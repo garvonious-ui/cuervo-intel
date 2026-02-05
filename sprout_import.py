@@ -57,8 +57,8 @@ BRAND_MAP = {
 # Maps common Sprout Social column names to our internal field names.
 
 COLUMN_ALIASES = {
-    "brand": ["profile", "profile name", "instagram profile", "account",
-              "brand", "author", "account name"],
+    "brand": ["profile", "profile name", "instagram profile", "tiktok profiles",
+              "account", "brand", "author", "account name"],
     "platform": ["network", "platform", "channel", "network type"],
     "post_url": ["link", "permalink", "perma link", "post permalink",
                   "post link", "url", "post url"],
@@ -494,14 +494,21 @@ def import_sprout_profiles(csv_path: str) -> list[dict]:
         except (ValueError, TypeError):
             return 0
 
+    # Detect platform from the brand column name itself
+    # "TikTok Profiles" → TikTok, "Instagram Profile" → Instagram
+    brand_col_name = col_map.get("brand", "")
+    default_platform = "Instagram"
+    if "tiktok" in brand_col_name.lower():
+        default_platform = "TikTok"
+
     # Collect all rows, then pick the latest date per brand+platform
     all_rows = []
     for _, row in df.iterrows():
-        raw_brand = str(row.get(col_map.get("brand", ""), ""))
+        raw_brand = str(row.get(brand_col_name, ""))
         brand = _resolve_brand(raw_brand)
         raw_platform = str(row.get(col_map.get("platform", ""), ""))
         if not raw_platform or raw_platform in ("nan", "None"):
-            platform = "Instagram"
+            platform = default_platform
         else:
             platform = _resolve_platform(raw_platform)
         if platform not in ("Instagram", "TikTok"):
