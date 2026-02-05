@@ -43,7 +43,7 @@ CUSTOM_CSS = """
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&display=swap');
 
-    .block-container { padding-top: 1rem; }
+    .block-container { padding-top: 3rem; }
 
     /* Headings */
     h1, h2, h3 { color: #333333; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; }
