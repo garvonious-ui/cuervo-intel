@@ -145,7 +145,7 @@ best_brand = all_ers.idxmax() if len(all_ers) else "N/A"
 best_er = all_ers.max() if len(all_ers) else 0
 
 with c1:
-    st.metric("Posts Analyzed", f"{len(filtered_df):,}")
+    st.metric("Matching Posts", f"{len(filtered_df):,}")
 with c2:
     st.metric("Cuervo Avg ER", f"{cuervo_er:.2f}%",
               delta=f"{cuervo_er - cat_avg_er:+.2f}% vs avg")
@@ -172,11 +172,10 @@ st.markdown("""
 st.markdown("---")
 
 
-@st.cache_data
-def _generate_excel(_results):
+def _generate_excel(results):
     from dashboard import generate_dashboard
     path = os.path.join(tempfile.gettempdir(), "cuervo_report.xlsx")
-    generate_dashboard(_results, path)
+    generate_dashboard(results, path)
     with open(path, "rb") as f:
         return f.read()
 

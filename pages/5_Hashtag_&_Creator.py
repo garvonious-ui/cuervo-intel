@@ -11,6 +11,7 @@ from config import BRAND_COLORS, CHART_TEMPLATE, CHART_FONT, BRAND_ORDER, CUSTOM
 st.logo("logo.png")
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 st.header("Hashtag & Creator Analysis")
+st.caption("Hashtag and creator metrics are based on the full 30-day dataset.")
 
 if "results" not in st.session_state:
     st.warning("Go to the home page first to load data.")

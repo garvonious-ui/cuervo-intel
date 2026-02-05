@@ -207,6 +207,18 @@ CAPTION_FRAGMENTS = {
         "This playlist + {brand} = perfect night",
         "The weekend starts now",
     ],
+    "Giveaway / Promo": [
+        "GIVEAWAY: Win a {brand} party pack!",
+        "Tag 3 friends for a chance to win {brand}",
+        "Limited edition {brand} drop — don't miss out",
+        "Summer giveaway alert! Enter to win {brand}",
+    ],
+    "Event / Activation": [
+        "Catch us at the {brand} pop-up this weekend",
+        "Live from the {brand} experience — who's here?",
+        "The {brand} activation was one for the books",
+        "See you at the {brand} summer series",
+    ],
 }
 
 HASHTAG_POOLS = {
@@ -310,18 +322,18 @@ def generate_sample_posts(output_dir: str) -> str:
                 followers = profile["tt_followers"]
 
             for i in range(num_posts):
-                # Random date within 30-day window
-                post_date = thirty_days_ago + timedelta(
-                    days=random.randint(0, 29),
-                    hours=random.randint(8, 22),
-                    minutes=random.randint(0, 59),
-                )
-                # Bias towards peak hours
+                # Random date within 30-day window, with consistent hour
                 peak_hours = [11, 12, 13, 17, 18, 19, 20, 21]
                 if random.random() < 0.6:
                     post_hour = random.choice(peak_hours)
                 else:
                     post_hour = random.randint(8, 23)
+                post_minute = random.randint(0, 59)
+                post_date = thirty_days_ago + timedelta(
+                    days=random.randint(0, 29),
+                    hours=post_hour,
+                    minutes=post_minute,
+                )
 
                 # Content type
                 if platform == "Instagram":
@@ -351,7 +363,11 @@ def generate_sample_posts(output_dir: str) -> str:
                 hashtags = " ".join(re.findall(r"#\w+", caption))
 
                 word_count = len(caption.split())
-                emoji_count = sum(1 for c in caption if c in "🍹🔥🥃🍋✨🎉💯🌮🎶😎🍸🥂🌵☀️🤙💚🙌")
+                emoji_count = len(re.findall(
+                    "[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F680-\U0001F6FF"
+                    "\U0001F1E0-\U0001F1FF\U00002702-\U000027B0\U000024C2-\U0001F251"
+                    "\U0001f926-\U0001f937\U0001F1F2-\U0001F1F4\U0001F620-\U0001F640"
+                    "\U0001F910-\U0001F9FF]", caption))
 
                 # Visual style
                 visual_style = random.choice(profile["visual_bias"])
@@ -391,7 +407,7 @@ def generate_sample_posts(output_dir: str) -> str:
                 likes = int(followers * actual_er / 100 * random.uniform(0.7, 1.0))
                 comments = int(likes * random.uniform(0.02, 0.08))
                 shares = int(likes * random.uniform(0.01, 0.05))
-                saves = int(likes * random.uniform(0.03, 0.10)) if platform == "Instagram" else 0
+                saves = int(likes * random.uniform(0.03, 0.10)) if platform == "Instagram" else int(likes * random.uniform(0.01, 0.06))
                 views = int(likes * random.uniform(8, 25)) if post_type in ("Reel", "Video") else 0
 
                 # Music
@@ -404,7 +420,7 @@ def generate_sample_posts(output_dir: str) -> str:
                 rows.append([
                     brand, platform, post_url,
                     post_date.strftime("%Y-%m-%d"),
-                    f"{post_hour}:{random.randint(0,59):02d}",
+                    f"{post_hour}:{post_minute:02d}",
                     post_type, video_length, caption, hashtags,
                     likes, comments, shares, saves, views,
                     "", theme, visual_style, tone, cta,

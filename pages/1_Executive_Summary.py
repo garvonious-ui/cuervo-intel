@@ -37,10 +37,12 @@ cuervo_ppw = 0
 for p in ["Instagram", "TikTok"]:
     cuervo_ppw += freq.get("Jose Cuervo", {}).get(p, {}).get("posts_per_week", 0)
 
+cuervo_combined_er = df[df["brand"] == "Jose Cuervo"]["engagement_rate"].mean() if "Jose Cuervo" in df["brand"].values else 0
+cuervo_combined_er = 0 if pd.isna(cuervo_combined_er) else cuervo_combined_er
 comp_ers = df[df["brand"] != "Jose Cuervo"].groupby("brand")["engagement_rate"].mean()
 best_comp = comp_ers.idxmax() if len(comp_ers) else "N/A"
 best_comp_er = comp_ers.max() if len(comp_ers) else 0
-gap = round(cuervo_ig - best_comp_er, 2) if best_comp_er else 0
+gap = round(cuervo_combined_er - best_comp_er, 2) if best_comp_er else 0
 
 with c1:
     st.metric("Cuervo IG ER", f"{cuervo_ig:.2f}%")
@@ -76,6 +78,7 @@ st.plotly_chart(fig, use_container_width=True)
 # ── Posting frequency ─────────────────────────────────────────────────
 
 st.subheader("Posting Frequency (posts/week)")
+st.caption("Based on full 30-day dataset (not affected by content type filters)")
 
 freq_rows = []
 for brand in sel_brands:
@@ -103,15 +106,20 @@ radar_brands = ["Jose Cuervo"] + top2
 
 dimensions = ["Avg ER %", "Posts/Week", "Collab %", "Hashtags/Post", "Avg Likes"]
 
-# First pass: collect raw values to compute max per dimension for normalization
+# First pass: collect raw values from filtered_df for consistency
 raw_vals = {}
 for brand in radar_brands:
     brand_df = df[df["brand"] == brand]
     er = brand_df["engagement_rate"].mean() if len(brand_df) else 0
     er = 0 if pd.isna(er) else er
-    ppw = sum(freq.get(brand, {}).get(p, {}).get("posts_per_week", 0) for p in ["Instagram", "TikTok"])
-    collab_pct = results["creators"].get(brand, {}).get("collab_pct", 0)
-    htags = results["hashtags"].get(brand, {}).get("avg_hashtags_per_post", 0)
+    # Compute posts/week from filtered data (30 days ~ 4.3 weeks)
+    ppw = round(len(brand_df) / 4.3, 1) if len(brand_df) else 0
+    # Compute collab % from filtered data
+    collab_count = len(brand_df[brand_df["has_creator_collab"].astype(str).str.lower() == "yes"]) if len(brand_df) else 0
+    collab_pct = round(collab_count / len(brand_df) * 100, 1) if len(brand_df) else 0
+    # Compute avg hashtags from filtered data
+    htag_counts = brand_df["hashtags"].fillna("").apply(lambda x: len(x.split()) if x.strip() else 0)
+    htags = round(htag_counts.mean(), 1) if len(htag_counts) else 0
     avg_likes = brand_df["likes"].mean() if len(brand_df) else 0
     avg_likes = 0 if pd.isna(avg_likes) else avg_likes
     raw_vals[brand] = [er, ppw, collab_pct, htags, avg_likes]

@@ -49,7 +49,7 @@ for brand in order:
     rows.append({
         "Brand": brand,
         "Followers": followers,
-        "Posts (30d)": len(plat_df),
+        "Matching Posts": len(plat_df),
         "Posts/Week": round(ppw, 1),
         "Avg ER %": round(avg_er, 3),
         "Avg Likes": int(plat_df["likes"].mean()) if len(plat_df) else 0,

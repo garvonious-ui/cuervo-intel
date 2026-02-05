@@ -125,7 +125,7 @@ def count_emojis(text: str) -> int:
         "\U0001F1F2-\U0001F1F4"
         "\U0001F620-\U0001F640"
         "\U0001F910-\U0001F9FF"
-        "]+", flags=re.UNICODE
+        "]", flags=re.UNICODE
     )
     return len(emoji_pattern.findall(text))
 
@@ -377,8 +377,8 @@ def analyze_content_themes(posts: list[dict]) -> dict[str, Any]:
         theme_engagement = defaultdict(list)
         for p in brand_posts:
             theme = p.get("content_theme", "Unknown")
-            if theme and "engagement_rate" in p:
-                theme_engagement[theme].append(p["engagement_rate"])
+            if theme:
+                theme_engagement[theme].append(p.get("engagement_rate", 0))
 
         theme_performance = {}
         for theme, rates in theme_engagement.items():
@@ -545,7 +545,7 @@ def generate_cuervo_recommendations(
         })
 
     # Check if collabs drive engagement lift across the category
-    for b in BRANDS:
+    for b in competitors:
         lift = creators.get(b, {}).get("collab_engagement_lift", 0)
         if lift > 0.5:
             recs.append({

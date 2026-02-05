@@ -23,9 +23,15 @@ order = [b for b in BRAND_ORDER if b in sel_brands]
 
 # ── Platform filter (applies to entire page) ─────────────────────────
 
-sel_plat = st.selectbox("Platform", ["All", "Instagram", "TikTok"], key="deep_plat")
+available_plats = sorted(df["platform"].unique().tolist())
+plat_options = ["All"] + available_plats
+sel_plat = st.selectbox("Platform", plat_options, key="deep_plat")
 if sel_plat != "All":
     df = df[df["platform"] == sel_plat]
+
+if df.empty:
+    st.warning("No posts match the current filters.")
+    st.stop()
 
 # ── ER by content type ────────────────────────────────────────────────
 
@@ -59,6 +65,7 @@ if "post_date" in sched_df.columns:
     sched_df["day_of_week"] = pd.to_datetime(sched_df["post_date"], errors="coerce").dt.day_name()
     sched_df["hour"] = pd.to_numeric(sched_df["post_hour"], errors="coerce")
     sched_df = sched_df.dropna(subset=["day_of_week", "hour"])
+    sched_df["hour"] = sched_df["hour"].astype(int)
 
     days_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     pivot = sched_df.groupby(["day_of_week", "hour"]).size().reset_index(name="posts")

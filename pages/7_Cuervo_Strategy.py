@@ -19,6 +19,7 @@ if "results" not in st.session_state:
 
 results = st.session_state["results"]
 df = st.session_state["df"]  # Use unfiltered data for strategy comparisons
+st.caption("This page uses the full dataset for strategy comparisons (sidebar filters do not apply here).")
 
 CUERVO = "Jose Cuervo"
 GEN_Z_LEADERS = ["Casamigos", "Teremana"]  # Highest ER / creator-forward brands
@@ -95,17 +96,23 @@ def compute_genz_scores(brand):
 dims = ["Authenticity\n(UGC %)", "Creator\nPartners %", "Humor/Meme\n%",
         "Short-form\nVideo %", "Music\nIntegration %", "Community\nEngagement"]
 
+# Collect raw scores and normalize to 0-100 for comparable radar
+raw_scores = {brand: compute_genz_scores(brand) for brand in compare_brands}
+maxes = [max((raw_scores[b][i] for b in compare_brands), default=1) or 1 for i in range(6)]
+
 fig_radar = go.Figure()
 for brand in compare_brands:
-    scores = compute_genz_scores(brand)
+    normed = [raw_scores[brand][i] / maxes[i] * 100 for i in range(6)]
+    hover = [f"{dims[i]}: {raw_scores[brand][i]:.1f}" for i in range(6)]
     fig_radar.add_trace(go.Scatterpolar(
-        r=scores + [scores[0]], theta=dims + [dims[0]],
+        r=normed + [normed[0]], theta=dims + [dims[0]],
         fill="toself", name=brand, opacity=0.55,
         line=dict(color=BRAND_COLORS.get(brand, "#888"), width=2),
+        hovertext=hover + [hover[0]], hoverinfo="text+name",
     ))
 
 fig_radar.update_layout(
-    polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
+    polar=dict(radialaxis=dict(visible=True, range=[0, 100], tickvals=[25, 50, 75, 100])),
     height=480, template=CHART_TEMPLATE, font=CHART_FONT,
     legend=dict(orientation="h", y=-0.12),
 )

@@ -141,13 +141,13 @@ st.dataframe(
 
 if len(filt) >= 5:
     with st.expander("Quick Insights on Filtered Data"):
-        best_type = filt.groupby("post_type")["engagement_rate"].mean().idxmax()
-        best_type_er = filt.groupby("post_type")["engagement_rate"].mean().max()
-        st.markdown(f"- **Best content type:** {best_type} (avg ER {best_type_er:.2f}%)")
+        type_ers = filt.groupby("post_type")["engagement_rate"].mean().dropna()
+        if len(type_ers):
+            st.markdown(f"- **Best content type:** {type_ers.idxmax()} (avg ER {type_ers.max():.2f}%)")
 
-        best_theme = filt.groupby("content_theme")["engagement_rate"].mean().idxmax()
-        best_theme_er = filt.groupby("content_theme")["engagement_rate"].mean().max()
-        st.markdown(f"- **Best theme:** {best_theme} (avg ER {best_theme_er:.2f}%)")
+        theme_ers = filt.groupby("content_theme")["engagement_rate"].mean().dropna()
+        if len(theme_ers):
+            st.markdown(f"- **Best theme:** {theme_ers.idxmax()} (avg ER {theme_ers.max():.2f}%)")
 
         collab_er = filt[filt["has_creator_collab"].str.lower() == "yes"]["engagement_rate"].mean()
         non_er = filt[filt["has_creator_collab"].str.lower() != "yes"]["engagement_rate"].mean()
@@ -173,12 +173,10 @@ with ex1:
                        file_name="cuervo_filtered_data.csv", mime="text/csv")
 
 with ex2:
-    if st.button("Generate full Excel report"):
-        from dashboard import generate_dashboard
-        path = os.path.join(tempfile.gettempdir(),
-                            f"cuervo_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx")
-        generate_dashboard(results, path)
-        with open(path, "rb") as f:
-            st.download_button("Save .xlsx", f.read(),
-                               file_name="cuervo_intelligence_report.xlsx",
-                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    from dashboard import generate_dashboard
+    xlsx_path = os.path.join(tempfile.gettempdir(), "cuervo_report_explorer.xlsx")
+    generate_dashboard(results, xlsx_path)
+    with open(xlsx_path, "rb") as f:
+        st.download_button("Download Excel Report", f.read(),
+                           file_name="cuervo_intelligence_report.xlsx",
+                           mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
