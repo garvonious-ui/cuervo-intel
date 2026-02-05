@@ -176,6 +176,26 @@ BRAND_PROFILES = {
         "caption_length_range": (15, 55),
         "ig_post_type_weights": {"Reel": 0.50, "Carousel": 0.25, "Static Image": 0.25},
     },
+    "818 Tequila": {
+        # @drink818 — 1.19M IG followers (confirmed from Sprout Social).
+        # Kendall Jenner's tequila brand. Strong Gen Z/millennial social presence.
+        # UGC-forward, lifestyle content, celebrity-driven engagement.
+        "ig_followers": 1_189_000,
+        "tt_followers": 350_000,
+        "ig_posts_per_month": 50,
+        "tt_posts_per_month": 48,
+        "ig_base_er": 1.4,
+        "tt_base_er": 3.5,
+        "themes": ["Cocktail Recipe", "Lifestyle/Aspirational", "Creator Collab / UGC",
+                    "Product Showcase", "Meme / Humor", "Cultural Moment / Holiday"],
+        "theme_weights": [0.25, 0.22, 0.18, 0.15, 0.10, 0.10],
+        "visual_bias": ["Raw / UGC-style", "Lo-fi / Authentic", "Mixed / Hybrid"],
+        "tone_bias": ["Casual / Conversational", "Playful / Fun", "Aspirational / Lifestyle"],
+        "collab_rate": 0.25,
+        "avg_hashtags": 4,
+        "caption_length_range": (8, 40),
+        "ig_post_type_weights": {"Reel": 0.60, "Carousel": 0.20, "Static Image": 0.20},
+    },
 }
 
 # ─── SAMPLE CAPTION FRAGMENTS ────────────────────────────────────────
@@ -279,6 +299,9 @@ HASHTAG_POOLS = {
     "1800 Tequila": ["#1800Tequila", "#1800", "#Essential1800", "#1800Cristalino",
                       "#1800Reposado", "#Tequila", "#TequilaNight", "#CocktailHour",
                       "#NightLife"],
+    "818 Tequila": ["#818Tequila", "#drink818", "#818", "#Tequila",
+                     "#CocktailVibes", "#GoodVibes", "#WeekendMood",
+                     "#TequilaTime", "#Cheers"],
 }
 
 CREATOR_HANDLES = [
@@ -495,6 +518,7 @@ def generate_sample_profiles(output_dir: str) -> str:
         "Espolon": "Born from the unbridled spirit of Mexico. To the Bone. Drink responsibly. 21+",
         "Teremana": "Small batch tequila crafted with Mana. @therock | Responsibly enjoyed. 21+",
         "1800 Tequila": "100% blue Weber agave tequila since 1800. Crafted in Mexico. 21+",
+        "818 Tequila": "Hand-selected tequila from Jalisco, Mexico. @kendalljenner. 21+",
     }
 
     handles = {
@@ -505,6 +529,7 @@ def generate_sample_profiles(output_dir: str) -> str:
         "Espolon": {"Instagram": "@espolontequila", "TikTok": "@espolontequila"},
         "Teremana": {"Instagram": "@teremana", "TikTok": "@teremanatequila"},
         "1800 Tequila": {"Instagram": "@1800tequila", "TikTok": "@1800tequila"},
+        "818 Tequila": {"Instagram": "@drink818", "TikTok": "@drink818"},
     }
 
     with open(filepath, "w", newline="", encoding="utf-8") as f:
