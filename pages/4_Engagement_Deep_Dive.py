@@ -40,6 +40,12 @@ for tab, plat in [(tab_ig, "Instagram"), (tab_tt, "TikTok")]:
         else:
             st.info(f"No {plat} data for selected brands.")
 
+# ── Platform filter for remaining sections ────────────────────────────
+
+sel_plat = st.selectbox("Filter by platform", ["All", "Instagram", "TikTok"], key="deep_plat")
+if sel_plat != "All":
+    df = df[df["platform"] == sel_plat]
+
 # ── Posting schedule heatmap ──────────────────────────────────────────
 
 st.subheader("Posting Schedule Heatmap")
