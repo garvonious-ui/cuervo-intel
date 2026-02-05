@@ -47,33 +47,41 @@ BRAND_MAP = {
     "1800tequila": "1800 Tequila",
     "1800 tequila": "1800 Tequila",
     "tequila 1800": "1800 Tequila",
+    "drink818": "818 Tequila",
+    "818": "818 Tequila",
+    "818 tequila": "818 Tequila",
+    "818tequila": "818 Tequila",
 }
 
 # ─── COLUMN NAME MAPPING ─────────────────────────────────────────────
 # Maps common Sprout Social column names to our internal field names.
 
 COLUMN_ALIASES = {
-    "brand": ["profile", "profile name", "account", "brand", "author",
-              "account name"],
+    "brand": ["profile", "profile name", "instagram profile", "account",
+              "brand", "author", "account name"],
     "platform": ["network", "platform", "channel", "network type"],
-    "post_url": ["permalink", "perma link", "post permalink", "post link",
-                  "url", "link", "post url"],
+    "post_url": ["link", "permalink", "perma link", "post permalink",
+                  "post link", "url", "post url"],
     "post_date": ["date", "date published", "publish date", "created date",
                    "created", "published", "date created"],
-    "post_type": ["type", "post type", "content type", "media type"],
-    "caption_text": ["text", "message", "content", "post text", "caption",
-                      "description", "post message"],
-    "likes": ["likes", "reactions", "like", "total likes", "post likes"],
+    "post_type": ["post type", "type", "media type"],
+    "content_type": ["content type"],
+    "caption_text": ["post", "text", "message", "content", "post text",
+                      "caption", "description", "post message"],
+    "likes": ["reactions", "likes", "like", "total likes", "post likes"],
     "comments": ["comments", "replies", "comment", "total comments"],
     "shares": ["shares", "retweets", "reposts", "share", "total shares"],
     "saves": ["saves", "bookmarks", "save", "total saves"],
     "views": ["video views", "views", "view", "total video views",
                "video plays", "plays"],
-    "impressions": ["impressions", "total impressions"],
-    "reach": ["reach", "total reach"],
-    "engagements": ["engagements", "total engagements", "engagement"],
-    "followers": ["followers", "follower count", "total followers",
-                   "followers at time of post", "net follower growth"],
+    "impressions": ["impressions", "organic impressions", "total impressions"],
+    "reach": ["reach", "organic reach", "total reach"],
+    "engagements": ["public engagements", "engagements", "total engagements",
+                     "engagement"],
+    "engagement_rate": ["engagement rate (per impression)", "engagement rate",
+                         "engagement rate %"],
+    "followers": ["followers", "audience", "follower count", "total followers",
+                   "followers at time of post"],
 }
 
 
@@ -112,20 +120,29 @@ def _resolve_platform(raw_network: str) -> str:
     return raw_network.strip()
 
 
-def _resolve_post_type(raw_type: str, platform: str) -> str:
+def _resolve_post_type(raw_type: str, platform: str, content_type: str = "") -> str:
+    """Resolve post type from Sprout's 'Post Type' and 'Content Type' columns."""
     t = (raw_type or "").strip().lower()
+    ct = (content_type or "").strip().lower()
     if platform == "TikTok":
         return "Video"
     if "reel" in t:
         return "Reel"
-    if "carousel" in t or "album" in t:
+    if "story" in t or "stories" in t:
+        return "Story"
+    if "carousel" in t or "carousel" in ct:
         return "Carousel"
-    if "video" in t:
+    # Sprout uses "Post" as type — check Content Type for video vs photo
+    if t == "post":
+        if "video" in ct:
+            return "Reel"
+        if "carousel" in ct:
+            return "Carousel"
+        return "Static Image"
+    if "video" in t or "video" in ct:
         return "Reel"
     if "image" in t or "photo" in t or "static" in t:
         return "Static Image"
-    if "story" in t:
-        return "Story"
     return "Static Image"
 
 
@@ -293,6 +310,7 @@ def classify_visual_style(post_type: str, theme: str, brand: str = "") -> str:
         "Espolon": "Animation / Motion Graphics",
         "Teremana": "Raw / UGC-style",
         "1800 Tequila": "Mixed / Hybrid",
+        "818 Tequila": "Raw / UGC-style",
     }
     return brand_defaults.get(brand, "Mixed / Hybrid")
 
@@ -379,16 +397,24 @@ def import_sprout_posts(csv_path: str) -> list[dict]:
             post_time = ""
 
         raw_type = str(row.get(col_map.get("post_type", ""), ""))
-        post_type = _resolve_post_type(raw_type, platform)
+        raw_content_type = str(row.get(col_map.get("content_type", ""), ""))
+        post_type = _resolve_post_type(raw_type, platform, raw_content_type)
+
+        # Skip Stories — ephemeral, different metrics, not available for competitors
+        if post_type == "Story":
+            continue
 
         caption = str(row.get(col_map.get("caption_text", ""), ""))
-        if caption == "nan":
+        if caption in ("nan", "None", ""):
             caption = ""
         hashtags = _extract_hashtags(caption)
 
         def safe_int(val):
+            """Parse int from values that may have commas or be empty."""
+            if val is None or str(val).strip() in ("", "nan", "None"):
+                return 0
             try:
-                return int(float(val))
+                return int(float(str(val).replace(",", "").replace("%", "")))
             except (ValueError, TypeError):
                 return 0
 
@@ -446,7 +472,11 @@ def import_sprout_posts(csv_path: str) -> list[dict]:
 
 
 def import_sprout_profiles(csv_path: str) -> list[dict]:
-    """Import a Sprout Social Profile Report."""
+    """
+    Import a Sprout Social aggregate report (Competitor Performance,
+    Instagram Competitors) and extract the latest follower count per profile.
+    These reports have one row per day per profile — we take the most recent.
+    """
     import pandas as pd
 
     df = pd.read_csv(csv_path, encoding="utf-8-sig")
@@ -456,34 +486,64 @@ def import_sprout_profiles(csv_path: str) -> list[dict]:
         if found:
             col_map[field] = found
 
-    rows = []
+    def safe_int(val):
+        if val is None or str(val).strip() in ("", "nan", "None"):
+            return 0
+        try:
+            return int(float(str(val).replace(",", "").replace("%", "")))
+        except (ValueError, TypeError):
+            return 0
+
+    # Collect all rows, then pick the latest date per brand+platform
+    all_rows = []
     for _, row in df.iterrows():
         raw_brand = str(row.get(col_map.get("brand", ""), ""))
         brand = _resolve_brand(raw_brand)
         raw_platform = str(row.get(col_map.get("platform", ""), ""))
-        platform = _resolve_platform(raw_platform)
+        if not raw_platform or raw_platform in ("nan", "None"):
+            platform = "Instagram"
+        else:
+            platform = _resolve_platform(raw_platform)
         if platform not in ("Instagram", "TikTok"):
             continue
 
-        def safe_int(val):
-            try:
-                return int(float(val))
-            except (ValueError, TypeError):
-                return 0
-
         followers = safe_int(row.get(col_map.get("followers", ""), 0))
+        if followers == 0:
+            continue
+
+        raw_date = str(row.get(col_map.get("post_date", ""), ""))
+        try:
+            dt = pd.to_datetime(raw_date)
+        except Exception:
+            dt = pd.Timestamp.now()
+
+        all_rows.append({
+            "brand": brand, "platform": platform, "handle": raw_brand,
+            "followers": followers, "date": dt,
+        })
+
+    if not all_rows:
+        return []
+
+    # Pick the latest date per (brand, platform) to get most recent follower count
+    tmp_df = pd.DataFrame(all_rows)
+    latest = tmp_df.sort_values("date").drop_duplicates(
+        subset=["brand", "platform"], keep="last")
+
+    rows = []
+    for _, r in latest.iterrows():
         rows.append({
-            "brand": brand,
-            "platform": platform,
-            "handle": raw_brand,
-            "followers": followers,
+            "brand": r["brand"],
+            "platform": r["platform"],
+            "handle": r["handle"],
+            "followers": r["followers"],
             "following": 0,
             "total_posts": 0,
             "bio_text": "",
             "bio_link": "",
             "is_verified": "Yes",
             "profile_category": "Alcohol Brand",
-            "date_collected": datetime.now().strftime("%Y-%m-%d"),
+            "date_collected": r["date"].strftime("%Y-%m-%d"),
             "notes": "Imported from Sprout Social",
         })
 
@@ -517,19 +577,25 @@ def import_sprout_directory(sprout_dir: str, output_dir: str) -> tuple[list[str]
         cols_lower = [c.lower().strip() for c in sample.columns]
         col_text = " ".join(cols_lower)
 
-        has_post_metrics = any(
-            kw in col_text for kw in ["likes", "reactions", "comments", "engagements"]
-        )
-        has_profile_metrics = any(
-            kw in col_text for kw in ["followers", "follower count"]
+        # Post-level reports have individual post identifiers
+        is_post_level = any(
+            kw in col_text for kw in ["post id", "permalink", "perma link"]
+        ) or ("link" in cols_lower and "post" in cols_lower)
+
+        # Aggregate/profile reports have audience growth and published totals
+        is_aggregate = any(
+            kw in col_text
+            for kw in ["audience", "net audience growth", "% audience growth",
+                        "net follower growth", "% follower growth",
+                        "published posts", "published posts & reels"]
         )
 
-        if has_post_metrics:
+        if is_post_level and not is_aggregate:
             posts = import_sprout_posts(fpath)
             all_posts.extend(posts)
             imported_files.append(fname)
 
-        if has_profile_metrics and not has_post_metrics:
+        if is_aggregate:
             profiles = import_sprout_profiles(fpath)
             all_profiles.extend(profiles)
             imported_files.append(fname)
@@ -542,10 +608,13 @@ def import_sprout_directory(sprout_dir: str, output_dir: str) -> tuple[list[str]
         pd.DataFrame(all_posts).to_csv(posts_path, index=False)
         files.append(posts_path)
 
-    # Write brand_profiles.csv
+    # Write brand_profiles.csv (deduplicate — keep highest follower count per brand+platform)
     if all_profiles:
         profiles_path = os.path.join(output_dir, "brand_profiles.csv")
-        pd.DataFrame(all_profiles).to_csv(profiles_path, index=False)
+        prof_df = pd.DataFrame(all_profiles)
+        prof_df = prof_df.sort_values("followers").drop_duplicates(
+            subset=["brand", "platform"], keep="last")
+        prof_df.to_csv(profiles_path, index=False)
         files.append(profiles_path)
     elif all_posts:
         # Auto-generate from post data if no profile report

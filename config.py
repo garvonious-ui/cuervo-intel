@@ -18,11 +18,12 @@ BRAND_COLORS = {
     "Espolon": "#A3C4D9",       # Muted sky blue
     "Teremana": "#C9A87E",      # Sandy tan
     "1800 Tequila": "#6B8FA3",  # Steel blue
+    "818 Tequila": "#B88BBF",   # Soft purple
 }
 
 BRAND_ORDER = [
     "Jose Cuervo", "Patron", "Don Julio", "Casamigos",
-    "Espolon", "Teremana", "1800 Tequila",
+    "Espolon", "Teremana", "1800 Tequila", "818 Tequila",
 ]
 
 PLATFORM_COLORS = {

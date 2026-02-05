@@ -16,6 +16,7 @@ BRANDS = [
     "Espolon",
     "Teremana",
     "1800 Tequila",
+    "818 Tequila",
 ]
 
 PLATFORMS = ["Instagram", "TikTok"]
