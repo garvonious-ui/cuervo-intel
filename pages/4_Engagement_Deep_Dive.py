@@ -19,32 +19,27 @@ df = st.session_state["filtered_df"]
 sel_brands = st.session_state["sel_brands"]
 order = [b for b in BRAND_ORDER if b in sel_brands]
 
-# ── ER by content type per platform ───────────────────────────────────
+# ── Platform filter (applies to entire page) ─────────────────────────
+
+sel_plat = st.selectbox("Platform", ["All", "Instagram", "TikTok"], key="deep_plat")
+if sel_plat != "All":
+    df = df[df["platform"] == sel_plat]
+
+# ── ER by content type ────────────────────────────────────────────────
 
 st.subheader("Engagement Rate by Content Type")
 
-tab_ig, tab_tt = st.tabs(["Instagram", "TikTok"])
-
-for tab, plat in [(tab_ig, "Instagram"), (tab_tt, "TikTok")]:
-    with tab:
-        pdata = df[(df["brand"].isin(sel_brands)) & (df["platform"] == plat)]
-        type_er = pdata.groupby(["brand", "post_type"])["engagement_rate"].mean().reset_index()
-        if len(type_er):
-            fig = px.bar(type_er, x="post_type", y="engagement_rate", color="brand",
-                         barmode="group", color_discrete_map=BRAND_COLORS,
-                         category_orders={"brand": order},
-                         labels={"engagement_rate": "Avg ER %", "post_type": "", "brand": "Brand"},
-                         template=CHART_TEMPLATE)
-            fig.update_layout(font=CHART_FONT, height=400, legend=dict(orientation="h", y=1.12))
-            st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.info(f"No {plat} data for selected brands.")
-
-# ── Platform filter for remaining sections ────────────────────────────
-
-sel_plat = st.selectbox("Filter by platform", ["All", "Instagram", "TikTok"], key="deep_plat")
-if sel_plat != "All":
-    df = df[df["platform"] == sel_plat]
+type_er = df[df["brand"].isin(sel_brands)].groupby(["brand", "post_type"])["engagement_rate"].mean().reset_index()
+if len(type_er):
+    fig = px.bar(type_er, x="post_type", y="engagement_rate", color="brand",
+                 barmode="group", color_discrete_map=BRAND_COLORS,
+                 category_orders={"brand": order},
+                 labels={"engagement_rate": "Avg ER %", "post_type": "", "brand": "Brand"},
+                 template=CHART_TEMPLATE)
+    fig.update_layout(font=CHART_FONT, height=400, legend=dict(orientation="h", y=1.12))
+    st.plotly_chart(fig, use_container_width=True)
+else:
+    st.info("No data for the selected platform/brands.")
 
 # ── Posting schedule heatmap ──────────────────────────────────────────
 
@@ -61,16 +56,17 @@ if "post_date" in sched_df.columns:
     sched_df = sched_df.copy()
     sched_df["day_of_week"] = pd.to_datetime(sched_df["post_date"], errors="coerce").dt.day_name()
     sched_df["hour"] = pd.to_numeric(sched_df["post_hour"], errors="coerce")
+    sched_df = sched_df.dropna(subset=["day_of_week", "hour"])
 
     days_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     pivot = sched_df.groupby(["day_of_week", "hour"]).size().reset_index(name="posts")
     heatmap = pivot.pivot(index="day_of_week", columns="hour", values="posts").fillna(0)
-    heatmap = heatmap.reindex(days_order)
+    heatmap = heatmap.reindex(days_order).fillna(0)
     # Ensure all hours 0-23
     for h in range(24):
         if h not in heatmap.columns:
             heatmap[h] = 0
-    heatmap = heatmap[sorted(heatmap.columns)]
+    heatmap = heatmap[[h for h in sorted(heatmap.columns) if pd.notna(h)]]
 
     fig_hm = go.Figure(go.Heatmap(
         z=heatmap.values, x=[f"{h}:00" for h in heatmap.columns],

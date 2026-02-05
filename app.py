@@ -93,7 +93,7 @@ else:
 sel_platforms = st.sidebar.multiselect("Platforms", ["Instagram", "TikTok"],
                                        default=["Instagram", "TikTok"])
 
-content_types = sorted(df["post_type"].dropna().unique().tolist())
+content_types = sorted(df["post_type"].dropna().unique().tolist()) if len(df) else []
 sel_types = st.sidebar.multiselect("Content types", content_types, default=content_types)
 
 # Apply filters
@@ -102,7 +102,17 @@ mask = (
     df["platform"].isin(sel_platforms) &
     df["post_type"].isin(sel_types)
 )
-filtered_df = df[mask].copy()
+filtered_df = df[mask].copy() if len(df) else df.copy()
+
+if filtered_df.empty:
+    st.session_state["results"] = results
+    st.session_state["df"] = df
+    st.session_state["filtered_df"] = filtered_df
+    st.session_state["sel_brands"] = sel_brands
+    st.session_state["sel_platforms"] = sel_platforms
+    st.session_state["data_dir"] = data_dir
+    st.warning("No posts match the current filters. Adjust filters in the sidebar.")
+    st.stop()
 
 # Store in session state for pages
 st.session_state["results"] = results
@@ -156,13 +166,20 @@ st.markdown("""
 
 # Excel export
 st.markdown("---")
+
+
+@st.cache_data
+def _generate_excel(_results):
+    from dashboard import generate_dashboard
+    path = os.path.join(tempfile.gettempdir(), "cuervo_report.xlsx")
+    generate_dashboard(_results, path)
+    with open(path, "rb") as f:
+        return f.read()
+
+
 col_a, col_b = st.columns([3, 1])
 with col_b:
-    if st.button("Download Excel Report"):
-        from dashboard import generate_dashboard
-        path = os.path.join(tempfile.gettempdir(),
-                            f"cuervo_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx")
-        generate_dashboard(results, path)
-        with open(path, "rb") as f:
-            st.download_button("Save .xlsx", f, file_name="cuervo_intelligence_report.xlsx",
-                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    xlsx_bytes = _generate_excel(results)
+    st.download_button("Download Excel Report", xlsx_bytes,
+                       file_name="cuervo_intelligence_report.xlsx",
+                       mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")

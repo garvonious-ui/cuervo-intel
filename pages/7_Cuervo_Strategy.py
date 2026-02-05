@@ -63,6 +63,8 @@ with c3:
 with c4:
     cuervo_tt_er = df[(df["brand"] == CUERVO) & (df["platform"] == "TikTok")]["engagement_rate"].mean()
     leader_tt_er = df[(df["brand"].isin(GEN_Z_LEADERS)) & (df["platform"] == "TikTok")]["engagement_rate"].mean()
+    cuervo_tt_er = 0 if pd.isna(cuervo_tt_er) else cuervo_tt_er
+    leader_tt_er = 0 if pd.isna(leader_tt_er) else leader_tt_er
     st.metric("Cuervo TikTok ER", f"{cuervo_tt_er:.2f}%",
               delta=f"{cuervo_tt_er - leader_tt_er:+.2f}% vs leaders")
 
@@ -232,24 +234,30 @@ col_t, col_o = st.columns(2)
 with col_t:
     st.error("**Competitive Threats**")
     # Compute dynamic threats
-    highest_poster = df.groupby("brand").size().idxmax()
-    highest_post_count = df.groupby("brand").size().max()
-    cuervo_count = len(df[df["brand"] == CUERVO])
-    st.markdown(f"- {highest_poster} leads with **{highest_post_count}** posts vs Cuervo's **{cuervo_count}** — losing share of voice")
+    brand_counts = df.groupby("brand").size()
+    if len(brand_counts):
+        highest_poster = brand_counts.idxmax()
+        highest_post_count = brand_counts.max()
+        cuervo_count = len(df[df["brand"] == CUERVO])
+        st.markdown(f"- {highest_poster} leads with **{highest_post_count}** posts vs Cuervo's **{cuervo_count}** — losing share of voice")
 
-    best_er_brand = df.groupby("brand")["engagement_rate"].mean().idxmax()
-    best_er_val = df.groupby("brand")["engagement_rate"].mean().max()
-    st.markdown(f"- {best_er_brand} dominates engagement at **{best_er_val:.2f}% ER**")
+    brand_ers = df.groupby("brand")["engagement_rate"].mean()
+    if len(brand_ers):
+        best_er_brand = brand_ers.idxmax()
+        best_er_val = brand_ers.max()
+        st.markdown(f"- {best_er_brand} dominates engagement at **{best_er_val:.2f}% ER**")
 
-    highest_collab = max(results["creators"].items(), key=lambda x: x[1].get("collab_pct", 0))
-    st.markdown(f"- {highest_collab[0]}'s creator collab rate ({highest_collab[1].get('collab_pct', 0):.0f}%) "
-                f"dwarfs Cuervo's ({cuervo_collab:.0f}%)")
+    if results["creators"]:
+        highest_collab = max(results["creators"].items(), key=lambda x: x[1].get("collab_pct", 0))
+        st.markdown(f"- {highest_collab[0]}'s creator collab rate ({highest_collab[1].get('collab_pct', 0):.0f}%) "
+                    f"dwarfs Cuervo's ({cuervo_collab:.0f}%)")
 
 with col_o:
     st.success("**Opportunities for Cuervo**")
     # Compute dynamic opportunities
-    cuervo_best_theme = cuervo_df.groupby("content_theme")["engagement_rate"].mean().idxmax() if len(cuervo_df) else "N/A"
-    cuervo_best_er = cuervo_df.groupby("content_theme")["engagement_rate"].mean().max() if len(cuervo_df) else 0
+    cuervo_theme_er = cuervo_df.groupby("content_theme")["engagement_rate"].mean() if len(cuervo_df) else pd.Series(dtype=float)
+    cuervo_best_theme = cuervo_theme_er.idxmax() if len(cuervo_theme_er) else "N/A"
+    cuervo_best_er = cuervo_theme_er.max() if len(cuervo_theme_er) else 0
     cat_theme_er = df.groupby("content_theme")["engagement_rate"].mean().get(cuervo_best_theme, 0) if cuervo_best_theme != "N/A" else 0
     if cuervo_best_er > cat_theme_er:
         st.markdown(f"- Cuervo's **{cuervo_best_theme}** content outperforms category avg "

@@ -12,6 +12,17 @@ from typing import Any
 from templates import BRANDS, CONTENT_THEMES, VISUAL_STYLES, TONE_OPTIONS
 
 
+def _parse_int(val: str) -> int:
+    """Safely parse a string to int, handling commas, floats, negatives."""
+    if not val:
+        return 0
+    val = val.strip().replace(",", "")
+    try:
+        return int(float(val))
+    except (ValueError, TypeError):
+        return 0
+
+
 def load_posts(filepath: str) -> list[dict]:
     """Load and clean posts data from CSV."""
     posts = []
@@ -25,8 +36,7 @@ def load_posts(filepath: str) -> list[dict]:
             for field in ["likes", "comments", "shares", "saves", "views",
                           "video_length_seconds", "emoji_count_in_caption",
                           "caption_word_count", "mentions_count"]:
-                val = row.get(field, "").strip()
-                row[field] = int(float(val)) if val and val.replace(".", "").isdigit() else 0
+                row[field] = _parse_int(row.get(field, ""))
 
             # Parse date
             date_str = row.get("post_date", "").strip()
@@ -73,8 +83,7 @@ def load_profiles(filepath: str) -> list[dict]:
         reader = csv.DictReader(f)
         for row in reader:
             for field in ["followers", "following", "total_posts"]:
-                val = row.get(field, "").strip()
-                row[field] = int(float(val)) if val and val.replace(".", "").isdigit() else 0
+                row[field] = _parse_int(row.get(field, ""))
             profiles.append(row)
     return profiles
 
@@ -85,8 +94,7 @@ def load_hashtags(filepath: str) -> list[dict]:
     with open(filepath, "r", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
-            val = row.get("times_used_in_30_days", "").strip()
-            row["times_used_in_30_days"] = int(float(val)) if val and val.isdigit() else 0
+            row["times_used_in_30_days"] = _parse_int(row.get("times_used_in_30_days", ""))
             tags.append(row)
     return tags
 
@@ -99,8 +107,7 @@ def load_creators(filepath: str) -> list[dict]:
         for row in reader:
             if "Example row" in row.get("notes", ""):
                 continue
-            val = row.get("creator_follower_count", "").strip()
-            row["creator_follower_count"] = int(float(val)) if val and val.replace(".", "").isdigit() else 0
+            row["creator_follower_count"] = _parse_int(row.get("creator_follower_count", ""))
             creators.append(row)
     return creators
 

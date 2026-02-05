@@ -62,7 +62,7 @@ with col1:
 
 with col2:
     st.markdown("**Avg Emoji Usage per Post**")
-    emoji_data = df[df["brand"].isin(sel_brands)].groupby("brand")["emoji_count_in_caption"].mean().reindex(order).reset_index()
+    emoji_data = df[df["brand"].isin(sel_brands)].groupby("brand")["emoji_count_in_caption"].mean().reindex(order).fillna(0).reset_index()
     emoji_data.columns = ["brand", "avg_emojis"]
     fig_em = px.bar(emoji_data, x="brand", y="avg_emojis",
                     color="brand", color_discrete_map=BRAND_COLORS,

@@ -96,29 +96,41 @@ st.subheader("Competitive Radar — Cuervo vs Top 2 Competitors")
 
 # Pick top 2 competitors by ER
 comp_avg_er = df[df["brand"] != "Jose Cuervo"].groupby("brand")["engagement_rate"].mean()
-top2 = comp_avg_er.nlargest(2).index.tolist()
+top2 = comp_avg_er.nlargest(2).index.tolist() if len(comp_avg_er) >= 2 else comp_avg_er.index.tolist()
 radar_brands = ["Jose Cuervo"] + top2
 
 dimensions = ["Avg ER %", "Posts/Week", "Collab %", "Hashtags/Post", "Avg Likes"]
 
-fig3 = go.Figure()
+# First pass: collect raw values to compute max per dimension for normalization
+raw_vals = {}
 for brand in radar_brands:
     brand_df = df[df["brand"] == brand]
-    er = brand_df["engagement_rate"].mean()
+    er = brand_df["engagement_rate"].mean() if len(brand_df) else 0
+    er = 0 if pd.isna(er) else er
     ppw = sum(freq.get(brand, {}).get(p, {}).get("posts_per_week", 0) for p in ["Instagram", "TikTok"])
     collab_pct = results["creators"].get(brand, {}).get("collab_pct", 0)
     htags = results["hashtags"].get(brand, {}).get("avg_hashtags_per_post", 0)
-    avg_likes = brand_df["likes"].mean()
-    # Normalize to 0-100 scale relative to max across these brands
-    vals = [er, ppw, collab_pct, htags, avg_likes / max(df["likes"].mean(), 1) * 50]
+    avg_likes = brand_df["likes"].mean() if len(brand_df) else 0
+    avg_likes = 0 if pd.isna(avg_likes) else avg_likes
+    raw_vals[brand] = [er, ppw, collab_pct, htags, avg_likes]
+
+# Normalize each dimension to 0-100 so radar is comparable
+maxes = [max((raw_vals[b][i] for b in radar_brands), default=1) or 1 for i in range(5)]
+
+fig3 = go.Figure()
+for brand in radar_brands:
+    normed = [raw_vals[brand][i] / maxes[i] * 100 for i in range(5)]
+    hover = [f"{dimensions[i]}: {raw_vals[brand][i]:.1f}" for i in range(5)]
     fig3.add_trace(go.Scatterpolar(
-        r=vals + [vals[0]], theta=dimensions + [dimensions[0]],
+        r=normed + [normed[0]], theta=dimensions + [dimensions[0]],
         fill="toself", name=brand, opacity=0.6,
         line=dict(color=BRAND_COLORS.get(brand, "#888")),
+        hovertext=hover + [hover[0]], hoverinfo="text+name",
     ))
 
-fig3.update_layout(polar=dict(radialaxis=dict(visible=True)), height=450,
-                   template=CHART_TEMPLATE, font=CHART_FONT,
+fig3.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 100],
+                                               tickvals=[25, 50, 75, 100])),
+                   height=450, template=CHART_TEMPLATE, font=CHART_FONT,
                    legend=dict(orientation="h", y=-0.15))
 st.plotly_chart(fig3, use_container_width=True)
 

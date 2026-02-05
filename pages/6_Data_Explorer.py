@@ -26,12 +26,13 @@ st.markdown("Use these filters to drill into the data. Global brand/platform fil
 fc1, fc2, fc3, fc4 = st.columns(4)
 
 with fc1:
-    er_min, er_max = float(df["engagement_rate"].min()), float(df["engagement_rate"].max())
+    er_min = float(df["engagement_rate"].min()) if len(df) and df["engagement_rate"].notna().any() else 0.0
+    er_max = float(df["engagement_rate"].max()) if len(df) and df["engagement_rate"].notna().any() else 10.0
     er_range = st.slider("ER % range", er_min, max(er_max, er_min + 0.1),
                          (er_min, er_max), step=0.1, key="er_slider")
 
 with fc2:
-    likes_max = int(df["likes"].max()) if len(df) else 100
+    likes_max = int(df["likes"].max()) if len(df) and df["likes"].notna().any() else 100
     likes_range = st.slider("Likes range", 0, max(likes_max, 1), (0, likes_max), key="likes_slider")
 
 with fc3:
@@ -58,25 +59,28 @@ with fc7:
 with fc8:
     paid_opt = st.selectbox("Paid partnership", ["All", "Yes", "No"], key="exp_paid")
 
-# Apply advanced filters
+# Apply advanced filters (use fillna to include rows with missing categorical values)
 mask = (
     df["engagement_rate"].between(er_range[0], er_range[1]) &
     df["likes"].between(likes_range[0], likes_range[1]) &
-    df["content_theme"].isin(sel_themes) &
-    df["caption_tone"].isin(sel_tones) &
-    df["visual_style"].isin(sel_styles) &
-    df["cta_type"].isin(sel_ctas)
+    (df["content_theme"].isin(sel_themes) | df["content_theme"].isna()) &
+    (df["caption_tone"].isin(sel_tones) | df["caption_tone"].isna()) &
+    (df["visual_style"].isin(sel_styles) | df["visual_style"].isna()) &
+    (df["cta_type"].isin(sel_ctas) | df["cta_type"].isna())
 )
 
+collab_col = df["has_creator_collab"].astype(str).str.lower()
+paid_col = df["is_paid_partnership"].astype(str).str.lower()
+
 if collab_opt == "Yes":
-    mask = mask & (df["has_creator_collab"].str.lower() == "yes")
+    mask = mask & (collab_col == "yes")
 elif collab_opt == "No":
-    mask = mask & (df["has_creator_collab"].str.lower() != "yes")
+    mask = mask & (collab_col != "yes")
 
 if paid_opt == "Yes":
-    mask = mask & (df["is_paid_partnership"].str.lower() == "yes")
+    mask = mask & (paid_col == "yes")
 elif paid_opt == "No":
-    mask = mask & (df["is_paid_partnership"].str.lower() != "yes")
+    mask = mask & (paid_col != "yes")
 
 filt = df[mask]
 

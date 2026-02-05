@@ -7,6 +7,7 @@ Patterns are modeled on typical tequila brand social media behavior.
 import csv
 import os
 import random
+import re
 from datetime import datetime, timedelta
 
 from templates import (
@@ -347,10 +348,7 @@ def generate_sample_posts(output_dir: str) -> str:
 
                 # Caption
                 caption = _generate_caption(brand, theme)
-                hashtags = " ".join(re.findall(r"#\w+", caption)) if "re" in dir() else ""
-                # Extract hashtags manually
-                import re as _re
-                hashtags = " ".join(_re.findall(r"#\w+", caption))
+                hashtags = " ".join(re.findall(r"#\w+", caption))
 
                 word_count = len(caption.split())
                 emoji_count = sum(1 for c in caption if c in "🍹🔥🥃🍋✨🎉💯🌮🎶😎🍸🥂🌵☀️🤙💚🙌")
