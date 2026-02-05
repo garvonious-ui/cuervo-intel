@@ -24,6 +24,10 @@ st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # ── Data Loading ──────────────────────────────────────────────────────
 
+SPROUT_INPUT_DIR = os.path.join(os.path.dirname(__file__), "data", "sprout")
+SPROUT_OUTPUT_DIR = os.path.join(tempfile.gettempdir(), "cuervo_sprout_imported")
+
+
 @st.cache_data(show_spinner="Running competitive analysis...")
 def load_demo():
     from sample_data import generate_all_sample_data
@@ -32,6 +36,16 @@ def load_demo():
     os.makedirs(tmp, exist_ok=True)
     generate_all_sample_data(tmp)
     return run_full_analysis(tmp), tmp
+
+
+@st.cache_data(show_spinner="Importing Sprout Social data...")
+def load_sprout(sprout_dir: str):
+    from sprout_import import import_sprout_directory
+    from analysis import run_full_analysis
+    os.makedirs(SPROUT_OUTPUT_DIR, exist_ok=True)
+    files, stats = import_sprout_directory(sprout_dir, SPROUT_OUTPUT_DIR)
+    results = run_full_analysis(SPROUT_OUTPUT_DIR)
+    return results, SPROUT_OUTPUT_DIR, stats
 
 
 @st.cache_data(show_spinner="Analyzing your data...")
@@ -65,10 +79,27 @@ def results_to_df(results: dict) -> pd.DataFrame:
 
 st.logo("logo.png")
 
-data_mode = st.sidebar.radio("Data source", ["Demo Data", "Custom CSV Folder"], index=0)
+# Check if Sprout Social CSVs are present
+sprout_csvs = [f for f in os.listdir(SPROUT_INPUT_DIR) if f.lower().endswith(".csv")] \
+    if os.path.isdir(SPROUT_INPUT_DIR) else []
+has_sprout = len(sprout_csvs) > 0
+
+data_options = ["Demo Data", "Custom CSV Folder"]
+if has_sprout:
+    data_options.insert(1, "Sprout Social Import")
+
+data_mode = st.sidebar.radio("Data source", data_options, index=0)
 
 if data_mode == "Demo Data":
     results, data_dir = load_demo()
+elif data_mode == "Sprout Social Import":
+    results, data_dir, sprout_stats = load_sprout(SPROUT_INPUT_DIR)
+    st.sidebar.success(
+        f"Imported {sprout_stats['total_posts']} posts from "
+        f"{sprout_stats['files_imported']} file(s)"
+    )
+    if sprout_stats["brands_found"]:
+        st.sidebar.caption(f"Brands: {', '.join(sprout_stats['brands_found'])}")
 else:
     data_dir = st.sidebar.text_input("Path to CSV folder")
     if not data_dir or not os.path.isdir(data_dir):
