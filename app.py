@@ -63,8 +63,7 @@ def results_to_df(results: dict) -> pd.DataFrame:
 
 # ── Load Data ─────────────────────────────────────────────────────────
 
-st.sidebar.image("logo.png", use_container_width=True)
-st.sidebar.markdown("####  Social Intel")
+st.logo("logo.png")
 
 data_mode = st.sidebar.radio("Data source", ["Demo Data", "Custom CSV Folder"], index=0)
 
