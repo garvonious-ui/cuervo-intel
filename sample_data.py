@@ -18,125 +18,160 @@ from templates import (
 random.seed(42)
 
 # ─── BRAND PERSONALITY PROFILES ───────────────────────────────────────
-# These define how each brand behaves on social media for realistic sample data.
+# Follower counts and strategies based on real social media research (Feb 2026).
+# Posts-per-month values are inflated above real-world rates to generate
+# enough demo data (100+ posts per brand); all other fields reflect actual
+# brand positioning, content strategies, and relative engagement performance.
 
 BRAND_PROFILES = {
     "Jose Cuervo": {
-        "ig_followers": 485_000,
-        "tt_followers": 312_000,
+        # @josecuervotequila (US) — 112K IG followers (confirmed).
+        # World's #1 selling tequila since 1795. Heritage brand, moderate digital presence.
+        # "Tradicional Mural Project" experiential marketing; cultural moment activations.
+        "ig_followers": 112_000,
+        "tt_followers": 28_000,
         "ig_posts_per_month": 55,
         "tt_posts_per_month": 50,
         "ig_base_er": 1.8,
-        "tt_base_er": 3.2,
-        "themes": ["Cocktail Recipe", "Lifestyle/Aspirational", "Cultural Moment / Holiday",
-                    "Product Showcase", "Meme / Humor", "Creator Collab / UGC",
-                    "Music / Party", "Giveaway / Promo"],
-        "theme_weights": [0.22, 0.18, 0.13, 0.18, 0.15, 0.05, 0.05, 0.04],
-        "visual_bias": ["Raw / UGC-style", "Mixed / Hybrid", "Polished / Studio"],
-        "tone_bias": ["Playful / Fun", "Casual / Conversational", "Bold / Edgy"],
-        "collab_rate": 0.12,
-        "avg_hashtags": 5,
+        "tt_base_er": 3.0,
+        "themes": ["Cocktail Recipe", "Cultural Moment / Holiday", "Product Showcase",
+                    "Lifestyle/Aspirational", "Meme / Humor", "Brand Heritage / Story",
+                    "Creator Collab / UGC", "Music / Party", "Giveaway / Promo"],
+        "theme_weights": [0.22, 0.15, 0.18, 0.13, 0.10, 0.08, 0.06, 0.05, 0.03],
+        "visual_bias": ["Mixed / Hybrid", "Polished / Studio", "Raw / UGC-style"],
+        "tone_bias": ["Playful / Fun", "Casual / Conversational", "Nostalgic / Heritage"],
+        "collab_rate": 0.08,
+        "avg_hashtags": 6,
         "caption_length_range": (15, 60),
-        "ig_post_type_weights": {"Reel": 0.50, "Carousel": 0.25, "Static Image": 0.25},
+        "ig_post_type_weights": {"Reel": 0.45, "Carousel": 0.25, "Static Image": 0.30},
     },
     "Patron": {
-        "ig_followers": 1_100_000,
-        "tt_followers": 520_000,
+        # @patron — ~350K IG followers (estimated). TikTok presence minimal (~2.5K).
+        # Ultra-premium positioning; first liquor brand with Instagram in-app ordering.
+        # "Agave Familia" influencer network; partnerships with Missy Elliott, Doja Cat.
+        # Education-focused content; polished studio visuals; cocktail artistry.
+        "ig_followers": 350_000,
+        "tt_followers": 2_500,
         "ig_posts_per_month": 58,
-        "tt_posts_per_month": 52,
-        "ig_base_er": 2.4,
-        "tt_base_er": 4.1,
-        "themes": ["Product Showcase", "Cocktail Recipe", "Lifestyle/Aspirational",
-                    "Behind the Scenes", "Education (Tequila 101)", "Creator Collab / UGC"],
-        "theme_weights": [0.20, 0.25, 0.15, 0.15, 0.10, 0.15],
-        "visual_bias": ["Polished / Studio", "Mixed / Hybrid"],
+        "tt_posts_per_month": 48,
+        "ig_base_er": 1.5,
+        "tt_base_er": 3.5,
+        "themes": ["Cocktail Recipe", "Product Showcase", "Education (Tequila 101)",
+                    "Behind the Scenes", "Lifestyle/Aspirational", "Creator Collab / UGC"],
+        "theme_weights": [0.25, 0.20, 0.15, 0.15, 0.15, 0.10],
+        "visual_bias": ["Polished / Studio", "Polished / Studio", "Mixed / Hybrid"],
         "tone_bias": ["Premium / Luxury", "Educational / Informative", "Aspirational / Lifestyle"],
-        "collab_rate": 0.22,
+        "collab_rate": 0.18,
         "avg_hashtags": 8,
         "caption_length_range": (30, 80),
-        "ig_post_type_weights": {"Reel": 0.55, "Carousel": 0.30, "Static Image": 0.15},
+        "ig_post_type_weights": {"Reel": 0.50, "Carousel": 0.30, "Static Image": 0.20},
     },
     "Don Julio": {
-        "ig_followers": 890_000,
-        "tt_followers": 445_000,
-        "ig_posts_per_month": 55,
-        "tt_posts_per_month": 50,
-        "ig_base_er": 2.1,
-        "tt_base_er": 3.8,
-        "themes": ["Product Showcase", "Lifestyle/Aspirational", "Behind the Scenes",
-                    "Brand Heritage / Story", "Event / Activation"],
-        "theme_weights": [0.25, 0.25, 0.15, 0.20, 0.15],
+        # @donjuliotequila — 459K IG followers (confirmed), 171 posts.
+        # #1 VIT score (62,800) among US spirits brands for creator marketing.
+        # Celebrity placement strategy (Kylie Jenner, @corporatenatalie).
+        # "Por Amor" heritage campaign; Diageo reported 35% tequila growth.
+        # Luxury positioning — 1942 bottle as social status symbol.
+        "ig_followers": 459_000,
+        "tt_followers": 180_000,
+        "ig_posts_per_month": 52,
+        "tt_posts_per_month": 55,
+        "ig_base_er": 2.2,
+        "tt_base_er": 4.5,
+        "themes": ["Product Showcase", "Lifestyle/Aspirational", "Brand Heritage / Story",
+                    "Creator Collab / UGC", "Event / Activation", "Cocktail Recipe"],
+        "theme_weights": [0.22, 0.20, 0.18, 0.18, 0.12, 0.10],
         "visual_bias": ["Polished / Studio", "Polished / Studio", "Mixed / Hybrid"],
         "tone_bias": ["Premium / Luxury", "Aspirational / Lifestyle", "Nostalgic / Heritage"],
-        "collab_rate": 0.18,
-        "avg_hashtags": 6,
+        "collab_rate": 0.28,
+        "avg_hashtags": 5,
         "caption_length_range": (25, 70),
         "ig_post_type_weights": {"Reel": 0.45, "Carousel": 0.25, "Static Image": 0.30},
     },
     "Casamigos": {
-        "ig_followers": 750_000,
-        "tt_followers": 680_000,
-        "ig_posts_per_month": 60,
-        "tt_posts_per_month": 58,
-        "ig_base_er": 3.1,
-        "tt_base_er": 5.5,
+        # @casamigos — ~310K IG followers (estimated from 225K in 2022 + growth).
+        # "Anything Goes with My Casamigos" 2025 campaign (agency: Accomplice).
+        # #HouseOfFriends UGC campaign; meme culture; whimsical/organic content.
+        # FIFA World Cup 2026 Official Tequila Supporter in North America.
+        # George Clooney co-founder; brand avoids over-polished content.
+        # Sales dipped 20.7% in 2024 despite strong social engagement.
+        "ig_followers": 310_000,
+        "tt_followers": 145_000,
+        "ig_posts_per_month": 56,
+        "tt_posts_per_month": 52,
+        "ig_base_er": 2.8,
+        "tt_base_er": 4.8,
         "themes": ["Lifestyle/Aspirational", "Meme / Humor", "Creator Collab / UGC",
                     "Music / Party", "Cocktail Recipe", "Cultural Moment / Holiday"],
         "theme_weights": [0.20, 0.20, 0.20, 0.15, 0.15, 0.10],
         "visual_bias": ["Raw / UGC-style", "Lo-fi / Authentic", "Mixed / Hybrid"],
         "tone_bias": ["Casual / Conversational", "Playful / Fun", "Humorous / Meme"],
-        "collab_rate": 0.35,
+        "collab_rate": 0.22,
         "avg_hashtags": 4,
         "caption_length_range": (8, 35),
-        "ig_post_type_weights": {"Reel": 0.65, "Carousel": 0.15, "Static Image": 0.20},
+        "ig_post_type_weights": {"Reel": 0.60, "Carousel": 0.15, "Static Image": 0.25},
     },
     "Espolon": {
-        "ig_followers": 280_000,
-        "tt_followers": 195_000,
-        "ig_posts_per_month": 52,
-        "tt_posts_per_month": 50,
-        "ig_base_er": 2.0,
-        "tt_base_er": 3.5,
+        # @espolontequila — 66K IG followers (confirmed), 360 posts.
+        # "To the Bone" first global campaign (2024); "Join the Revolution" identity.
+        # Skeleton art brand identity; LatinX PMP initiative with Mindshare.
+        # Double-digit growth for 10 consecutive years; top 3 premium tequila globally.
+        # Campari Group brand; strong cultural storytelling and Mexican heritage focus.
+        "ig_followers": 66_000,
+        "tt_followers": 15_000,
+        "ig_posts_per_month": 55,
+        "tt_posts_per_month": 48,
+        "ig_base_er": 1.6,
+        "tt_base_er": 2.8,
         "themes": ["Brand Heritage / Story", "Product Showcase", "Cocktail Recipe",
                     "Education (Tequila 101)", "Cultural Moment / Holiday"],
         "theme_weights": [0.25, 0.20, 0.25, 0.15, 0.15],
         "visual_bias": ["Animation / Motion Graphics", "Polished / Studio", "Mixed / Hybrid"],
         "tone_bias": ["Bold / Edgy", "Educational / Informative", "Casual / Conversational"],
-        "collab_rate": 0.10,
+        "collab_rate": 0.08,
         "avg_hashtags": 7,
         "caption_length_range": (20, 65),
         "ig_post_type_weights": {"Reel": 0.40, "Carousel": 0.30, "Static Image": 0.30},
     },
     "Teremana": {
-        "ig_followers": 620_000,
-        "tt_followers": 890_000,
+        # @teremana — 785K IG followers (confirmed); @teremanatequila on TikTok.
+        # Scored 36.5/40 (#4 overall) in Spirits Business social media ranking.
+        # Leverages Dwayne "The Rock" Johnson's 396M IG followers.
+        # #TeremanaTuesday campaign; "Guac on the Rock" promotion.
+        # 600K+ cases in first year; $3.5B brand valuation.
+        # Top 10 VIT score in creator marketing rankings.
+        "ig_followers": 785_000,
+        "tt_followers": 420_000,
         "ig_posts_per_month": 55,
-        "tt_posts_per_month": 55,
-        "ig_base_er": 2.8,
-        "tt_base_er": 6.2,
+        "tt_posts_per_month": 52,
+        "ig_base_er": 3.2,
+        "tt_base_er": 5.8,
         "themes": ["Creator Collab / UGC", "Cocktail Recipe", "Meme / Humor",
                     "Lifestyle/Aspirational", "Music / Party", "Giveaway / Promo"],
         "theme_weights": [0.25, 0.20, 0.20, 0.15, 0.10, 0.10],
         "visual_bias": ["Raw / UGC-style", "Lo-fi / Authentic"],
         "tone_bias": ["Casual / Conversational", "Playful / Fun", "Humorous / Meme"],
-        "collab_rate": 0.40,
-        "avg_hashtags": 3,
+        "collab_rate": 0.35,
+        "avg_hashtags": 4,
         "caption_length_range": (5, 30),
         "ig_post_type_weights": {"Reel": 0.70, "Carousel": 0.15, "Static Image": 0.15},
     },
     "1800 Tequila": {
-        "ig_followers": 410_000,
-        "tt_followers": 275_000,
+        # @1800tequila — 49K IG followers (confirmed).
+        # Owned by Becle (Jose Cuervo's parent company). Multiple regional accounts.
+        # Relatively modest social media presence; product-forward content.
+        "ig_followers": 49_000,
+        "tt_followers": 12_000,
         "ig_posts_per_month": 52,
         "tt_posts_per_month": 50,
-        "ig_base_er": 2.0,
-        "tt_base_er": 3.6,
+        "ig_base_er": 1.4,
+        "tt_base_er": 2.5,
         "themes": ["Product Showcase", "Cocktail Recipe", "Lifestyle/Aspirational",
                     "Cultural Moment / Holiday", "Music / Party", "Meme / Humor"],
-        "theme_weights": [0.25, 0.20, 0.20, 0.15, 0.10, 0.10],
+        "theme_weights": [0.25, 0.22, 0.18, 0.15, 0.10, 0.10],
         "visual_bias": ["Polished / Studio", "Mixed / Hybrid", "Raw / UGC-style"],
         "tone_bias": ["Bold / Edgy", "Casual / Conversational", "Playful / Fun"],
-        "collab_rate": 0.15,
+        "collab_rate": 0.10,
         "avg_hashtags": 5,
         "caption_length_range": (15, 55),
         "ig_post_type_weights": {"Reel": 0.50, "Carousel": 0.25, "Static Image": 0.25},
@@ -224,23 +259,25 @@ CAPTION_FRAGMENTS = {
 
 HASHTAG_POOLS = {
     "Jose Cuervo": ["#JoseCuervo", "#Cuervo", "#CuervoMargarita", "#HaveACuervoDay",
-                     "#MargaritaSeason", "#Tequila", "#TequilaCocktails", "#FridayVibes",
-                     "#CocktailRecipe", "#WeekendVibes", "#DrinkResponsibly"],
-    "Patron": ["#Patron", "#PatronTequila", "#SimplyPerfect", "#PatronMargarita",
-                "#PerfectMargarita", "#Tequila", "#CocktailArt", "#MixologyLife",
-                "#PremiumTequila", "#CraftCocktails", "#PatronPaloma"],
-    "Don Julio": ["#DonJulio", "#DonJulioTequila", "#DonJulio1942", "#LuxuryTequila",
-                   "#Tequila", "#ElevateYourSpirits", "#CocktailCulture", "#AgaveLove"],
-    "Casamigos": ["#Casamigos", "#CasaAmigos", "#CasaFriends", "#PartyStarter",
-                   "#Tequila", "#GoodVibes", "#NightOut", "#SquadGoals", "#WeekendMood"],
-    "Espolon": ["#Espolon", "#EspolonTequila", "#UnbridledSpirit", "#MexicanCulture",
-                 "#Tequila", "#TequilaLover", "#ArtOfTequila", "#CocktailRecipe",
-                 "#TequilaEducation"],
-    "Teremana": ["#Teremana", "#TeremanaTequila", "#TeremanaTime", "#RockTequila",
-                  "#Tequila", "#CleanTequila", "#SmallBatch", "#PartyTime",
+                     "#CuervoTradicional", "#MargaritaSeason", "#Tequila",
+                     "#TequilaCocktails", "#CocktailRecipe", "#DrinkResponsibly",
+                     "#Since1795"],
+    "Patron": ["#PatronTequila", "#Patron", "#SimplyPerfect", "#PatronMargarita",
+                "#AgaveFamilia", "#Remixology", "#Tequila", "#CocktailArt",
+                "#MixologyLife", "#PremiumTequila", "#PatronPaloma"],
+    "Don Julio": ["#DonJulio", "#DonJulioTequila", "#DonJulio1942", "#PorAmor",
+                   "#Tequila", "#LuxuryTequila", "#CocktailCulture", "#AgaveLove"],
+    "Casamigos": ["#Casamigos", "#HouseOfFriends", "#AnythingGoes", "#CasaAmigos",
+                   "#Tequila", "#GoodVibes", "#NightOut", "#SquadGoals",
+                   "#WeekendMood"],
+    "Espolon": ["#Espolon", "#EspolonTequila", "#ToTheBone", "#JoinTheRevolution",
+                 "#UnbridledSpirit", "#Tequila", "#TequilaLover", "#ArtOfTequila",
+                 "#MexicanCulture"],
+    "Teremana": ["#Teremana", "#TeremanaTequila", "#TeremanaTuesday", "#TeremanaTime",
+                  "#ManaTequila", "#Tequila", "#SmallBatch", "#PartyTime",
                   "#CocktailVibes"],
-    "1800 Tequila": ["#1800Tequila", "#1800", "#1800Cristalino", "#1800Reposado",
-                      "#Tequila", "#TequilaNight", "#SmoothSip", "#CocktailHour",
+    "1800 Tequila": ["#1800Tequila", "#1800", "#Essential1800", "#1800Cristalino",
+                      "#1800Reposado", "#Tequila", "#TequilaNight", "#CocktailHour",
                       "#NightLife"],
 }
 
@@ -451,22 +488,22 @@ def generate_sample_profiles(output_dir: str) -> str:
     ]
 
     bios = {
-        "Jose Cuervo": "The world's #1 tequila since 1795. 🥃 Drink responsibly. 21+",
-        "Patron": "Simply Perfect. Handcrafted tequila from Jalisco, Mexico.",
-        "Don Julio": "The tequila that started it all. Est. 1942. Drink responsibly.",
-        "Casamigos": "Brought to you by those who drink it. 🥂 21+",
-        "Espolon": "Born from the unbridled spirit of Mexico. Drink responsibly. 21+",
-        "Teremana": "Small batch tequila. Responsibly enjoyed. 21+ 🌵",
-        "1800 Tequila": "100% blue Weber agave tequila. Est. 1800. Drink smart. 21+",
+        "Jose Cuervo": "The world's #1 tequila since 1795. Drink responsibly. 21+",
+        "Patron": "Simply Perfect. Handcrafted ultra-premium tequila from the Highlands of Jalisco, Mexico.",
+        "Don Julio": "Our passion for tequila-making began in 1942. For Don Julio, it was always Por Amor. 21+",
+        "Casamigos": "Brought to you by those who drink it. House of Friends. 21+",
+        "Espolon": "Born from the unbridled spirit of Mexico. To the Bone. Drink responsibly. 21+",
+        "Teremana": "Small batch tequila crafted with Mana. @therock | Responsibly enjoyed. 21+",
+        "1800 Tequila": "100% blue Weber agave tequila since 1800. Crafted in Mexico. 21+",
     }
 
     handles = {
-        "Jose Cuervo": {"Instagram": "@josecuervo", "TikTok": "@josecuervo"},
+        "Jose Cuervo": {"Instagram": "@josecuervotequila", "TikTok": "@josecuervo"},
         "Patron": {"Instagram": "@patron", "TikTok": "@patron"},
         "Don Julio": {"Instagram": "@donjuliotequila", "TikTok": "@donjulio"},
         "Casamigos": {"Instagram": "@casamigos", "TikTok": "@casamigos"},
         "Espolon": {"Instagram": "@espolontequila", "TikTok": "@espolontequila"},
-        "Teremana": {"Instagram": "@teaborhardstuff", "TikTok": "@teremana"},
+        "Teremana": {"Instagram": "@teremana", "TikTok": "@teremanatequila"},
         "1800 Tequila": {"Instagram": "@1800tequila", "TikTok": "@1800tequila"},
     }
 
