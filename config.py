@@ -122,7 +122,7 @@ CUSTOM_CSS = """
 
 PAGE_CONFIG = dict(
     page_title="Poplife | Cuervo Social Intel",
-    page_icon="logo.png",
+    page_icon="favicon.png",
     layout="wide",
     initial_sidebar_state="expanded",
 )
