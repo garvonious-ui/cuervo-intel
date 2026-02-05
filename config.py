@@ -93,6 +93,17 @@ CUSTOM_CSS = """
         background-color: #1b8fd4;
     }
 
+    /* Sidebar inputs — darker than sidebar bg (#333333) */
+    [data-testid="stSidebar"] [data-baseweb="select"],
+    [data-testid="stSidebar"] [data-baseweb="input"] {
+        background-color: #252525;
+    }
+    [data-testid="stSidebar"] [data-baseweb="select"] div[class*="ValueContainer"],
+    [data-testid="stSidebar"] [data-baseweb="select"] div[class*="control"],
+    [data-testid="stSidebar"] [data-baseweb="select"] > div {
+        background-color: #252525 !important;
+    }
+
     /* Selectbox / multiselect on main area */
     .stSelectbox label, .stMultiSelect label { font-weight: 600; color: #333333; }
 
