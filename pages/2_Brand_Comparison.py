@@ -5,8 +5,10 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from config import BRAND_COLORS, CHART_TEMPLATE, CHART_FONT, BRAND_ORDER
+from config import BRAND_COLORS, CHART_TEMPLATE, CHART_FONT, BRAND_ORDER, CUSTOM_CSS
 
+st.logo("logo.png")
+st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 st.header("Brand Comparison")
 
 if "results" not in st.session_state:

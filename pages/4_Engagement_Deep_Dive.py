@@ -6,8 +6,10 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-from config import BRAND_COLORS, CHART_TEMPLATE, CHART_FONT, BRAND_ORDER
+from config import BRAND_COLORS, CHART_TEMPLATE, CHART_FONT, BRAND_ORDER, CUSTOM_CSS
 
+st.logo("logo.png")
+st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 st.header("Engagement Deep Dive")
 
 if "results" not in st.session_state:

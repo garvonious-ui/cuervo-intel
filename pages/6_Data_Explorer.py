@@ -8,8 +8,10 @@ from datetime import datetime
 import pandas as pd
 import streamlit as st
 
-from config import BRAND_ORDER
+from config import BRAND_ORDER, CUSTOM_CSS
 
+st.logo("logo.png")
+st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 st.header("Data Explorer")
 
 if "results" not in st.session_state:
