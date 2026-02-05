@@ -103,10 +103,13 @@ CUSTOM_CSS = """
     [data-testid="stSidebar"] [data-baseweb="select"] > div {
         background-color: #252525 !important;
     }
-    /* Tag/chip text inside sidebar multiselects */
+    /* Tag/chip text and close button inside sidebar multiselects */
     [data-testid="stSidebar"] [data-baseweb="tag"] span,
-    [data-testid="stSidebar"] [data-baseweb="tag"] {
+    [data-testid="stSidebar"] [data-baseweb="tag"],
+    [data-testid="stSidebar"] [data-baseweb="tag"] svg,
+    [data-testid="stSidebar"] [data-baseweb="tag"] [role="presentation"] {
         color: #333333 !important;
+        fill: #333333 !important;
     }
 
     /* Selectbox / multiselect on main area */
