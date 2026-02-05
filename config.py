@@ -103,6 +103,11 @@ CUSTOM_CSS = """
     [data-testid="stSidebar"] [data-baseweb="select"] > div {
         background-color: #252525 !important;
     }
+    /* Tag/chip text inside sidebar multiselects */
+    [data-testid="stSidebar"] [data-baseweb="tag"] span,
+    [data-testid="stSidebar"] [data-baseweb="tag"] {
+        color: #333333 !important;
+    }
 
     /* Selectbox / multiselect on main area */
     .stSelectbox label, .stMultiSelect label { font-weight: 600; color: #333333; }
