@@ -39,7 +39,7 @@ for brand in order:
 ht_df = pd.DataFrame(ht_rows)
 st.dataframe(
     ht_df.style.apply(
-        lambda row: ["background-color: #FFF8E1" if row["Brand"] == "Jose Cuervo" else "" for _ in row],
+        lambda row: ["background-color: #FDEBD6" if row["Brand"] == "Jose Cuervo" else "" for _ in row],
         axis=1,
     ).format({"Avg/Post": "{:.1f}", "Branded %": "{:.1f}%"}),
     use_container_width=True, hide_index=True,
@@ -85,7 +85,7 @@ for i, brand in enumerate(order):
                 "bar": {"color": BRAND_COLORS.get(brand, "#888")},
                 "steps": [
                     {"range": [0, 15], "color": "#FFCDD2"},
-                    {"range": [15, 30], "color": "#FFF9C4"},
+                    {"range": [15, 30], "color": "#FDEBD6"},
                     {"range": [30, 50], "color": "#C8E6C9"},
                 ],
             },
@@ -104,7 +104,7 @@ for brand in order:
 
 cdf = pd.DataFrame(collab_rows)
 fig_collab = px.bar(cdf, x="brand", y="er", color="type", barmode="group",
-                    color_discrete_map={"Collab": "#43A047", "Non-Collab": "#E0E0E0"},
+                    color_discrete_map={"Collab": "#F8C090", "Non-Collab": "#D9D3CC"},
                     category_orders={"brand": order},
                     labels={"er": "Avg ER %", "brand": "", "type": ""},
                     template=CHART_TEMPLATE)
@@ -131,7 +131,7 @@ for brand in order:
 cr_df = pd.DataFrame(cr_rows)
 st.dataframe(
     cr_df.style.apply(
-        lambda row: ["background-color: #FFF8E1" if row["Brand"] == "Jose Cuervo" else "" for _ in row],
+        lambda row: ["background-color: #FDEBD6" if row["Brand"] == "Jose Cuervo" else "" for _ in row],
         axis=1,
     ).map(
         lambda v: "color: #2E7D32; font-weight:bold" if isinstance(v, (int, float)) and v > 0.5 else

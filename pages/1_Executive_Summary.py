@@ -58,7 +58,7 @@ er_data = er_data[er_data["brand"].isin(sel_brands)]
 order = [b for b in BRAND_ORDER if b in sel_brands]
 
 fig = px.bar(er_data, x="brand", y="engagement_rate", color="platform",
-             barmode="group", color_discrete_map={"Instagram": "#C13584", "TikTok": "#EE1D52"},
+             barmode="group", color_discrete_map={"Instagram": "#D4956A", "TikTok": "#2ea3f2"},
              category_orders={"brand": order},
              labels={"engagement_rate": "Avg ER %", "brand": "", "platform": "Platform"},
              template=CHART_TEMPLATE)
@@ -83,7 +83,7 @@ for brand in sel_brands:
 freq_df = pd.DataFrame(freq_rows)
 
 fig2 = px.bar(freq_df, x="brand", y="posts_per_week", color="platform",
-              barmode="group", color_discrete_map={"Instagram": "#C13584", "TikTok": "#EE1D52"},
+              barmode="group", color_discrete_map={"Instagram": "#D4956A", "TikTok": "#2ea3f2"},
               category_orders={"brand": order},
               labels={"posts_per_week": "Posts / Week", "brand": ""},
               template=CHART_TEMPLATE)

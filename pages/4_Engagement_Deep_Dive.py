@@ -96,7 +96,7 @@ top_df["engagement_rate"] = top_df["engagement_rate"].round(2)
 
 st.dataframe(
     top_df.style.map(
-        lambda v: "background-color: #FFF8E1" if v == "Jose Cuervo" else "",
+        lambda v: "background-color: #FDEBD6" if v == "Jose Cuervo" else "",
         subset=["brand"],
     ),
     use_container_width=True,

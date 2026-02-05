@@ -63,7 +63,8 @@ def results_to_df(results: dict) -> pd.DataFrame:
 
 # ── Load Data ─────────────────────────────────────────────────────────
 
-st.sidebar.title("\U0001F943 Cuervo Intel")
+st.sidebar.image("logo.png", use_container_width=True)
+st.sidebar.markdown("####  Social Intel")
 
 data_mode = st.sidebar.radio("Data source", ["Demo Data", "Custom CSV Folder"], index=0)
 
@@ -124,9 +125,13 @@ st.session_state["data_dir"] = data_dir
 
 # ── Home Page ─────────────────────────────────────────────────────────
 
-st.title("Jose Cuervo — Social Media Intelligence")
-st.caption(f"Competitive analysis across {len(BRANDS)} tequila brands on Instagram & TikTok  "
-           f"|  {len(df)} posts analyzed  |  Gen Z (21-24) strategy focus")
+logo_col, title_col = st.columns([1, 5])
+with logo_col:
+    st.image("logo.png", width=140)
+with title_col:
+    st.title("Jose Cuervo — Social Media Intelligence")
+    st.caption(f"Competitive analysis across {len(BRANDS)} tequila brands on Instagram & TikTok  "
+               f"|  {len(df)} posts analyzed  |  Gen Z (21-24) strategy focus")
 
 st.markdown("---")
 

@@ -128,7 +128,7 @@ if "engagement_rate" in show_df.columns:
 
 st.dataframe(
     show_df.style.apply(
-        lambda row: ["background-color: #FFF8E1" if row.get("brand") == "Jose Cuervo" else "" for _ in row],
+        lambda row: ["background-color: #FDEBD6" if row.get("brand") == "Jose Cuervo" else "" for _ in row],
         axis=1,
     ),
     use_container_width=True,

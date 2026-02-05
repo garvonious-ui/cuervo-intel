@@ -61,7 +61,7 @@ comp_df = pd.DataFrame(rows)
 
 
 def highlight_cuervo(row):
-    return ["background-color: #FFF8E1" if row["Brand"] == "Jose Cuervo" else "" for _ in row]
+    return ["background-color: #FDEBD6" if row["Brand"] == "Jose Cuervo" else "" for _ in row]
 
 
 def color_er(val):
@@ -69,7 +69,7 @@ def color_er(val):
         if val >= 4:
             return "background-color: #C8E6C9"
         elif val >= 2.5:
-            return "background-color: #FFF9C4"
+            return "background-color: #FDEBD6"
         elif val > 0:
             return "background-color: #FFCDD2"
     return ""

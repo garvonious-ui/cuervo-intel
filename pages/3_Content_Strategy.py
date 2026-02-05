@@ -99,7 +99,7 @@ cta_er = cta_data.groupby(["cta_type", "platform"])["engagement_rate"].mean().re
 if len(cta_er):
     fig_cta = px.bar(cta_er, x="cta_type", y="engagement_rate", color="platform",
                      barmode="group",
-                     color_discrete_map={"Instagram": "#C13584", "TikTok": "#EE1D52"},
+                     color_discrete_map={"Instagram": "#D4956A", "TikTok": "#2ea3f2"},
                      labels={"engagement_rate": "Avg ER %", "cta_type": "", "platform": "Platform"},
                      template=CHART_TEMPLATE)
     fig_cta.update_layout(font=CHART_FONT, height=400, xaxis_tickangle=-30,
