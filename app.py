@@ -126,7 +126,7 @@ st.session_state["data_dir"] = data_dir
 
 logo_col, title_col = st.columns([1, 5])
 with logo_col:
-    st.image("logo.png", width=140)
+    st.image("cuervo_logo.png", width=140)
 with title_col:
     st.title("Jose Cuervo — Social Media Intelligence")
     st.caption(f"Competitive analysis across {len(BRANDS)} tequila brands on Instagram & TikTok  "
