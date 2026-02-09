@@ -7,6 +7,16 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from config import BRAND_COLORS, CHART_TEMPLATE, CHART_FONT, BRAND_ORDER, PRIORITY_COLORS, CUSTOM_CSS
+from autostrat_loader import (
+    has_autostrat_data, get_all_how_to_win, get_all_audience_profiles,
+    get_all_content_trends, get_all_creator_archetypes,
+    get_all_strategic_actions, get_all_sponsorship_suggestions,
+)
+from autostrat_components import (
+    render_section_label, render_territory_cards, render_nopd_cards,
+    render_narrative_card, render_creator_archetype,
+    render_sponsorship_card, render_verbatim_quotes,
+)
 
 st.logo("logo.png")
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
@@ -270,3 +280,153 @@ with col_o:
     st.markdown(f"- Instagram Reels at only **{reel_pct:.0f}%** of IG content — room to grow to 60%+")
     st.markdown(f"- Authenticity score ({ugc_score:.0f}% UGC-style) can be raised with creator partnerships")
     st.markdown(f"- Brand heritage is a unique differentiator vs newer brands (Casamigos, Teremana)")
+
+# ══════════════════════════════════════════════════════════════════════
+# AUTOSTRAT QUALITATIVE INTELLIGENCE
+# ══════════════════════════════════════════════════════════════════════
+
+st.markdown("---")
+
+autostrat = st.session_state.get("autostrat", {})
+_has_autostrat = has_autostrat_data(autostrat)
+
+if _has_autostrat:
+    st.header("Qualitative Intelligence")
+    st.caption("Audience psychographics, strategic territories, and partnership opportunities from autostrat.ai reports")
+
+    # ── 1. Winning Territories ────────────────────────────────────────
+    all_htw = get_all_how_to_win(autostrat)
+    if all_htw:
+        render_section_label("Winning Territories")
+        st.caption("Strategic territories identified across all autostrat reports")
+
+        # Consolidate and deduplicate territories
+        all_territories = []
+        for entry in all_htw:
+            for territory in entry["how_to_win"].get("territories", []):
+                is_dupe = any(territory[:40] == existing[:40] for existing in all_territories)
+                if not is_dupe:
+                    all_territories.append(territory)
+
+        render_territory_cards(all_territories[:8])
+
+        # Strategic summaries
+        summaries = [(e, e["how_to_win"]["summary"]) for e in all_htw if e["how_to_win"].get("summary")]
+        if summaries:
+            with st.expander("Strategic Summaries by Report"):
+                for entry, summary in summaries:
+                    source = f"{entry['source_label']} — {entry['identifier']}"
+                    st.markdown(f"**{source}:** *{summary}*")
+
+        # Audience verbatims
+        all_verbatims = []
+        for entry in all_htw:
+            all_verbatims.extend(entry["how_to_win"].get("audience_verbatims", []))
+        if all_verbatims:
+            unique_verbatims = list(dict.fromkeys(all_verbatims))
+            with st.expander(f"Audience Verbatims ({len(unique_verbatims)})"):
+                render_verbatim_quotes(unique_verbatims, max_quotes=10)
+
+        st.markdown("---")
+
+    # ── 2. Audience Psychographics (NOPD) ─────────────────────────────
+    all_profiles = get_all_audience_profiles(autostrat)
+    if all_profiles:
+        render_section_label("Audience Psychographics")
+        st.caption("NOPD profiles from autostrat reports — understand who Cuervo needs to reach")
+
+        identifiers = list(dict.fromkeys(p["identifier"] for p in all_profiles))
+        identifier_labels = {ident: ident.replace("_", " ").title() for ident in identifiers}
+
+        selected = st.selectbox("Select audience profile", identifiers,
+                                format_func=lambda x: identifier_labels[x],
+                                key="cuervo_nopd_profile")
+
+        matching = [p for p in all_profiles if p["identifier"] == selected]
+        if matching:
+            ap = matching[0]["audience_profile"]
+            if ap.get("summary"):
+                st.markdown(ap["summary"])
+            render_nopd_cards(ap)
+
+        st.markdown("---")
+
+    # ── 3. Content Trends ─────────────────────────────────────────────
+    all_trends = get_all_content_trends(autostrat)
+    if all_trends:
+        render_section_label("Content Trends")
+        st.caption("Trending content formats and themes from conversation analysis")
+
+        cols = st.columns(2)
+        for i, trend in enumerate(all_trends[:6]):
+            with cols[i % 2]:
+                render_narrative_card(
+                    trend.get("trend", f"Trend {i+1}"),
+                    trend.get("description", ""),
+                    accent_color="#F8C090",
+                )
+
+        st.markdown("---")
+
+    # ── 4. Creator Archetypes ─────────────────────────────────────────
+    all_archetypes = get_all_creator_archetypes(autostrat)
+    if all_archetypes:
+        render_section_label("Creator Archetypes to Target")
+        st.caption("Types of creators performing well in relevant conversation spaces")
+
+        arch_cols = st.columns(min(len(all_archetypes), 3))
+        for i, arch in enumerate(all_archetypes[:6]):
+            with arch_cols[i % len(arch_cols)]:
+                render_creator_archetype(arch)
+
+        st.markdown("---")
+
+    # ── 5. Strategic Opportunities & Risks ────────────────────────────
+    all_actions = get_all_strategic_actions(autostrat)
+    if all_actions:
+        render_section_label("Strategic Opportunities & Risks")
+
+        all_opps = []
+        all_gaps = []
+        all_strategic = []
+        for entry in all_actions:
+            all_opps.extend(entry.get("opportunities", []))
+            all_gaps.extend(entry.get("gaps_risks_unmet_needs", []))
+            all_strategic.extend(entry.get("strategic_actions", []))
+
+        col_op, col_gap = st.columns(2)
+        with col_op:
+            if all_opps:
+                st.markdown("**Opportunities**")
+                for opp in all_opps[:5]:
+                    st.success(opp)
+        with col_gap:
+            if all_gaps:
+                st.markdown("**Gaps, Risks & Unmet Needs**")
+                for gap in all_gaps[:5]:
+                    st.error(gap)
+
+        if all_strategic:
+            with st.expander(f"Strategic Actions ({len(all_strategic)})"):
+                for i, action in enumerate(all_strategic[:8], 1):
+                    st.markdown(f"**{i}.** {action}")
+
+        st.markdown("---")
+
+    # ── 6. Partnership Opportunities ──────────────────────────────────
+    all_suggestions = get_all_sponsorship_suggestions(autostrat)
+    if all_suggestions:
+        render_section_label("Partnership Opportunities")
+        st.caption("Sponsorship and partnership recommendations from profile analysis")
+
+        for entry in all_suggestions:
+            source = f"{entry['source_label']} — {entry['identifier'].replace('_', ' ').title()}"
+            st.markdown(f"**From: {source}**")
+            sug_cols = st.columns(min(len(entry["suggestions"]), 2))
+            for i, sug in enumerate(entry["suggestions"]):
+                with sug_cols[i % len(sug_cols)]:
+                    render_sponsorship_card(sug)
+            st.markdown("")
+
+else:
+    st.info("No autostrat qualitative intelligence loaded. Import autostrat PDF reports from the home page to enrich this strategy view with audience psychographics, winning territories, and partnership opportunities.")
