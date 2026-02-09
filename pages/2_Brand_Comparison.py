@@ -105,33 +105,46 @@ st.plotly_chart(fig, use_container_width=True)
 
 # ── Followers vs ER scatter ───────────────────────────────────────────
 
-st.subheader("Followers vs Engagement Rate")
+st.subheader("Followers & Engagement Rate by Brand")
 
-scatter_rows = []
+fe_rows = []
 for brand in sel_brands:
     for plat in st.session_state["sel_platforms"]:
         bdf = df[(df["brand"] == brand) & (df["platform"] == plat)]
         if len(bdf) == 0:
             continue
         eng = results["engagement"].get(brand, {}).get(plat, {})
-        scatter_rows.append({
-            "brand": brand,
-            "platform": plat,
-            "followers": eng.get("followers", 0),
-            "avg_er": bdf["engagement_rate"].mean(),
-            "posts": len(bdf),
-        })
+        followers = eng.get("followers", 0)
+        avg_er = bdf["engagement_rate"].mean()
+        if followers > 0 and avg_er > 0:
+            fe_rows.append({
+                "brand": brand,
+                "platform": plat,
+                "followers": followers,
+                "avg_er": round(avg_er, 2),
+            })
 
-sdf = pd.DataFrame(scatter_rows)
-if len(sdf):
-    fig2 = px.scatter(sdf, x="followers", y="avg_er", color="brand", symbol="platform",
-                      size="posts", size_max=30,
-                      color_discrete_map=BRAND_COLORS,
-                      labels={"followers": "Followers", "avg_er": "Avg ER %",
-                              "posts": "Post Count"},
-                      template=CHART_TEMPLATE, hover_name="brand")
-    fig2.update_layout(font=CHART_FONT, height=450)
-    # Quadrant lines
-    fig2.add_hline(y=sdf["avg_er"].median(), line_dash="dot", line_color="#ccc")
-    fig2.add_vline(x=sdf["followers"].median(), line_dash="dot", line_color="#ccc")
-    st.plotly_chart(fig2, use_container_width=True)
+fe_df = pd.DataFrame(fe_rows)
+if len(fe_df):
+    col_f, col_e = st.columns(2)
+    with col_f:
+        st.markdown("**Followers**")
+        fig_fol = px.bar(fe_df, x="followers", y="brand", color="platform", orientation="h",
+                         barmode="group",
+                         color_discrete_map={"Instagram": "#D4956A", "TikTok": "#2ea3f2"},
+                         category_orders={"brand": order},
+                         labels={"followers": "Followers", "brand": ""},
+                         template=CHART_TEMPLATE, text_auto=".3s")
+        fig_fol.update_layout(font=CHART_FONT, height=400, showlegend=False)
+        st.plotly_chart(fig_fol, use_container_width=True)
+    with col_e:
+        st.markdown("**Avg Engagement Rate**")
+        fig_er = px.bar(fe_df, x="avg_er", y="brand", color="platform", orientation="h",
+                        barmode="group",
+                        color_discrete_map={"Instagram": "#D4956A", "TikTok": "#2ea3f2"},
+                        category_orders={"brand": order},
+                        labels={"avg_er": "Avg ER %", "brand": ""},
+                        template=CHART_TEMPLATE, text_auto=".2f")
+        fig_er.update_layout(font=CHART_FONT, height=400,
+                             legend=dict(orientation="h", y=1.12))
+        st.plotly_chart(fig_er, use_container_width=True)

@@ -79,7 +79,7 @@ def results_to_df(results: dict) -> pd.DataFrame:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).astype(int)
     if "engagement_rate" in df.columns:
-        df["engagement_rate"] = pd.to_numeric(df["engagement_rate"], errors="coerce").fillna(0.0)
+        df["engagement_rate"] = pd.to_numeric(df["engagement_rate"], errors="coerce")
     if "post_date" in df.columns:
         df["post_date"] = pd.to_datetime(df["post_date"], errors="coerce")
     if "post_hour" in df.columns:
@@ -183,9 +183,10 @@ st.markdown("---")
 c1, c2, c3, c4 = st.columns(4)
 
 cuervo_posts = filtered_df[filtered_df["brand"] == "Jose Cuervo"]
-all_ers = filtered_df.groupby("brand")["engagement_rate"].mean()
+all_ers = filtered_df.groupby("brand")["engagement_rate"].mean().dropna()
 nonzero_ers = all_ers[all_ers > 0]
 cuervo_er = all_ers.get("Jose Cuervo", 0)
+cuervo_er = 0 if pd.isna(cuervo_er) else cuervo_er
 cat_avg_er = nonzero_ers.mean() if len(nonzero_ers) else 0
 best_brand = nonzero_ers.idxmax() if len(nonzero_ers) else "N/A"
 best_er = nonzero_ers.max() if len(nonzero_ers) else 0

@@ -98,50 +98,50 @@ st.plotly_chart(fig2, use_container_width=True)
 
 # ── Radar chart ───────────────────────────────────────────────────────
 
-st.subheader("Competitive Radar — Cuervo vs Top 2 Competitors")
+st.subheader("Competitive Comparison — Cuervo vs Top 2 Competitors")
 
 # Pick top 2 competitors by ER
 comp_avg_er = df[df["brand"] != "Jose Cuervo"].groupby("brand")["engagement_rate"].mean()
+comp_avg_er = comp_avg_er[comp_avg_er > 0]
 top2 = comp_avg_er.nlargest(2).index.tolist() if len(comp_avg_er) >= 2 else comp_avg_er.index.tolist()
 radar_brands = ["Jose Cuervo"] + top2
 
 dimensions = ["Avg ER %", "Posts/Week", "Collab %", "Hashtags/Post", "Avg Likes"]
 
-# First pass: collect raw values from filtered_df for consistency
 raw_vals = {}
 for brand in radar_brands:
     brand_df = df[df["brand"] == brand]
     er = brand_df["engagement_rate"].mean() if len(brand_df) else 0
     er = 0 if pd.isna(er) else er
-    # Compute posts/week from filtered data (30 days ~ 4.3 weeks)
     ppw = round(len(brand_df) / 4.3, 1) if len(brand_df) else 0
-    # Compute collab % from filtered data
     collab_count = len(brand_df[brand_df["has_creator_collab"].astype(str).str.lower() == "yes"]) if len(brand_df) else 0
     collab_pct = round(collab_count / len(brand_df) * 100, 1) if len(brand_df) else 0
-    # Compute avg hashtags from filtered data
     htag_counts = brand_df["hashtags"].fillna("").apply(lambda x: len(x.split()) if x.strip() else 0)
     htags = round(htag_counts.mean(), 1) if len(htag_counts) else 0
     avg_likes = brand_df["likes"].mean() if len(brand_df) else 0
     avg_likes = 0 if pd.isna(avg_likes) else avg_likes
     raw_vals[brand] = [er, ppw, collab_pct, htags, avg_likes]
 
-# Normalize each dimension to 0-100 so radar is comparable
+# Normalize to 0-100 for comparable bars
 maxes = [max((raw_vals[b][i] for b in radar_brands), default=1) or 1 for i in range(5)]
 
-fig3 = go.Figure()
+comp_rows = []
 for brand in radar_brands:
-    normed = [raw_vals[brand][i] / maxes[i] * 100 for i in range(5)]
-    hover = [f"{dimensions[i]}: {raw_vals[brand][i]:.1f}" for i in range(5)]
-    fig3.add_trace(go.Scatterpolar(
-        r=normed + [normed[0]], theta=dimensions + [dimensions[0]],
-        fill="toself", name=brand, opacity=0.6,
-        line=dict(color=BRAND_COLORS.get(brand, "#888")),
-        hovertext=hover + [hover[0]], hoverinfo="text+name",
-    ))
+    for i, dim in enumerate(dimensions):
+        comp_rows.append({
+            "Brand": brand, "Metric": dim,
+            "Normalized": round(raw_vals[brand][i] / maxes[i] * 100, 1),
+            "Raw": round(raw_vals[brand][i], 1),
+        })
 
-fig3.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 100],
-                                               tickvals=[25, 50, 75, 100])),
-                   height=450, template=CHART_TEMPLATE, font=CHART_FONT,
+comp_df = pd.DataFrame(comp_rows)
+fig3 = px.bar(comp_df, x="Normalized", y="Metric", color="Brand", orientation="h",
+              barmode="group", color_discrete_map=BRAND_COLORS,
+              labels={"Normalized": "Score (0–100)", "Metric": ""},
+              template=CHART_TEMPLATE, text="Raw",
+              hover_data={"Raw": ":.1f", "Normalized": False})
+fig3.update_traces(texttemplate="%{text}", textposition="outside")
+fig3.update_layout(height=450, font=CHART_FONT,
                    legend=dict(orientation="h", y=-0.15))
 st.plotly_chart(fig3, use_container_width=True)
 

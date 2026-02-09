@@ -114,12 +114,16 @@ st.dataframe(
 
 # ── ER distribution violin ────────────────────────────────────────────
 
-st.subheader("Engagement Rate Distribution by Brand")
+st.subheader("Avg Engagement Rate by Brand")
 
-fig_v = px.violin(df[df["brand"].isin(sel_brands)], x="brand", y="engagement_rate",
-                  color="brand", color_discrete_map=BRAND_COLORS,
-                  category_orders={"brand": order}, box=True, points="outliers",
-                  labels={"engagement_rate": "ER %", "brand": ""},
-                  template=CHART_TEMPLATE)
+er_brand = (df[df["brand"].isin(sel_brands)]
+            .groupby("brand")["engagement_rate"].mean()
+            .reindex(order).fillna(0).reset_index())
+er_brand.columns = ["brand", "avg_er"]
+fig_v = px.bar(er_brand, x="avg_er", y="brand", orientation="h",
+               color="brand", color_discrete_map=BRAND_COLORS,
+               category_orders={"brand": order},
+               labels={"avg_er": "Avg ER %", "brand": ""},
+               template=CHART_TEMPLATE, text_auto=".2f")
 fig_v.update_layout(showlegend=False, font=CHART_FONT, height=420)
 st.plotly_chart(fig_v, use_container_width=True)

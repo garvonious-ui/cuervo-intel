@@ -93,29 +93,23 @@ def compute_genz_scores(brand):
 
     return [ugc_pct, collab_pct, humor_pct, video_pct, music_pct, comment_rate]
 
-dims = ["Authenticity\n(UGC %)", "Creator\nPartners %", "Humor/Meme\n%",
-        "Short-form\nVideo %", "Music\nIntegration %", "Community\nEngagement"]
+dims = ["Authenticity (UGC %)", "Creator Partners %", "Humor/Meme %",
+        "Short-form Video %", "Music Integration %", "Community Engagement"]
 
-# Collect raw scores and normalize to 0-100 for comparable radar
 raw_scores = {brand: compute_genz_scores(brand) for brand in compare_brands}
-maxes = [max((raw_scores[b][i] for b in compare_brands), default=1) or 1 for i in range(6)]
 
-fig_radar = go.Figure()
+genz_rows = []
 for brand in compare_brands:
-    normed = [raw_scores[brand][i] / maxes[i] * 100 for i in range(6)]
-    hover = [f"{dims[i]}: {raw_scores[brand][i]:.1f}" for i in range(6)]
-    fig_radar.add_trace(go.Scatterpolar(
-        r=normed + [normed[0]], theta=dims + [dims[0]],
-        fill="toself", name=brand, opacity=0.55,
-        line=dict(color=BRAND_COLORS.get(brand, "#888"), width=2),
-        hovertext=hover + [hover[0]], hoverinfo="text+name",
-    ))
+    for i, dim in enumerate(dims):
+        genz_rows.append({"Brand": brand, "Driver": dim, "Value": round(raw_scores[brand][i], 1)})
 
-fig_radar.update_layout(
-    polar=dict(radialaxis=dict(visible=True, range=[0, 100], tickvals=[25, 50, 75, 100])),
-    height=480, template=CHART_TEMPLATE, font=CHART_FONT,
-    legend=dict(orientation="h", y=-0.12),
-)
+genz_df = pd.DataFrame(genz_rows)
+fig_radar = px.bar(genz_df, x="Value", y="Driver", color="Brand", orientation="h",
+                   barmode="group", color_discrete_map=BRAND_COLORS,
+                   labels={"Value": "%", "Driver": ""},
+                   template=CHART_TEMPLATE, text_auto=".1f")
+fig_radar.update_layout(height=480, font=CHART_FONT,
+                        legend=dict(orientation="h", y=-0.12))
 st.plotly_chart(fig_radar, use_container_width=True)
 
 # ── Content gap analysis ──────────────────────────────────────────────

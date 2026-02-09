@@ -53,12 +53,16 @@ st.subheader("Caption Analysis")
 col1, col2 = st.columns(2)
 
 with col1:
-    st.markdown("**Caption Word Count by Brand**")
-    fig_box = px.box(df[df["brand"].isin(sel_brands)], x="brand", y="caption_word_count",
+    st.markdown("**Avg Caption Word Count by Brand**")
+    wc_data = (df[df["brand"].isin(sel_brands)]
+               .groupby("brand")["caption_word_count"].mean()
+               .reindex(order).fillna(0).reset_index())
+    wc_data.columns = ["brand", "avg_words"]
+    fig_box = px.bar(wc_data, x="avg_words", y="brand", orientation="h",
                      color="brand", color_discrete_map=BRAND_COLORS,
                      category_orders={"brand": order},
-                     labels={"caption_word_count": "Word Count", "brand": ""},
-                     template=CHART_TEMPLATE)
+                     labels={"avg_words": "Avg Word Count", "brand": ""},
+                     template=CHART_TEMPLATE, text_auto=".0f")
     fig_box.update_layout(showlegend=False, height=380, font=CHART_FONT)
     st.plotly_chart(fig_box, use_container_width=True)
 

@@ -139,9 +139,11 @@ def extract_hashtags(text: str) -> list[str]:
 
 
 def calc_engagement_rate(post: dict, follower_count: int) -> float:
-    """Calculate engagement rate as (total engagements / followers) * 100."""
+    """Calculate engagement rate as (total engagements / followers) * 100.
+    Returns float('nan') when follower count is unknown so these posts
+    are excluded from average calculations rather than dragging them to 0."""
     if follower_count == 0:
-        return 0.0
+        return float('nan')
     return (post["total_engagement"] / follower_count) * 100
 
 
@@ -216,9 +218,11 @@ def analyze_engagement(posts: list[dict], profiles: list[dict]) -> dict[str, Any
             for p in plat_posts:
                 p["engagement_rate"] = calc_engagement_rate(p, followers)
 
-            # Overall averages
+            # Overall averages (exclude NaN ER from brands with no follower data)
             if plat_posts:
-                avg_er = sum(p["engagement_rate"] for p in plat_posts) / len(plat_posts)
+                import math
+                valid_ers = [p["engagement_rate"] for p in plat_posts if not math.isnan(p["engagement_rate"])]
+                avg_er = sum(valid_ers) / len(valid_ers) if valid_ers else 0
                 avg_likes = sum(p["likes"] for p in plat_posts) / len(plat_posts)
                 avg_comments = sum(p["comments"] for p in plat_posts) / len(plat_posts)
                 avg_shares = sum(p["shares"] for p in plat_posts) / len(plat_posts)
@@ -226,17 +230,20 @@ def analyze_engagement(posts: list[dict], profiles: list[dict]) -> dict[str, Any
             else:
                 avg_er = avg_likes = avg_comments = avg_shares = avg_views = 0
 
-            # By content type
+            # By content type (exclude NaN ERs)
             type_engagement = defaultdict(list)
             for p in plat_posts:
-                type_engagement[p.get("post_type", "Unknown")].append(p["engagement_rate"])
+                er = p["engagement_rate"]
+                if not math.isnan(er):
+                    type_engagement[p.get("post_type", "Unknown")].append(er)
 
             type_avg = {}
             for ptype, rates in type_engagement.items():
                 type_avg[ptype] = round(sum(rates) / len(rates), 3) if rates else 0
 
-            # Top 10 posts by engagement rate
-            top_10 = sorted(plat_posts, key=lambda x: x["engagement_rate"], reverse=True)[:10]
+            # Top 10 posts by engagement rate (exclude NaN)
+            valid_posts = [p for p in plat_posts if not math.isnan(p["engagement_rate"])]
+            top_10 = sorted(valid_posts, key=lambda x: x["engagement_rate"], reverse=True)[:10]
             top_10_summary = [{
                 "url": p.get("post_url", ""),
                 "date": p.get("post_date", ""),
@@ -302,7 +309,9 @@ def analyze_captions(posts: list[dict]) -> dict[str, Any]:
 
             # Correlation: do longer captions get more engagement?
             if len(plat_posts) >= 5:
-                sorted_by_er = sorted(plat_posts, key=lambda x: x.get("engagement_rate", 0), reverse=True)
+                import math
+                er_posts = [p for p in plat_posts if not math.isnan(p.get("engagement_rate", 0))]
+                sorted_by_er = sorted(er_posts, key=lambda x: x.get("engagement_rate", 0), reverse=True) if er_posts else []
                 top_half = sorted_by_er[:len(sorted_by_er)//2]
                 bottom_half = sorted_by_er[len(sorted_by_er)//2:]
                 top_avg_words = sum(p["caption_word_count"] for p in top_half) / len(top_half) if top_half else 0
@@ -373,18 +382,20 @@ def analyze_content_themes(posts: list[dict]) -> dict[str, Any]:
         # Theme distribution
         themes = Counter(p.get("content_theme", "Unknown") for p in brand_posts if p.get("content_theme"))
 
-        # Theme performance (avg engagement rate)
+        # Theme performance (avg engagement rate, excluding NaN)
+        import math
         theme_engagement = defaultdict(list)
         for p in brand_posts:
             theme = p.get("content_theme", "Unknown")
-            if theme:
-                theme_engagement[theme].append(p.get("engagement_rate", 0))
+            er = p.get("engagement_rate", 0)
+            if theme and not math.isnan(er):
+                theme_engagement[theme].append(er)
 
         theme_performance = {}
         for theme, rates in theme_engagement.items():
             theme_performance[theme] = {
                 "count": len(rates),
-                "avg_engagement_rate": round(sum(rates) / len(rates), 3),
+                "avg_engagement_rate": round(sum(rates) / len(rates), 3) if rates else 0,
                 "pct_of_content": round(len(rates) / len(brand_posts) * 100, 1) if brand_posts else 0,
             }
 
@@ -420,9 +431,12 @@ def analyze_creators(posts: list[dict], creator_data: list[dict]) -> dict[str, A
         collab_count = len(collab_posts)
         total = len(brand_posts)
 
-        # Engagement comparison: collab vs. non-collab
-        collab_er = sum(p.get("engagement_rate", 0) for p in collab_posts) / collab_count if collab_count else 0
-        non_collab_er = sum(p.get("engagement_rate", 0) for p in non_collab_posts) / len(non_collab_posts) if non_collab_posts else 0
+        # Engagement comparison: collab vs. non-collab (exclude NaN ERs)
+        import math
+        collab_valid = [p.get("engagement_rate", 0) for p in collab_posts if not math.isnan(p.get("engagement_rate", 0))]
+        non_collab_valid = [p.get("engagement_rate", 0) for p in non_collab_posts if not math.isnan(p.get("engagement_rate", 0))]
+        collab_er = sum(collab_valid) / len(collab_valid) if collab_valid else 0
+        non_collab_er = sum(non_collab_valid) / len(non_collab_valid) if non_collab_valid else 0
 
         # Paid vs. organic collabs
         paid = sum(1 for p in collab_posts if p.get("is_paid_partnership", "").lower() in ("yes", "true", "1"))
