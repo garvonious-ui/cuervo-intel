@@ -1,0 +1,91 @@
+{
+  "report_type": "tiktok_profile",
+  "username": "",
+  "report_date": "",
+  "search_purpose": "",
+
+  "snapshot": {
+    "followers": 0,
+    "following": 0,
+    "avg_likes": 0,
+    "avg_comments": 0,
+    "avg_engagement_rate": 0
+  },
+
+  "creator_summary": {
+    "topline": "",
+    "common_themes": [],
+    "what_hits": "",
+    "what_misses": "",
+    "what_it_means": ""
+  },
+
+  "audience_profile": {
+    "summary": "",
+    "needs": [],
+    "objections": [],
+    "desires": [],
+    "pain_points": []
+  },
+
+  "sponsorships": {
+    "summary": "",
+    "integration_summary": "",
+    "categories": [],
+    "companies": []
+  },
+
+  "future_sponsorship_suggestions": [
+    {
+      "category": "",
+      "why_it_works": "",
+      "how_to_activate": []
+    }
+  ],
+
+  "statistics": {
+    "all_posts": {
+      "min_views": 0, "max_views": 0, "median_views": 0, "avg_views": 0,
+      "min_likes": 0, "max_likes": 0, "median_likes": 0, "avg_likes": 0,
+      "min_comments": 0, "max_comments": 0, "median_comments": 0, "avg_comments": 0
+    }
+  },
+
+  "engagement_analysis": {
+    "summary": ""
+  },
+
+  "posting_analysis": {
+    "summary": ""
+  },
+
+  "top_posts": {
+    "most_liked": {
+      "caption": "",
+      "engagement_rate": 0,
+      "likes": 0,
+      "comments": 0,
+      "link": ""
+    },
+    "most_comments": {
+      "caption": "",
+      "engagement_rate": 0,
+      "likes": 0,
+      "comments": 0,
+      "link": ""
+    },
+    "least_engaged": {
+      "caption": "",
+      "engagement_rate": 0,
+      "likes": 0,
+      "comments": 0,
+      "link": ""
+    }
+  },
+
+  "how_to_win": {
+    "summary": "",
+    "territories": [],
+    "audience_verbatims": []
+  }
+}

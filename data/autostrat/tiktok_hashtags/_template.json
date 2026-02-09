@@ -1,0 +1,89 @@
+{
+  "report_type": "tiktok_hashtag",
+  "hashtag": "",
+  "report_date": "",
+  "search_purpose": "",
+
+  "executive_summary": {
+    "overview": "",
+    "key_insights": []
+  },
+
+  "audience_profile": {
+    "summary": "",
+    "needs": [],
+    "objections": [],
+    "desires": [],
+    "pain_points": []
+  },
+
+  "hashtag_analysis": {
+    "summary": "",
+    "related_hashtags": [
+      {
+        "hashtag": "",
+        "themes": [],
+        "engagement_tactics": [],
+        "sentiment": "",
+        "motivations": []
+      }
+    ],
+    "key_findings": [],
+    "opportunities": [],
+    "gaps_risks_unmet_needs": [],
+    "strategic_actions": []
+  },
+
+  "interesting_conversations": [
+    {
+      "title": "",
+      "description": ""
+    }
+  ],
+
+  "conversation_map": {
+    "summary": "",
+    "relationship_analysis": "",
+    "overarching_patterns": [],
+    "action_opportunities": []
+  },
+
+  "content_trends": [
+    {
+      "trend": "",
+      "description": ""
+    }
+  ],
+
+  "brand_mentions": [
+    {
+      "brand": "",
+      "context": "",
+      "sentiment": "",
+      "reception": "",
+      "verbatims": []
+    }
+  ],
+
+  "in_market_campaigns": [
+    {
+      "campaign": "",
+      "description": ""
+    }
+  ],
+
+  "creator_archetypes": [
+    {
+      "archetype": "",
+      "description": "",
+      "appeal": "",
+      "examples": []
+    }
+  ],
+
+  "how_to_win": {
+    "summary": "",
+    "territories": [],
+    "audience_verbatims": []
+  }
+}

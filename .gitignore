@@ -5,3 +5,4 @@ cuervo_demo/
 cuervo_data/
 data/sprout_imported/
 *.xlsx
+data/autostrat/pdfs/*.pdf

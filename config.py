@@ -118,6 +118,10 @@ CUSTOM_CSS = """
 
     /* Expander headers */
     .streamlit-expanderHeader { font-weight: 600; color: #333333; }
+
+    /* Autostrat narrative content */
+    blockquote { border-left: 4px solid #F8C090; padding: 10px 16px; margin: 8px 0;
+                 background: #F3EDE6; border-radius: 0 8px 8px 0; }
 </style>
 """
 

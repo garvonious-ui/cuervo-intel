@@ -1,0 +1,66 @@
+{
+  "report_type": "tiktok_keywords",
+  "keyword": "",
+  "report_date": "",
+  "search_purpose": "",
+
+  "executive_summary": {
+    "overview": "",
+    "key_insights": []
+  },
+
+  "audience_profile": {
+    "summary": "",
+    "needs": [],
+    "objections": [],
+    "desires": [],
+    "pain_points": []
+  },
+
+  "keyword_analysis": {
+    "summary": "",
+    "related_topics": [],
+    "key_findings": [],
+    "opportunities": [],
+    "gaps_risks_unmet_needs": [],
+    "strategic_actions": []
+  },
+
+  "conversation_themes": [
+    {
+      "theme": "",
+      "description": "",
+      "sentiment": ""
+    }
+  ],
+
+  "content_trends": [
+    {
+      "trend": "",
+      "description": ""
+    }
+  ],
+
+  "brand_mentions": [
+    {
+      "brand": "",
+      "context": "",
+      "sentiment": "",
+      "verbatims": []
+    }
+  ],
+
+  "creator_archetypes": [
+    {
+      "archetype": "",
+      "description": "",
+      "appeal": ""
+    }
+  ],
+
+  "how_to_win": {
+    "summary": "",
+    "territories": [],
+    "audience_verbatims": []
+  }
+}

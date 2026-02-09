@@ -17,6 +17,13 @@ pages/
   5_Hashtag_&_Creator.py
   6_Data_Explorer.py
   7_Cuervo_Strategy.py  # Gen Z recommendations, 30-day action plan
+  8_Audience_Intelligence.py   # Psychographic profiles, NOPD comparison, sentiment
+  9_Conversation_&_Trends.py   # Hashtag/keyword analysis, content trends, archetypes
+  10_Strategic_Playbook.py     # Consolidated winning territories, sponsorship playbook
+  11_Profile_Deep_Dive.py      # Per-brand profile intelligence (IG & TikTok)
+autostrat_parser.py    # PDF-to-JSON parser for autostrat.ai report exports
+autostrat_loader.py    # JSON loader + cross-report extraction helpers
+autostrat_components.py # Reusable UI components for narrative content
 config.py              # Brand colors, BRAND_ORDER, CUSTOM_CSS (Poplife palette)
 templates.py           # BRANDS list, content themes, visual styles, tone options
 analysis.py            # Core analysis engine — run_full_analysis(data_dir)
@@ -24,6 +31,8 @@ sample_data.py         # Demo data generator with realistic brand profiles
 sprout_import.py       # Sprout Social CSV import adapter + AI content classifiers
 dashboard.py           # Excel report generator (download button)
 data/sprout/           # Drop Sprout Social CSV exports here
+data/autostrat/        # Parsed autostrat JSON reports (6 subdirectories)
+data/autostrat/pdfs/   # Drop autostrat PDF exports here for import
 ```
 
 ## Data Sources (3 modes, selected in sidebar)
@@ -59,6 +68,17 @@ data/sprout/           # Drop Sprout Social CSV exports here
 python3 -m streamlit run app.py
 # Opens at http://localhost:8501
 ```
+
+## Autostrat Intelligence (Pages 8-11)
+- Qualitative reports from autostrat.ai — audience psychographics, competitive positioning, content trends, creator archetypes, strategic recommendations
+- Reports are Google Slides exported as PDFs, parsed via `pdftotext` (poppler)
+- `st.session_state["autostrat"]` stores `{report_type: {identifier: report_data}}`
+- 6 report types: instagram_profiles, tiktok_profiles, instagram_hashtags, tiktok_hashtags, tiktok_keywords, google_news
+- Parser detects report type from title line, splits on section headings, extracts structured fields
+- NOPD framework: Needs (#2ea3f2), Objections (#D9534F), Desires (#5CB85C), Pain Points (#F8C090)
+- PDF import: sidebar button triggers parser, outputs JSON to correct subdirectory
+- Pages 8-11 gracefully handle missing data (show info messages, don't crash)
+- Python 3.9.6 compatibility: `from __future__ import annotations` in parser
 
 ## Pending / Known Issues
 - TikTok data not yet in Sprout exports — TikTok sections show zeros on Sprout import mode

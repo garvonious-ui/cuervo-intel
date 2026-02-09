@@ -167,6 +167,38 @@ st.session_state["sel_brands"] = sel_brands
 st.session_state["sel_platforms"] = sel_platforms
 st.session_state["data_dir"] = data_dir
 
+# ── Autostrat Intelligence ───────────────────────────────────────────
+from autostrat_loader import load_all_autostrat, has_autostrat_data
+
+autostrat = load_all_autostrat()
+st.session_state["autostrat"] = autostrat
+
+# PDF import sidebar section
+st.sidebar.markdown("---")
+st.sidebar.subheader("Autostrat Intel")
+if st.sidebar.button("Import PDFs"):
+    from autostrat_parser import parse_all_pdfs
+    import_results = parse_all_pdfs()
+    ok = [r for r in import_results if not r["error"]]
+    errors = [r for r in import_results if r["error"]]
+    if ok:
+        st.sidebar.success(f"Imported {len(ok)} report(s)")
+        for r in ok:
+            st.sidebar.caption(f"{r['report_type']}: {r['identifier']}")
+        autostrat = load_all_autostrat()
+        st.session_state["autostrat"] = autostrat
+    if errors:
+        for r in errors:
+            st.sidebar.error(f"{r['pdf']}: {r['error']}")
+    if not import_results:
+        st.sidebar.info("No PDFs found in data/autostrat/pdfs/")
+
+if has_autostrat_data(autostrat):
+    from autostrat_loader import get_report_counts
+    counts = get_report_counts(autostrat)
+    total = sum(counts.values())
+    st.sidebar.caption(f"{total} autostrat report(s) loaded")
+
 # ── Home Page ─────────────────────────────────────────────────────────
 
 logo_col, title_col = st.columns([1, 5])
@@ -213,6 +245,10 @@ st.markdown("""
 | **Hashtag & Creator** | Hashtag strategy, creator collab rates, collab engagement lift |
 | **Data Explorer** | Filter, sort, and query every post — download CSV or Excel |
 | **Cuervo Strategy** | Gen Z recommendations, content gaps, 30-day action plan |
+| **Audience Intelligence** | Psychographic profiles (NOPD), brand sentiment landscape |
+| **Conversation & Trends** | Hashtag/keyword analysis, content trends, creator archetypes |
+| **Strategic Playbook** | Consolidated winning territories, sponsorship opportunities |
+| **Profile Deep Dive** | Per-brand profile intelligence (Instagram & TikTok) |
 """)
 
 # Excel export

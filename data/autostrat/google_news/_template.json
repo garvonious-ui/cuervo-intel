@@ -1,0 +1,67 @@
+{
+  "report_type": "google_news",
+  "search_query": "",
+  "report_date": "",
+  "search_purpose": "",
+
+  "executive_summary": {
+    "overview": "",
+    "key_insights": []
+  },
+
+  "news_analysis": {
+    "summary": "",
+    "volume_trend": "",
+    "sentiment_breakdown": {
+      "positive_pct": 0,
+      "neutral_pct": 0,
+      "negative_pct": 0
+    },
+    "key_topics": [],
+    "key_findings": [],
+    "opportunities": [],
+    "risks": []
+  },
+
+  "top_stories": [
+    {
+      "headline": "",
+      "source": "",
+      "date": "",
+      "summary": "",
+      "sentiment": "",
+      "url": ""
+    }
+  ],
+
+  "brand_mentions": [
+    {
+      "brand": "",
+      "mention_count": 0,
+      "sentiment": "",
+      "context": ""
+    }
+  ],
+
+  "competitor_coverage": [
+    {
+      "competitor": "",
+      "mention_count": 0,
+      "key_stories": [],
+      "sentiment": ""
+    }
+  ],
+
+  "trending_narratives": [
+    {
+      "narrative": "",
+      "description": "",
+      "brands_involved": []
+    }
+  ],
+
+  "strategic_implications": {
+    "summary": "",
+    "action_items": []
+  }
+}
