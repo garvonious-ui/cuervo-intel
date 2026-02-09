@@ -51,7 +51,7 @@ def _sprout_fingerprint(sprout_dir: str) -> str:
 
 
 @st.cache_data(show_spinner="Importing Sprout Social data...")
-def load_sprout(sprout_dir: str, _fingerprint: str = ""):
+def load_sprout(sprout_dir: str, fingerprint: str = ""):
     from sprout_import import import_sprout_directory
     from analysis import run_full_analysis
     os.makedirs(SPROUT_OUTPUT_DIR, exist_ok=True)
@@ -106,7 +106,7 @@ if data_mode == "Demo Data":
     results, data_dir = load_demo()
 elif data_mode == "Sprout Social Import":
     results, data_dir, sprout_stats = load_sprout(
-        SPROUT_INPUT_DIR, _fingerprint=_sprout_fingerprint(SPROUT_INPUT_DIR)
+        SPROUT_INPUT_DIR, fingerprint=_sprout_fingerprint(SPROUT_INPUT_DIR)
     )
     st.sidebar.success(
         f"Imported {sprout_stats['total_posts']} posts from "
