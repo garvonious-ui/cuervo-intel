@@ -514,22 +514,6 @@ def generate_cuervo_recommendations(
                 "recommendation": f"Study {best_comp_name}'s top-performing content and adapt successful patterns",
             })
 
-    # 4. Content theme opportunities
-    cuervo_themes = themes.get(cuervo, {}).get("theme_distribution", {})
-    for b in competitors:
-        comp_theme_perf = themes.get(b, {}).get("theme_performance", {})
-        for theme, perf in comp_theme_perf.items():
-            if (perf["avg_engagement_rate"] > 0 and
-                    theme not in cuervo_themes and
-                    perf["count"] >= 3):
-                recs.append({
-                    "category": "Content Theme Opportunity",
-                    "platform": "Both",
-                    "priority": "Medium",
-                    "insight": f"{b} gets {perf['avg_engagement_rate']}% ER with '{theme}' content (Cuervo doesn't use this theme)",
-                    "recommendation": f"Test '{theme}' content pillar — it drives strong engagement for {b}",
-                })
-
     # 5. Creator strategy
     cuervo_collabs = creators.get(cuervo, {})
     comp_collab_rates = [creators.get(b, {}).get("collab_pct", 0) for b in competitors]
