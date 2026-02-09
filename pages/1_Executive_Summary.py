@@ -40,6 +40,7 @@ for p in ["Instagram", "TikTok"]:
 cuervo_combined_er = df[df["brand"] == "Jose Cuervo"]["engagement_rate"].mean() if "Jose Cuervo" in df["brand"].values else 0
 cuervo_combined_er = 0 if pd.isna(cuervo_combined_er) else cuervo_combined_er
 comp_ers = df[df["brand"] != "Jose Cuervo"].groupby("brand")["engagement_rate"].mean()
+comp_ers = comp_ers[comp_ers > 0]
 best_comp = comp_ers.idxmax() if len(comp_ers) else "N/A"
 best_comp_er = comp_ers.max() if len(comp_ers) else 0
 gap = round(cuervo_combined_er - best_comp_er, 2) if best_comp_er else 0
@@ -69,7 +70,7 @@ fig = px.bar(er_data, x="brand", y="engagement_rate", color="platform",
 fig.update_layout(font=CHART_FONT, height=420, legend=dict(orientation="h", y=1.12))
 
 # Category avg line
-cat_avg = df["engagement_rate"].mean()
+cat_avg = df[df["engagement_rate"] > 0]["engagement_rate"].mean() if len(df[df["engagement_rate"] > 0]) else 0
 fig.add_hline(y=cat_avg, line_dash="dash", line_color="gray",
               annotation_text=f"Category avg {cat_avg:.2f}%", annotation_position="top right")
 

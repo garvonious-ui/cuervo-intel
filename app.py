@@ -184,10 +184,11 @@ c1, c2, c3, c4 = st.columns(4)
 
 cuervo_posts = filtered_df[filtered_df["brand"] == "Jose Cuervo"]
 all_ers = filtered_df.groupby("brand")["engagement_rate"].mean()
+nonzero_ers = all_ers[all_ers > 0]
 cuervo_er = all_ers.get("Jose Cuervo", 0)
-cat_avg_er = all_ers.mean() if len(all_ers) else 0
-best_brand = all_ers.idxmax() if len(all_ers) else "N/A"
-best_er = all_ers.max() if len(all_ers) else 0
+cat_avg_er = nonzero_ers.mean() if len(nonzero_ers) else 0
+best_brand = nonzero_ers.idxmax() if len(nonzero_ers) else "N/A"
+best_er = nonzero_ers.max() if len(nonzero_ers) else 0
 
 with c1:
     st.metric("Matching Posts", f"{len(filtered_df):,}")
