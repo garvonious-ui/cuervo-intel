@@ -38,8 +38,20 @@ def load_demo():
     return run_full_analysis(tmp), tmp
 
 
+def _sprout_fingerprint(sprout_dir: str) -> str:
+    """Return a hash of CSV filenames + sizes so cache busts when files change."""
+    import hashlib
+    entries = []
+    if os.path.isdir(sprout_dir):
+        for f in sorted(os.listdir(sprout_dir)):
+            if f.lower().endswith(".csv"):
+                fp = os.path.join(sprout_dir, f)
+                entries.append(f"{f}:{os.path.getsize(fp)}")
+    return hashlib.md5("|".join(entries).encode()).hexdigest()
+
+
 @st.cache_data(show_spinner="Importing Sprout Social data...")
-def load_sprout(sprout_dir: str):
+def load_sprout(sprout_dir: str, _fingerprint: str = ""):
     from sprout_import import import_sprout_directory
     from analysis import run_full_analysis
     os.makedirs(SPROUT_OUTPUT_DIR, exist_ok=True)
@@ -93,7 +105,9 @@ data_mode = st.sidebar.radio("Data source", data_options, index=0)
 if data_mode == "Demo Data":
     results, data_dir = load_demo()
 elif data_mode == "Sprout Social Import":
-    results, data_dir, sprout_stats = load_sprout(SPROUT_INPUT_DIR)
+    results, data_dir, sprout_stats = load_sprout(
+        SPROUT_INPUT_DIR, _fingerprint=_sprout_fingerprint(SPROUT_INPUT_DIR)
+    )
     st.sidebar.success(
         f"Imported {sprout_stats['total_posts']} posts from "
         f"{sprout_stats['files_imported']} file(s)"
