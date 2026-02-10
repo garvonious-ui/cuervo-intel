@@ -48,6 +48,7 @@ c1, c2, c3, c4 = st.columns(4)
 def brand_metric(brand, col):
     bdf = df[df["brand"] == brand]
     er = bdf["engagement_rate"].mean()
+    er = 0 if pd.isna(er) else er
     cr = results["creators"].get(brand, {})
     freq = results["frequency"].get(brand, {})
     ppw = sum(freq.get(p, {}).get("posts_per_week", 0) for p in ["Instagram", "TikTok"])
@@ -60,6 +61,7 @@ for brand in GEN_Z_LEADERS:
 
 # Show deltas
 leader_avg_er = df[df["brand"].isin(GEN_Z_LEADERS)]["engagement_rate"].mean()
+leader_avg_er = 0 if pd.isna(leader_avg_er) else leader_avg_er
 leader_avg_collab = sum(results["creators"].get(b, {}).get("collab_pct", 0) for b in GEN_Z_LEADERS) / len(GEN_Z_LEADERS)
 leader_avg_ppw = 0
 for b in GEN_Z_LEADERS:

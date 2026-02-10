@@ -59,7 +59,7 @@ with tab_content:
             df[df["brand"].isin(sel_brands)]
             .groupby(["brand", "post_type"])["engagement_rate"].mean().reset_index()
         )
-        format_er = format_er[format_er["engagement_rate"] > 0]
+        format_er = format_er[(format_er["engagement_rate"] > 0) & (format_er["post_type"] != "Video")]
         if len(format_er):
             fig_fer = px.bar(format_er, x="post_type", y="engagement_rate", color="brand",
                              barmode="group", color_discrete_map=BRAND_COLORS,
@@ -105,7 +105,8 @@ with tab_content:
         row = []
         for theme in all_themes:
             sub = df[(df["brand"] == brand) & (df["content_theme"] == theme)]
-            er = round(sub["engagement_rate"].mean(), 2) if len(sub) else 0
+            _er = sub["engagement_rate"].mean() if len(sub) else 0
+            er = round(_er, 2) if pd.notna(_er) else 0
             row.append(er)
         matrix.append(row)
 
@@ -267,13 +268,14 @@ with tab_engage:
             bdf = eng_df[eng_df["brand"] == brand]
             if len(bdf) == 0:
                 continue
+            _safe_int = lambda s: int(s.mean()) if pd.notna(s.mean()) else 0
             signal_rows.append({
                 "Brand": brand,
-                "Avg Likes": int(bdf["likes"].mean()),
-                "Avg Comments": int(bdf["comments"].mean()),
-                "Avg Shares": int(bdf["shares"].mean()),
-                "Avg Saves": int(bdf["saves"].mean()),
-                "Avg Views": int(bdf["views"].mean()),
+                "Avg Likes": _safe_int(bdf["likes"]),
+                "Avg Comments": _safe_int(bdf["comments"]),
+                "Avg Shares": _safe_int(bdf["shares"]),
+                "Avg Saves": _safe_int(bdf["saves"]),
+                "Avg Views": _safe_int(bdf["views"]),
                 "Save Rate": round(bdf["saves"].sum() / max(bdf["likes"].sum(), 1) * 100, 2),
                 "Share Rate": round(bdf["shares"].sum() / max(bdf["likes"].sum(), 1) * 100, 2),
                 "Comment Rate": round(bdf["comments"].sum() / max(bdf["likes"].sum(), 1) * 100, 2),

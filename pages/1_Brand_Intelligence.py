@@ -220,11 +220,17 @@ with tab_compare:
         if platform_tab == "Combined":
             followers = sum(eng.get(p, {}).get("followers", 0) for p in ["Instagram", "TikTok"])
             avg_er = plat_df["engagement_rate"].mean() if len(plat_df) else 0
+            avg_er = 0 if pd.isna(avg_er) else avg_er
             ppw = sum(freq_b.get(p, {}).get("posts_per_week", 0) for p in ["Instagram", "TikTok"])
         else:
             followers = eng.get(platform_tab, {}).get("followers", 0)
             avg_er = plat_df["engagement_rate"].mean() if len(plat_df) else 0
+            avg_er = 0 if pd.isna(avg_er) else avg_er
             ppw = freq_b.get(platform_tab, {}).get("posts_per_week", 0)
+
+        _likes = plat_df["likes"].mean() if len(plat_df) else 0
+        _comments = plat_df["comments"].mean() if len(plat_df) else 0
+        _views = plat_df["views"].mean() if len(plat_df) else 0
 
         rows.append({
             "Brand": brand,
@@ -232,9 +238,9 @@ with tab_compare:
             "Matching Posts": len(plat_df),
             "Posts/Week": round(ppw, 1),
             "Avg ER %": round(avg_er, 3),
-            "Avg Likes": int(plat_df["likes"].mean()) if len(plat_df) else 0,
-            "Avg Comments": int(plat_df["comments"].mean()) if len(plat_df) else 0,
-            "Avg Views": int(plat_df["views"].mean()) if len(plat_df) else 0,
+            "Avg Likes": int(_likes) if pd.notna(_likes) else 0,
+            "Avg Comments": int(_comments) if pd.notna(_comments) else 0,
+            "Avg Views": int(_views) if pd.notna(_views) else 0,
             "Collab %": cr.get("collab_pct", 0),
             "Hashtags/Post": ht.get("avg_hashtags_per_post", 0),
         })
