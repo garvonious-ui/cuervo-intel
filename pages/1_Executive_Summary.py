@@ -56,21 +56,22 @@ with c4:
 
 # ── Engagement rate comparison ────────────────────────────────────────
 
-st.subheader("Avg Engagement Rate by Brand & Platform")
+st.subheader("Avg Engagement Rate by Brand (Instagram)")
 
-er_data = df.groupby(["brand", "platform"])["engagement_rate"].mean().reset_index()
+er_data = df[df["platform"] == "Instagram"].groupby("brand")["engagement_rate"].mean().reset_index()
 er_data = er_data[er_data["brand"].isin(sel_brands)]
 order = [b for b in BRAND_ORDER if b in sel_brands]
 
-fig = px.bar(er_data, x="brand", y="engagement_rate", color="platform",
-             barmode="group", color_discrete_map={"Instagram": "#D4956A", "TikTok": "#2ea3f2"},
+fig = px.bar(er_data, x="brand", y="engagement_rate",
+             color="brand", color_discrete_map=BRAND_COLORS,
              category_orders={"brand": order},
-             labels={"engagement_rate": "Avg ER %", "brand": "", "platform": "Platform"},
+             labels={"engagement_rate": "Avg ER %", "brand": ""},
              template=CHART_TEMPLATE)
-fig.update_layout(font=CHART_FONT, height=420, legend=dict(orientation="h", y=1.12))
+fig.update_layout(font=CHART_FONT, height=420, showlegend=False)
 
-# Category avg line
-cat_avg = df[df["engagement_rate"] > 0]["engagement_rate"].mean() if len(df[df["engagement_rate"] > 0]) else 0
+# Category avg line (Instagram only)
+ig_df = df[df["platform"] == "Instagram"]
+cat_avg = ig_df[ig_df["engagement_rate"] > 0]["engagement_rate"].mean() if len(ig_df[ig_df["engagement_rate"] > 0]) else 0
 fig.add_hline(y=cat_avg, line_dash="dash", line_color="gray",
               annotation_text=f"Category avg {cat_avg:.2f}%", annotation_position="top right")
 
