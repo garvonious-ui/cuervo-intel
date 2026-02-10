@@ -34,6 +34,9 @@ st.caption("This page uses the full dataset for strategy comparisons (sidebar fi
 CUERVO = "Jose Cuervo"
 GEN_Z_LEADERS = ["Casamigos", "Teremana"]  # Highest ER / creator-forward brands
 
+cuervo_df = df[df["brand"] == CUERVO]
+leader_df = df[df["brand"].isin(GEN_Z_LEADERS)]
+
 # ── Performance vs Gen Z leaders ──────────────────────────────────────
 
 st.subheader("Cuervo vs Gen Z Leaders")
@@ -257,8 +260,6 @@ st.subheader("Content Gap Analysis: Cuervo vs Top Performers")
 
 all_themes = sorted(df["content_theme"].dropna().unique())
 
-cuervo_df = df[df["brand"] == CUERVO]
-leader_df = df[df["brand"].isin(GEN_Z_LEADERS)]
 cuervo_total = len(cuervo_df) or 1
 leader_total = len(leader_df) or 1
 
