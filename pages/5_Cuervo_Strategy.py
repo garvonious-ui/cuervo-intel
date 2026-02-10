@@ -91,19 +91,12 @@ st.subheader("Gen Z Engagement Drivers")
 def compute_genz_scores(brand):
     bdf = df[df["brand"] == brand]
     total = len(bdf) or 1
-    # Authenticity = % UGC-style or Lo-fi content
     ugc_pct = len(bdf[bdf["visual_style"].isin(["Raw / UGC-style", "Lo-fi / Authentic"])]) / total * 100
-    # Creator partnerships
     collab_pct = results["creators"].get(brand, {}).get("collab_pct", 0)
-    # Humor/meme
     humor_pct = len(bdf[bdf["content_theme"].isin(["Meme / Humor"])]) / total * 100
-    # Short-form video
     video_pct = len(bdf[bdf["post_type"].isin(["Reel", "Video"])]) / total * 100
-    # Music integration
     music_pct = len(bdf[bdf["has_music_audio"].str.lower() == "yes"]) / total * 100 if "has_music_audio" in bdf.columns else 0
-    # Community engagement (avg comment rate)
     comment_rate = (bdf["comments"].sum() / max(bdf["likes"].sum(), 1)) * 100
-
     return [ugc_pct, collab_pct, humor_pct, video_pct, music_pct, comment_rate]
 
 dims = ["Authenticity (UGC %)", "Creator Partners %", "Humor/Meme %",
@@ -130,7 +123,6 @@ st.plotly_chart(fig_radar, use_container_width=True)
 st.subheader("Content Format Strategy")
 st.caption("Reels should be the primary format driver — data shows format mix and ER performance")
 
-# Format mix comparison
 cuervo_ig = cuervo_df[cuervo_df["platform"] == "Instagram"]
 leader_ig = leader_df[leader_df["platform"] == "Instagram"]
 
@@ -216,7 +208,6 @@ for brand in compare_brands:
 
 if cadence_rows:
     cadence_df = pd.DataFrame(cadence_rows)
-    # Show IG cadence by format
     ig_cadence = cadence_df[cadence_df["Platform"] == "Instagram"]
     if len(ig_cadence):
         fig_cad = px.bar(ig_cadence, x="Brand", y="Posts/Week", color="Format",
@@ -227,7 +218,6 @@ if cadence_rows:
         fig_cad.update_layout(font=CHART_FONT, height=380, legend=dict(orientation="h", y=-0.15))
         st.plotly_chart(fig_cad, use_container_width=True)
 
-    # Cadence recommendation
     cuervo_total_ppw = sum(
         results["frequency"].get(CUERVO, {}).get(p, {}).get("posts_per_week", 0)
         for p in ["Instagram", "TikTok"]
@@ -290,7 +280,6 @@ fig_gap.update_layout(barmode="group", template=CHART_TEMPLATE, font=CHART_FONT,
                       legend=dict(orientation="h", y=1.1))
 st.plotly_chart(fig_gap, use_container_width=True)
 
-# Highlight biggest gaps
 st.markdown("**Biggest content gaps (themes leaders use more):**")
 for _, row in gap_df.head(3).iterrows():
     if row["gap"] > 0:
@@ -321,7 +310,6 @@ st.markdown("---")
 st.subheader("Content Pillars Framework")
 st.caption("Aligned to Cuervo's brand positioning: Cuervo = the social signal for fun. Content should ladder to SKU lanes while keeping Gen Z (21-24) as the core audience.")
 
-# Define pillars based on the 2026 Social Brief
 PILLARS = [
     {
         "name": "Party Starter",
@@ -369,7 +357,6 @@ PILLARS = [
     },
 ]
 
-# Render pillar cards
 for pillar in PILLARS:
     with st.expander(f"{pillar['icon']}  **{pillar['name']}** — {pillar['sku']}", expanded=False):
         st.markdown(f"**Objective:** {pillar['objective']}")
@@ -378,7 +365,6 @@ for pillar in PILLARS:
         st.markdown(f"**Tone:** {pillar['tone']}")
         st.markdown(f"**Example Post:** *\"{pillar['example']}\"*")
 
-        # Show current data for matching themes
         matching = cuervo_df[cuervo_df["content_theme"].isin(pillar["themes"])]
         if len(matching):
             pct_of_cuervo = len(matching) / max(len(cuervo_df), 1) * 100
@@ -394,7 +380,6 @@ for pillar in PILLARS:
         else:
             st.info("No Cuervo posts currently match this pillar's themes in the dataset.")
 
-# Pillar distribution chart
 pillar_data = []
 for pillar in PILLARS:
     matching = cuervo_df[cuervo_df["content_theme"].isin(pillar["themes"])]
@@ -432,7 +417,6 @@ with col_pd2:
 st.markdown("---")
 st.subheader("30-Day Action Plan for Cuervo")
 
-# Compute recommended actions from data
 rec_ppw = round(leader_avg_ppw, 0)
 top_themes_for_leaders = leader_df.groupby("content_theme")["engagement_rate"].mean().nlargest(3)
 ugc_score = compute_genz_scores(CUERVO)[0]
@@ -492,7 +476,6 @@ col_t, col_o = st.columns(2)
 
 with col_t:
     st.error("**Competitive Threats**")
-    # Compute dynamic threats
     brand_counts = df.groupby("brand").size()
     if len(brand_counts):
         highest_poster = brand_counts.idxmax()
@@ -513,7 +496,6 @@ with col_t:
 
 with col_o:
     st.success("**Opportunities for Cuervo**")
-    # Compute dynamic opportunities
     cuervo_theme_er = cuervo_df.groupby("content_theme")["engagement_rate"].mean() if len(cuervo_df) else pd.Series(dtype=float)
     cuervo_best_theme = cuervo_theme_er.idxmax() if len(cuervo_theme_er) else "N/A"
     cuervo_best_er = cuervo_theme_er.max() if len(cuervo_theme_er) else 0
@@ -548,7 +530,6 @@ if _has_autostrat:
         render_section_label("Winning Territories")
         st.caption("Strategic territories identified across all autostrat reports")
 
-        # Consolidate and deduplicate territories
         all_territories = []
         for entry in all_htw:
             for territory in entry["how_to_win"].get("territories", []):
@@ -558,7 +539,6 @@ if _has_autostrat:
 
         render_territory_cards(all_territories[:8])
 
-        # Strategic summaries
         summaries = [(e, e["how_to_win"]["summary"]) for e in all_htw if e["how_to_win"].get("summary")]
         if summaries:
             with st.expander("Strategic Summaries by Report"):
@@ -566,7 +546,6 @@ if _has_autostrat:
                     source = f"{entry['source_label']} — {entry['identifier']}"
                     st.markdown(f"**{source}:** *{summary}*")
 
-        # Audience verbatims
         all_verbatims = []
         for entry in all_htw:
             all_verbatims.extend(entry["how_to_win"].get("audience_verbatims", []))

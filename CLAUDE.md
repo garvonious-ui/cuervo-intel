@@ -10,17 +10,12 @@ Jose Cuervo, Patron, Don Julio, Casamigos, Espolon, Teremana, 1800 Tequila, 818 
 ```
 app.py                 # Entry point — data loading, sidebar filters, session state
 pages/
-  1_Executive_Summary.py
-  2_Brand_Comparison.py
-  3_Content_Strategy.py
-  4_Engagement_Deep_Dive.py
-  5_Hashtag_&_Creator.py
-  6_Data_Explorer.py
-  7_Cuervo_Strategy.py  # Gen Z recommendations, 30-day action plan
-  8_Audience_Intelligence.py   # Psychographic profiles, NOPD comparison, sentiment
-  9_Conversation_&_Trends.py   # Hashtag/keyword analysis, content trends, archetypes
-  10_Strategic_Playbook.py     # Consolidated winning territories, sponsorship playbook
-  11_Profile_Deep_Dive.py      # Per-brand profile intelligence (IG & TikTok)
+  1_Brand_Intelligence.py      # Executive overview + detailed brand comparison (tabbed)
+  2_Content_&_Engagement.py    # Content strategy + engagement analysis (tabbed)
+  3_Hashtag_&_Creator.py
+  4_Data_Explorer.py
+  5_Cuervo_Strategy.py         # Gen Z recs, content pillars, 30-day action plan
+  6_Autostrat_Intelligence.py  # Strategic playbook, conversations, profiles, audience (tabbed)
 autostrat_parser.py    # PDF-to-JSON parser for autostrat.ai report exports
 autostrat_loader.py    # JSON loader + cross-report extraction helpers
 autostrat_components.py # Reusable UI components for narrative content
