@@ -21,6 +21,72 @@ df = st.session_state["filtered_df"]
 sel_brands = st.session_state["sel_brands"]
 order = [b for b in BRAND_ORDER if b in sel_brands]
 
+# ── Content Format Breakdown ──────────────────────────────────────────
+
+st.subheader("Content Format Breakdown")
+st.caption("How each brand distributes content across Reels, Carousels, and Static Images — and which formats drive the highest engagement")
+
+format_data = (
+    df[df["brand"].isin(sel_brands)]
+    .groupby(["brand", "post_type"]).size().reset_index(name="count")
+)
+totals = format_data.groupby("brand")["count"].transform("sum")
+format_data["pct"] = (format_data["count"] / totals * 100).round(1)
+
+col_fmt1, col_fmt2 = st.columns(2)
+
+with col_fmt1:
+    st.markdown("**Format Mix by Brand (%)**")
+    fig_fmix = px.bar(format_data, x="brand", y="pct", color="post_type",
+                      barmode="stack", category_orders={"brand": order},
+                      labels={"pct": "% of Posts", "brand": "", "post_type": "Format"},
+                      template=CHART_TEMPLATE,
+                      color_discrete_sequence=["#F8C090", "#2ea3f2", "#7B6B63", "#D4956A", "#A3C4D9"])
+    fig_fmix.update_layout(font=CHART_FONT, height=420, legend=dict(orientation="h", y=-0.18))
+    st.plotly_chart(fig_fmix, use_container_width=True)
+
+with col_fmt2:
+    st.markdown("**Avg Engagement Rate by Format**")
+    format_er = (
+        df[df["brand"].isin(sel_brands)]
+        .groupby(["brand", "post_type"])["engagement_rate"].mean().reset_index()
+    )
+    format_er = format_er[format_er["engagement_rate"] > 0]
+    if len(format_er):
+        fig_fer = px.bar(format_er, x="post_type", y="engagement_rate", color="brand",
+                         barmode="group", color_discrete_map=BRAND_COLORS,
+                         category_orders={"brand": order},
+                         labels={"engagement_rate": "Avg ER %", "post_type": "", "brand": "Brand"},
+                         template=CHART_TEMPLATE, text_auto=".2f")
+        fig_fer.update_layout(font=CHART_FONT, height=420, legend=dict(orientation="h", y=-0.18))
+        st.plotly_chart(fig_fer, use_container_width=True)
+    else:
+        st.info("No engagement rate data available for format comparison.")
+
+# Format insights callout
+cuervo_fmts = df[df["brand"] == "Jose Cuervo"]
+if len(cuervo_fmts):
+    cuervo_total = len(cuervo_fmts)
+    reel_pct = len(cuervo_fmts[cuervo_fmts["post_type"] == "Reel"]) / cuervo_total * 100
+    carousel_pct = len(cuervo_fmts[cuervo_fmts["post_type"] == "Carousel"]) / cuervo_total * 100
+    static_pct = len(cuervo_fmts[cuervo_fmts["post_type"] == "Static Image"]) / cuervo_total * 100
+
+    # Best performing format for Cuervo
+    cuervo_format_er = cuervo_fmts.groupby("post_type")["engagement_rate"].mean()
+    cuervo_format_er = cuervo_format_er[cuervo_format_er > 0]
+    best_format = cuervo_format_er.idxmax() if len(cuervo_format_er) else "N/A"
+    best_format_er = cuervo_format_er.max() if len(cuervo_format_er) else 0
+
+    insight_col1, insight_col2, insight_col3 = st.columns(3)
+    with insight_col1:
+        st.metric("Cuervo Reels", f"{reel_pct:.0f}%", help="% of Cuervo posts that are Reels")
+    with insight_col2:
+        st.metric("Cuervo Carousels", f"{carousel_pct:.0f}%", help="% of Cuervo posts that are Carousels")
+    with insight_col3:
+        st.metric("Best Format (ER)", f"{best_format}", delta=f"{best_format_er:.2f}% avg ER")
+
+st.markdown("---")
+
 # ── Theme × Brand heatmap ─────────────────────────────────────────────
 
 st.subheader("Content Theme Performance Heatmap (Avg ER %)")
@@ -130,3 +196,46 @@ if len(style_data):
     fig_vs.update_layout(font=CHART_FONT, height=420, xaxis_tickangle=-20,
                          legend=dict(orientation="h", y=-0.20))
     st.plotly_chart(fig_vs, use_container_width=True)
+
+# ── Posting Cadence by Format ────────────────────────────────────────
+
+st.markdown("---")
+st.subheader("Posting Cadence by Format")
+st.caption("Weekly posting frequency broken down by content format — shows each brand's format velocity")
+
+freq = results["frequency"]
+cadence_rows = []
+for brand in sel_brands:
+    for plat in st.session_state["sel_platforms"]:
+        by_type = freq.get(brand, {}).get(plat, {}).get("by_content_type", {})
+        total_30d = freq.get(brand, {}).get(plat, {}).get("total_posts_30d", 0)
+        for fmt, count in by_type.items():
+            cadence_rows.append({
+                "brand": brand,
+                "platform": plat,
+                "format": fmt,
+                "posts_30d": count,
+                "posts_per_week": round(count / 4.3, 1),
+            })
+
+if cadence_rows:
+    cadence_df = pd.DataFrame(cadence_rows)
+    # Aggregate across platforms
+    cadence_agg = cadence_df.groupby(["brand", "format"])["posts_per_week"].sum().reset_index()
+
+    fig_cadence = px.bar(cadence_agg, x="brand", y="posts_per_week", color="format",
+                         barmode="stack", category_orders={"brand": order},
+                         labels={"posts_per_week": "Posts / Week", "brand": "", "format": "Format"},
+                         template=CHART_TEMPLATE,
+                         color_discrete_sequence=["#F8C090", "#2ea3f2", "#7B6B63", "#D4956A", "#A3C4D9"])
+    fig_cadence.update_layout(font=CHART_FONT, height=420, legend=dict(orientation="h", y=-0.18))
+    st.plotly_chart(fig_cadence, use_container_width=True)
+
+    # Show Cuervo-specific cadence insight
+    cuervo_cadence = cadence_agg[cadence_agg["brand"] == "Jose Cuervo"]
+    if len(cuervo_cadence):
+        st.markdown("**Cuervo Format Cadence:**")
+        for _, row in cuervo_cadence.iterrows():
+            st.markdown(f"- **{row['format']}**: {row['posts_per_week']:.1f} posts/week")
+else:
+    st.info("No posting cadence data available.")

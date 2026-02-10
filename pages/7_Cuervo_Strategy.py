@@ -122,6 +122,135 @@ fig_radar.update_layout(height=480, font=CHART_FONT,
                         legend=dict(orientation="h", y=-0.12))
 st.plotly_chart(fig_radar, use_container_width=True)
 
+# ── Content Format Strategy ───────────────────────────────────────────
+
+st.subheader("Content Format Strategy")
+st.caption("Reels should be the primary format driver — data shows format mix and ER performance")
+
+# Format mix comparison
+cuervo_ig = cuervo_df[cuervo_df["platform"] == "Instagram"]
+leader_ig = leader_df[leader_df["platform"] == "Instagram"]
+
+format_compare_rows = []
+for fmt in ["Reel", "Carousel", "Static Image"]:
+    c_count = len(cuervo_ig[cuervo_ig["post_type"] == fmt])
+    c_pct = c_count / max(len(cuervo_ig), 1) * 100
+    c_er = cuervo_ig[cuervo_ig["post_type"] == fmt]["engagement_rate"].mean()
+    l_count = len(leader_ig[leader_ig["post_type"] == fmt])
+    l_pct = l_count / max(len(leader_ig), 1) * 100
+    l_er = leader_ig[leader_ig["post_type"] == fmt]["engagement_rate"].mean()
+    format_compare_rows.append({
+        "Format": fmt,
+        "Cuervo %": round(c_pct, 1),
+        "Cuervo ER": round(c_er, 2) if pd.notna(c_er) else 0,
+        "Leaders %": round(l_pct, 1),
+        "Leaders ER": round(l_er, 2) if pd.notna(l_er) else 0,
+    })
+
+fc_df = pd.DataFrame(format_compare_rows)
+
+col_fc1, col_fc2 = st.columns(2)
+with col_fc1:
+    st.markdown("**Format Mix: Cuervo vs Gen Z Leaders**")
+    fc_melt = pd.melt(fc_df, id_vars=["Format"], value_vars=["Cuervo %", "Leaders %"],
+                       var_name="Group", value_name="Pct")
+    fig_fc = px.bar(fc_melt, x="Format", y="Pct", color="Group", barmode="group",
+                    color_discrete_map={"Cuervo %": "#F8C090", "Leaders %": "#66BB6A"},
+                    labels={"Pct": "% of IG Posts", "Format": ""},
+                    template=CHART_TEMPLATE, text_auto=".0f")
+    fig_fc.update_layout(font=CHART_FONT, height=380, legend=dict(orientation="h", y=-0.15))
+    st.plotly_chart(fig_fc, use_container_width=True)
+
+with col_fc2:
+    st.markdown("**Avg ER by Format: Cuervo vs Gen Z Leaders**")
+    fc_er_melt = pd.melt(fc_df, id_vars=["Format"], value_vars=["Cuervo ER", "Leaders ER"],
+                          var_name="Group", value_name="ER")
+    fig_fcer = px.bar(fc_er_melt, x="Format", y="ER", color="Group", barmode="group",
+                      color_discrete_map={"Cuervo ER": "#F8C090", "Leaders ER": "#66BB6A"},
+                      labels={"ER": "Avg ER %", "Format": ""},
+                      template=CHART_TEMPLATE, text_auto=".2f")
+    fig_fcer.update_layout(font=CHART_FONT, height=380, legend=dict(orientation="h", y=-0.15))
+    st.plotly_chart(fig_fcer, use_container_width=True)
+
+# Format KPI cards
+reel_pct_now = len(cuervo_ig[cuervo_ig["post_type"] == "Reel"]) / max(len(cuervo_ig), 1) * 100
+carousel_pct_now = len(cuervo_ig[cuervo_ig["post_type"] == "Carousel"]) / max(len(cuervo_ig), 1) * 100
+leader_reel_pct = len(leader_ig[leader_ig["post_type"] == "Reel"]) / max(len(leader_ig), 1) * 100
+
+fk1, fk2, fk3 = st.columns(3)
+with fk1:
+    st.metric("Cuervo Reel %", f"{reel_pct_now:.0f}%",
+              delta=f"{reel_pct_now - leader_reel_pct:+.0f}% vs leaders",
+              help="Target: 60%+ Reels for maximum reach")
+with fk2:
+    st.metric("Cuervo Carousel %", f"{carousel_pct_now:.0f}%",
+              help="Carousels drive saves — aim for 20-25%")
+with fk3:
+    best_fmt_er = cuervo_ig.groupby("post_type")["engagement_rate"].mean()
+    best_fmt_er = best_fmt_er[best_fmt_er > 0]
+    best_fmt = best_fmt_er.idxmax() if len(best_fmt_er) else "N/A"
+    best_val = best_fmt_er.max() if len(best_fmt_er) else 0
+    st.metric("Best Format (ER)", best_fmt, delta=f"{best_val:.2f}%")
+
+st.markdown("---")
+
+# ── Posting Cadence Analysis ─────────────────────────────────────────
+
+st.subheader("Posting Cadence Analysis")
+st.caption("Optimal posting velocity by format — based on competitor benchmarks and engagement data")
+
+cadence_rows = []
+for brand in compare_brands:
+    for plat in ["Instagram", "TikTok"]:
+        by_type = results["frequency"].get(brand, {}).get(plat, {}).get("by_content_type", {})
+        for fmt, count in by_type.items():
+            cadence_rows.append({
+                "Brand": brand,
+                "Platform": plat,
+                "Format": fmt,
+                "Posts/Week": round(count / 4.3, 1),
+            })
+
+if cadence_rows:
+    cadence_df = pd.DataFrame(cadence_rows)
+    # Show IG cadence by format
+    ig_cadence = cadence_df[cadence_df["Platform"] == "Instagram"]
+    if len(ig_cadence):
+        fig_cad = px.bar(ig_cadence, x="Brand", y="Posts/Week", color="Format",
+                         barmode="stack",
+                         color_discrete_sequence=["#F8C090", "#2ea3f2", "#7B6B63", "#D4956A"],
+                         labels={"Posts/Week": "Posts / Week", "Brand": ""},
+                         template=CHART_TEMPLATE, text_auto=".1f")
+        fig_cad.update_layout(font=CHART_FONT, height=380, legend=dict(orientation="h", y=-0.15))
+        st.plotly_chart(fig_cad, use_container_width=True)
+
+    # Cadence recommendation
+    cuervo_total_ppw = sum(
+        results["frequency"].get(CUERVO, {}).get(p, {}).get("posts_per_week", 0)
+        for p in ["Instagram", "TikTok"]
+    )
+    leader_total_ppw = sum(
+        results["frequency"].get(b, {}).get(p, {}).get("posts_per_week", 0)
+        for b in GEN_Z_LEADERS for p in ["Instagram", "TikTok"]
+    ) / len(GEN_Z_LEADERS)
+
+    rec_reels = max(3, round(leader_total_ppw * 0.6, 0))
+    rec_carousels = max(1, round(leader_total_ppw * 0.2, 0))
+    rec_static = max(1, round(leader_total_ppw * 0.15, 0))
+
+    st.markdown("**Recommended Weekly Cadence (Instagram)**")
+    rc1, rc2, rc3, rc4 = st.columns(4)
+    with rc1:
+        st.metric("Reels", f"{int(rec_reels)}/wk", help="60% of posts — maximize reach")
+    with rc2:
+        st.metric("Carousels", f"{int(rec_carousels)}/wk", help="20% of posts — drive saves")
+    with rc3:
+        st.metric("Static/Grid", f"{int(rec_static)}/wk", help="15% of posts — brand consistency")
+    with rc4:
+        st.metric("Stories", "3-5/day", help="Daily touchpoints — polls, BTS, product features")
+
+st.markdown("---")
+
 # ── Content gap analysis ──────────────────────────────────────────────
 
 st.subheader("Content Gap Analysis: Cuervo vs Top Performers")
@@ -185,6 +314,118 @@ if recs:
                     st.markdown(f"**Action:** {r['recommendation']}")
                     st.markdown(f"**Platform:** {r['platform']}")
 
+# ── Content Pillars Framework ─────────────────────────────────────────
+
+st.markdown("---")
+st.subheader("Content Pillars Framework")
+st.caption("Aligned to Cuervo's brand positioning: Cuervo = the social signal for fun. Content should ladder to SKU lanes while keeping Gen Z (21-24) as the core audience.")
+
+# Define pillars based on the 2026 Social Brief
+PILLARS = [
+    {
+        "name": "Party Starter",
+        "icon": "🎉",
+        "sku": "Especial (Silver/Gold)",
+        "objective": "Position Especial as the go-to for social occasions — house parties, pregames, celebrations",
+        "themes": ["Lifestyle/Aspirational", "Music / Party", "Meme / Humor", "Cultural Moment / Holiday"],
+        "formats": "Reels (60%), Stories, TikTok duets",
+        "tone": "Playful, irreverent, meme-fluent",
+        "example": "POV: You showed up with Cuervo and suddenly everyone loves you",
+        "color": "#F8C090",
+    },
+    {
+        "name": "Elevated Sips",
+        "icon": "🥃",
+        "sku": "Tradicional / Reserva de la Familia",
+        "objective": "Showcase craft and heritage for cocktail-curious Gen Z who want to level up",
+        "themes": ["Cocktail Recipe", "Product Showcase", "Education (Tequila 101)", "Brand Heritage / Story"],
+        "formats": "Carousels (educational), Reels (recipe), Grid posts",
+        "tone": "Informative but not pretentious — approachable expert",
+        "example": "3 margarita upgrades that'll change your summer (Carousel)",
+        "color": "#2ea3f2",
+    },
+    {
+        "name": "Mix It Up",
+        "icon": "🫧",
+        "sku": "Cuervo RTD (Margarita cans, Playamar)",
+        "objective": "Drive trial of ready-to-drink line — convenience + fun positioning",
+        "themes": ["Lifestyle/Aspirational", "Event / Activation", "Giveaway / Promo"],
+        "formats": "Reels, Stories (polls/stickers), UGC reposts",
+        "tone": "Casual, spontaneous, summer vibes",
+        "example": "Beach bag check ✓ Playamar ✓ Sunscreen... eventually",
+        "color": "#66BB6A",
+    },
+    {
+        "name": "Culture & Community",
+        "icon": "🤝",
+        "sku": "Brand-level (all SKUs)",
+        "objective": "Build cultural relevance through creator partnerships, UGC, and trending moments",
+        "themes": ["Creator Collab / UGC", "User Repost", "Sports Tie-in", "Cultural Moment / Holiday"],
+        "formats": "Creator Reels, UGC reposts, duets/stitches",
+        "tone": "Authentic, community-first, co-created",
+        "example": "Creator takeover series — 'My Cuervo Moment'",
+        "color": "#D4956A",
+    },
+]
+
+# Render pillar cards
+for pillar in PILLARS:
+    with st.expander(f"{pillar['icon']}  **{pillar['name']}** — {pillar['sku']}", expanded=False):
+        st.markdown(f"**Objective:** {pillar['objective']}")
+        st.markdown(f"**Target Themes:** {', '.join(pillar['themes'])}")
+        st.markdown(f"**Recommended Formats:** {pillar['formats']}")
+        st.markdown(f"**Tone:** {pillar['tone']}")
+        st.markdown(f"**Example Post:** *\"{pillar['example']}\"*")
+
+        # Show current data for matching themes
+        matching = cuervo_df[cuervo_df["content_theme"].isin(pillar["themes"])]
+        if len(matching):
+            pct_of_cuervo = len(matching) / max(len(cuervo_df), 1) * 100
+            avg_er_pillar = matching["engagement_rate"].mean()
+            avg_er_pillar = 0 if pd.isna(avg_er_pillar) else avg_er_pillar
+            pk1, pk2, pk3 = st.columns(3)
+            with pk1:
+                st.metric("Posts in Pillar", f"{len(matching)}", help=f"{pct_of_cuervo:.0f}% of Cuervo content")
+            with pk2:
+                st.metric("Pillar ER", f"{avg_er_pillar:.2f}%")
+            with pk3:
+                st.metric("% of Content", f"{pct_of_cuervo:.0f}%")
+        else:
+            st.info("No Cuervo posts currently match this pillar's themes in the dataset.")
+
+# Pillar distribution chart
+pillar_data = []
+for pillar in PILLARS:
+    matching = cuervo_df[cuervo_df["content_theme"].isin(pillar["themes"])]
+    pct = len(matching) / max(len(cuervo_df), 1) * 100
+    er = matching["engagement_rate"].mean() if len(matching) else 0
+    er = 0 if pd.isna(er) else er
+    pillar_data.append({
+        "Pillar": pillar["name"],
+        "% of Content": round(pct, 1),
+        "Avg ER": round(er, 2),
+    })
+
+pillar_df = pd.DataFrame(pillar_data)
+col_pd1, col_pd2 = st.columns(2)
+with col_pd1:
+    fig_pd = px.bar(pillar_df, x="Pillar", y="% of Content",
+                    color="Pillar",
+                    color_discrete_map={p["name"]: p["color"] for p in PILLARS},
+                    labels={"% of Content": "% of Cuervo Content", "Pillar": ""},
+                    template=CHART_TEMPLATE, text_auto=".0f")
+    fig_pd.update_layout(showlegend=False, font=CHART_FONT, height=350)
+    st.plotly_chart(fig_pd, use_container_width=True)
+
+with col_pd2:
+    fig_pe = px.bar(pillar_df, x="Pillar", y="Avg ER",
+                    color="Pillar",
+                    color_discrete_map={p["name"]: p["color"] for p in PILLARS},
+                    labels={"Avg ER": "Avg ER %", "Pillar": ""},
+                    template=CHART_TEMPLATE, text_auto=".2f")
+    fig_pe.update_layout(showlegend=False, font=CHART_FONT, height=350)
+    st.plotly_chart(fig_pe, use_container_width=True)
+
 # ── 30-Day action plan ────────────────────────────────────────────────
 
 st.markdown("---")
@@ -198,38 +439,42 @@ ugc_score = compute_genz_scores(CUERVO)[0]
 plan = [
     {
         "week": "Week 1",
-        "focus": "Increase Velocity & Creator Outreach",
+        "focus": "Format Reset & Creator Pipeline",
         "actions": [
             f"Ramp posting to {int(rec_ppw)}+ posts/week (currently {cuervo_ppw:.0f}/wk)",
-            "Reach out to 5 micro-creators (10K-100K) in Lifestyle, Comedy, and Food categories",
-            "Test 2 Meme/Humor format posts on TikTok",
+            f"Shift IG mix to 60%+ Reels (currently {compute_genz_scores(CUERVO)[3]:.0f}% video) — Reels drive reach, Carousels drive saves",
+            "Build creator shortlist: 5 micro-creators (10K-100K) in Lifestyle, Comedy, and Food niches",
+            "Audit current grid aesthetic — does it signal 'fun' at a glance?",
         ],
     },
     {
         "week": "Week 2",
-        "focus": "Content Mix Optimization",
+        "focus": "Content Pillar Launch",
         "actions": [
-            f"Shift to 60%+ Reels/Video (currently {compute_genz_scores(CUERVO)[3]:.0f}%)",
-            "Launch first creator collab series — raw/UGC-style",
+            "Launch 'Party Starter' pillar: 2 Reels featuring Especial in social settings (house party, pregame)",
+            "Launch 'Elevated Sips' pillar: 1 Carousel with cocktail recipe using Tradicional",
+            "Test first meme-format Reel (POV/trending audio) — keep it native, not ad-like",
             f"Test top-performing themes from leaders: {', '.join(top_themes_for_leaders.index[:2])}",
         ],
     },
     {
         "week": "Week 3",
-        "focus": "Engagement & Community",
+        "focus": "Community & UGC Flywheel",
         "actions": [
-            "Add 'Tag a friend' and 'Comment below' CTAs to every post",
-            "Repost 2-3 pieces of UGC from followers",
-            "Use trending audio on 80%+ of Reels/TikToks",
+            "Launch first creator collab — raw/UGC-style Reel, not polished ad",
+            "Repost 2-3 pieces of UGC from followers (build repost pipeline)",
+            "Add engagement-driving CTAs: 'Tag your +1', 'Drop your go-to order', 'Share to your story'",
+            "Stories: run 3-5/day with polls, quizzes, and BTS content",
         ],
     },
     {
         "week": "Week 4",
-        "focus": "Measure & Double Down",
+        "focus": "Measure, Learn & Scale",
         "actions": [
-            "Analyze Week 1-3 performance — identify top 3 posts by ER",
-            "Double down on winning formats and themes",
-            "Set ER target: close gap to category avg by 25%",
+            "Analyze Week 1-3: identify top 3 posts by ER, saves, and shares",
+            "Double down on winning formats — scale what works, drop what doesn't",
+            "Set ER target: close gap to category avg by 25% within 60 days",
+            "Brief next month's cultural calendar content (holidays, events, trending moments)",
         ],
     },
 ]
@@ -276,10 +521,12 @@ with col_o:
         st.markdown(f"- Cuervo's **{cuervo_best_theme}** content outperforms category avg "
                     f"({cuervo_best_er:.2f}% vs {cat_theme_er:.2f}%)")
 
-    reel_pct = len(cuervo_df[cuervo_df["post_type"] == "Reel"]) / max(len(cuervo_df[cuervo_df["platform"] == "Instagram"]), 1) * 100
-    st.markdown(f"- Instagram Reels at only **{reel_pct:.0f}%** of IG content — room to grow to 60%+")
+    reel_pct_opp = len(cuervo_df[cuervo_df["post_type"] == "Reel"]) / max(len(cuervo_df[cuervo_df["platform"] == "Instagram"]), 1) * 100
+    st.markdown(f"- Instagram Reels at only **{reel_pct_opp:.0f}%** of IG content — room to grow to 60%+")
     st.markdown(f"- Authenticity score ({ugc_score:.0f}% UGC-style) can be raised with creator partnerships")
-    st.markdown(f"- Brand heritage is a unique differentiator vs newer brands (Casamigos, Teremana)")
+    st.markdown("- Brand heritage (250+ yrs) is a unique differentiator vs newer brands (Casamigos, Teremana)")
+    st.markdown("- RTD line (Playamar, Margarita cans) offers untapped content pillar for casual/outdoor occasions")
+    st.markdown("- 'Fun signal' positioning aligns with Gen Z values — Cuervo doesn't need to be luxury, it needs to be the brand you bring")
 
 # ══════════════════════════════════════════════════════════════════════
 # AUTOSTRAT QUALITATIVE INTELLIGENCE

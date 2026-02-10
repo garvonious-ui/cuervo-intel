@@ -76,6 +76,35 @@ fig.add_hline(y=cat_avg, line_dash="dash", line_color="gray",
 
 st.plotly_chart(fig, use_container_width=True)
 
+# ── Content Format & Engagement Signals ──────────────────────────────
+
+st.subheader("Cuervo Content Format & Engagement Signals")
+
+cuervo_posts = df[df["brand"] == "Jose Cuervo"]
+if len(cuervo_posts):
+    ck1, ck2, ck3, ck4, ck5 = st.columns(5)
+
+    cuervo_ig_posts = cuervo_posts[cuervo_posts["platform"] == "Instagram"]
+    reel_pct = len(cuervo_ig_posts[cuervo_ig_posts["post_type"] == "Reel"]) / max(len(cuervo_ig_posts), 1) * 100
+    carousel_pct = len(cuervo_ig_posts[cuervo_ig_posts["post_type"] == "Carousel"]) / max(len(cuervo_ig_posts), 1) * 100
+
+    save_rate = cuervo_posts["saves"].sum() / max(cuervo_posts["likes"].sum(), 1) * 100
+    share_rate = cuervo_posts["shares"].sum() / max(cuervo_posts["likes"].sum(), 1) * 100
+    comment_rate = cuervo_posts["comments"].sum() / max(cuervo_posts["likes"].sum(), 1) * 100
+
+    with ck1:
+        st.metric("Reel %", f"{reel_pct:.0f}%", help="% of IG posts that are Reels")
+    with ck2:
+        st.metric("Carousel %", f"{carousel_pct:.0f}%", help="% of IG posts that are Carousels")
+    with ck3:
+        st.metric("Save Rate", f"{save_rate:.1f}%", help="Saves ÷ Likes — content bookmarking signal")
+    with ck4:
+        st.metric("Share Rate", f"{share_rate:.1f}%", help="Shares ÷ Likes — organic reach amplifier")
+    with ck5:
+        st.metric("Comment Rate", f"{comment_rate:.1f}%", help="Comments ÷ Likes — community engagement")
+
+st.markdown("---")
+
 # ── Posting frequency ─────────────────────────────────────────────────
 
 st.subheader("Posting Frequency (posts/week)")

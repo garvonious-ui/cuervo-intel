@@ -240,11 +240,11 @@ st.markdown("""
 |------|-----------------|
 | **Executive Summary** | KPIs, engagement comparison, priority recommendations, radar chart |
 | **Brand Comparison** | Side-by-side metrics table, content mix, followers-vs-ER scatter |
-| **Content Strategy** | Theme heatmap, caption analysis, CTA effectiveness, visual styles |
-| **Engagement Deep Dive** | ER by content type, posting schedule heatmap, top posts, distributions |
+| **Content Strategy** | Format breakdown, theme heatmap, posting cadence, caption analysis, CTA effectiveness |
+| **Engagement Deep Dive** | Engagement signals (saves/shares), ER by content type, schedule heatmap, top posts |
 | **Hashtag & Creator** | Hashtag strategy, creator collab rates, collab engagement lift |
 | **Data Explorer** | Filter, sort, and query every post — download CSV or Excel |
-| **Cuervo Strategy** | Gen Z recommendations, content gaps, 30-day action plan |
+| **Cuervo Strategy** | Format strategy, content pillars, posting cadence, Gen Z recs, 30-day action plan |
 | **Audience Intelligence** | Psychographic profiles (NOPD), brand sentiment landscape |
 | **Conversation & Trends** | Hashtag/keyword analysis, content trends, creator archetypes |
 | **Strategic Playbook** | Consolidated winning territories, sponsorship opportunities |

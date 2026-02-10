@@ -33,6 +33,72 @@ if df.empty:
     st.warning("No posts match the current filters.")
     st.stop()
 
+# ── Engagement Signals Breakdown ─────────────────────────────────────
+
+st.subheader("Engagement Signals Breakdown")
+st.caption("Beyond likes — saves, shares, and comments indicate deeper audience connection and algorithmic favorability")
+
+signal_brands = [b for b in order if b in sel_brands]
+signal_rows = []
+for brand in signal_brands:
+    bdf = df[df["brand"] == brand]
+    if len(bdf) == 0:
+        continue
+    signal_rows.append({
+        "Brand": brand,
+        "Avg Likes": int(bdf["likes"].mean()),
+        "Avg Comments": int(bdf["comments"].mean()),
+        "Avg Shares": int(bdf["shares"].mean()),
+        "Avg Saves": int(bdf["saves"].mean()),
+        "Avg Views": int(bdf["views"].mean()),
+        "Save Rate": round(bdf["saves"].sum() / max(bdf["likes"].sum(), 1) * 100, 2),
+        "Share Rate": round(bdf["shares"].sum() / max(bdf["likes"].sum(), 1) * 100, 2),
+        "Comment Rate": round(bdf["comments"].sum() / max(bdf["likes"].sum(), 1) * 100, 2),
+    })
+
+if signal_rows:
+    signal_df = pd.DataFrame(signal_rows)
+
+    col_s1, col_s2 = st.columns(2)
+
+    with col_s1:
+        st.markdown("**Save Rate by Brand** (Saves ÷ Likes × 100)")
+        st.caption("High save rates signal content worth returning to — strong algorithmic signal")
+        fig_save = px.bar(signal_df, x="Save Rate", y="Brand", orientation="h",
+                          color="Brand", color_discrete_map=BRAND_COLORS,
+                          category_orders={"Brand": order},
+                          labels={"Save Rate": "Save Rate %", "Brand": ""},
+                          template=CHART_TEMPLATE, text_auto=".1f")
+        fig_save.update_layout(showlegend=False, font=CHART_FONT, height=380)
+        st.plotly_chart(fig_save, use_container_width=True)
+
+    with col_s2:
+        st.markdown("**Share Rate by Brand** (Shares ÷ Likes × 100)")
+        st.caption("Shares extend reach organically — the strongest growth signal")
+        fig_share = px.bar(signal_df, x="Share Rate", y="Brand", orientation="h",
+                           color="Brand", color_discrete_map=BRAND_COLORS,
+                           category_orders={"Brand": order},
+                           labels={"Share Rate": "Share Rate %", "Brand": ""},
+                           template=CHART_TEMPLATE, text_auto=".1f")
+        fig_share.update_layout(showlegend=False, font=CHART_FONT, height=380)
+        st.plotly_chart(fig_share, use_container_width=True)
+
+    # Detailed signal table
+    with st.expander("Full Engagement Signals Table"):
+        def highlight_cuervo_signal(row):
+            return ["background-color: #FDEBD6" if row["Brand"] == "Jose Cuervo" else "" for _ in row]
+
+        styled_sig = (
+            signal_df.style
+            .apply(highlight_cuervo_signal, axis=1)
+            .format({"Save Rate": "{:.2f}", "Share Rate": "{:.2f}", "Comment Rate": "{:.2f}",
+                      "Avg Likes": "{:,.0f}", "Avg Comments": "{:,.0f}",
+                      "Avg Shares": "{:,.0f}", "Avg Saves": "{:,.0f}", "Avg Views": "{:,.0f}"})
+        )
+        st.dataframe(styled_sig, use_container_width=True, hide_index=True)
+
+st.markdown("---")
+
 # ── ER by content type ────────────────────────────────────────────────
 
 st.subheader("Engagement Rate by Content Type")
