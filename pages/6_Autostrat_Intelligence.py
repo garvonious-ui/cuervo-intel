@@ -8,22 +8,19 @@ import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
 
-from config import CUSTOM_CSS, CHART_TEMPLATE, CHART_FONT, BRAND_COLORS
+from config import (
+    CUSTOM_CSS, CHART_TEMPLATE, CHART_FONT, BRAND_COLORS,
+    REFERENCE_BRAND_LABELS,
+)
 from autostrat_loader import (
     has_autostrat_data,
-    # Playbook
     get_all_how_to_win, get_all_strategic_actions, get_all_brand_mentions,
     get_all_sponsorship_suggestions,
-    # Conversation
     CONVERSATION_TYPES, REPORT_TYPE_LABELS, get_available_identifiers, get_report,
-    # Audience
     get_all_audience_profiles,
-    # Profile
     PROFILE_TYPES, get_section_across_reports,
-    # Reference brands
     is_reference_brand, get_reference_profiles, get_competitor_identifiers,
 )
-from config import REFERENCE_BRAND_LABELS
 from autostrat_components import (
     render_territory_cards, render_verbatim_quotes, render_section_label,
     render_sponsorship_card, render_brand_mention,
