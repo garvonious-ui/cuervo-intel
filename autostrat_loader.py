@@ -11,6 +11,8 @@ import json
 import os
 from typing import Any, Optional
 
+from config import REFERENCE_BRANDS
+
 BASE_DIR = os.path.dirname(__file__)
 AUTOSTRAT_DIR = os.path.join(BASE_DIR, "data", "autostrat")
 
@@ -92,9 +94,37 @@ def has_autostrat_data(autostrat: dict) -> bool:
     return any(len(reports) > 0 for reports in autostrat.values())
 
 
+def is_reference_brand(identifier: str) -> bool:
+    """Check if an autostrat profile identifier is a reference/inspiration brand."""
+    return identifier.lower() in [rb.lower() for rb in REFERENCE_BRANDS]
+
+
 def get_available_identifiers(autostrat: dict, report_type: str) -> list[str]:
     """Get list of identifiers (brand names, hashtags, etc.) for a report type."""
     return list(autostrat.get(report_type, {}).keys())
+
+
+def get_competitor_identifiers(autostrat: dict, report_type: str) -> list[str]:
+    """Get identifiers for a report type, excluding reference/inspiration brands."""
+    return [i for i in get_available_identifiers(autostrat, report_type)
+            if not is_reference_brand(i)]
+
+
+def get_reference_profiles(autostrat: dict) -> dict[str, dict]:
+    """Get all profile reports for reference/inspiration brands.
+
+    Returns {key: {report_type, identifier, report}} across both platforms.
+    """
+    results = {}
+    for rt in PROFILE_TYPES:
+        for identifier, report in autostrat.get(rt, {}).items():
+            if is_reference_brand(identifier):
+                results[f"{rt}:{identifier}"] = {
+                    "report_type": rt,
+                    "identifier": identifier,
+                    "report": report,
+                }
+    return results
 
 
 def get_report(autostrat: dict, report_type: str, identifier: str) -> Optional[dict]:
@@ -116,14 +146,19 @@ def get_section_across_reports(
     return result
 
 
-def get_all_audience_profiles(autostrat: dict) -> list[dict]:
+def get_all_audience_profiles(
+    autostrat: dict, exclude_reference: bool = False
+) -> list[dict]:
     """Get all audience profiles across all report types.
 
     Returns list of {source_type, identifier, audience_profile}.
+    When exclude_reference=True, skips reference/inspiration brand profiles.
     """
     profiles = []
     for rt in REPORT_TYPES:
         for identifier, report in autostrat.get(rt, {}).items():
+            if exclude_reference and rt in PROFILE_TYPES and is_reference_brand(identifier):
+                continue
             if "audience_profile" in report:
                 ap = report["audience_profile"]
                 if any(ap.get(k) for k in ["needs", "objections", "desires", "pain_points"]):
@@ -136,14 +171,19 @@ def get_all_audience_profiles(autostrat: dict) -> list[dict]:
     return profiles
 
 
-def get_all_how_to_win(autostrat: dict) -> list[dict]:
+def get_all_how_to_win(
+    autostrat: dict, exclude_reference: bool = False
+) -> list[dict]:
     """Get all How to Win sections across all report types.
 
     Returns list of {source_type, identifier, how_to_win}.
+    When exclude_reference=True, skips reference/inspiration brand profiles.
     """
     results = []
     for rt in REPORT_TYPES:
         for identifier, report in autostrat.get(rt, {}).items():
+            if exclude_reference and rt in PROFILE_TYPES and is_reference_brand(identifier):
+                continue
             if "how_to_win" in report:
                 hw = report["how_to_win"]
                 if hw.get("territories") or hw.get("summary"):
@@ -233,14 +273,19 @@ def get_all_strategic_actions(autostrat: dict) -> list[dict]:
     return results
 
 
-def get_all_sponsorship_suggestions(autostrat: dict) -> list[dict]:
+def get_all_sponsorship_suggestions(
+    autostrat: dict, exclude_reference: bool = False
+) -> list[dict]:
     """Get all future sponsorship suggestions from profile reports.
 
     Returns list of {source_type, identifier, suggestions: [...]}.
+    When exclude_reference=True, skips reference/inspiration brand profiles.
     """
     results = []
     for rt in PROFILE_TYPES:
         for identifier, report in autostrat.get(rt, {}).items():
+            if exclude_reference and is_reference_brand(identifier):
+                continue
             suggestions = report.get("future_sponsorship_suggestions", [])
             if suggestions:
                 results.append({

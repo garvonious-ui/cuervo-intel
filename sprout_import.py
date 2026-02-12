@@ -51,6 +51,14 @@ BRAND_MAP = {
     "818": "818 Tequila",
     "818 tequila": "818 Tequila",
     "818tequila": "818 Tequila",
+    "casadores": "Casadores",
+    "casadorestequila": "Casadores",
+    "casadores tequila": "Casadores",
+    "tequila casadores": "Casadores",
+    "hornitos": "Hornitos",
+    "hornitostequila": "Hornitos",
+    "hornitos tequila": "Hornitos",
+    "tequila hornitos": "Hornitos",
 }
 
 # ─── COLUMN NAME MAPPING ─────────────────────────────────────────────
@@ -311,6 +319,8 @@ def classify_visual_style(post_type: str, theme: str, brand: str = "") -> str:
         "Teremana": "Raw / UGC-style",
         "1800 Tequila": "Mixed / Hybrid",
         "818 Tequila": "Raw / UGC-style",
+        "Casadores": "Mixed / Hybrid",
+        "Hornitos": "Mixed / Hybrid",
     }
     return brand_defaults.get(brand, "Mixed / Hybrid")
 

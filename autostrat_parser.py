@@ -24,12 +24,16 @@ PDF_DIR = os.path.join(AUTOSTRAT_DIR, "pdfs")
 # Map title line to report type directory
 REPORT_TYPE_MAP = {
     "tiktok hashtag analysis presentation": "tiktok_hashtags",
+    "tiktok hashtag search analysis presentation": "tiktok_hashtags",
     "tiktok profile analysis presentation": "tiktok_profiles",
     "instagram profile analysis presentation": "instagram_profiles",
     "instagram profile presentation": "instagram_profiles",
     "instagram hashtag analysis presentation": "instagram_hashtags",
+    "instagram hashtag search analysis presentation": "instagram_hashtags",
     "tiktok keyword analysis presentation": "tiktok_keywords",
     "tiktok keywords analysis presentation": "tiktok_keywords",
+    "tiktok keyword search analysis presentation": "tiktok_keywords",
+    "tiktok keywords search analysis presentation": "tiktok_keywords",
     "google news analysis presentation": "google_news",
     "google news presentation": "google_news",
 }

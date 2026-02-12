@@ -196,6 +196,44 @@ BRAND_PROFILES = {
         "caption_length_range": (8, 40),
         "ig_post_type_weights": {"Reel": 0.60, "Carousel": 0.20, "Static Image": 0.20},
     },
+    "Casadores": {
+        # Cazadores-family tequila brand. Moderate social media presence.
+        # Traditional positioning, product-forward content.
+        "ig_followers": 15_000,
+        "tt_followers": 5_000,
+        "ig_posts_per_month": 30,
+        "tt_posts_per_month": 20,
+        "ig_base_er": 1.2,
+        "tt_base_er": 2.0,
+        "themes": ["Product Showcase", "Cocktail Recipe", "Lifestyle/Aspirational",
+                    "Cultural Moment / Holiday"],
+        "theme_weights": [0.30, 0.25, 0.25, 0.20],
+        "visual_bias": ["Mixed / Hybrid", "Polished / Studio"],
+        "tone_bias": ["Casual / Conversational", "Bold / Edgy"],
+        "collab_rate": 0.05,
+        "avg_hashtags": 5,
+        "caption_length_range": (15, 50),
+        "ig_post_type_weights": {"Reel": 0.40, "Carousel": 0.25, "Static Image": 0.35},
+    },
+    "Hornitos": {
+        # Sauza Hornitos — accessible tequila brand. Shot/party culture positioning.
+        # Moderate social presence, younger-skewing audience.
+        "ig_followers": 22_000,
+        "tt_followers": 8_000,
+        "ig_posts_per_month": 35,
+        "tt_posts_per_month": 25,
+        "ig_base_er": 1.5,
+        "tt_base_er": 2.5,
+        "themes": ["Cocktail Recipe", "Lifestyle/Aspirational", "Product Showcase",
+                    "Meme / Humor", "Music / Party"],
+        "theme_weights": [0.25, 0.22, 0.20, 0.18, 0.15],
+        "visual_bias": ["Mixed / Hybrid", "Raw / UGC-style"],
+        "tone_bias": ["Playful / Fun", "Casual / Conversational"],
+        "collab_rate": 0.08,
+        "avg_hashtags": 5,
+        "caption_length_range": (12, 45),
+        "ig_post_type_weights": {"Reel": 0.50, "Carousel": 0.20, "Static Image": 0.30},
+    },
 }
 
 # ─── SAMPLE CAPTION FRAGMENTS ────────────────────────────────────────
@@ -302,6 +340,10 @@ HASHTAG_POOLS = {
     "818 Tequila": ["#818Tequila", "#drink818", "#818", "#Tequila",
                      "#CocktailVibes", "#GoodVibes", "#WeekendMood",
                      "#TequilaTime", "#Cheers"],
+    "Casadores": ["#Casadores", "#CasadoresTequila", "#Tequila",
+                   "#CocktailRecipe", "#TequilaTime", "#BoldMoments"],
+    "Hornitos": ["#Hornitos", "#HornitosTequila", "#HornitosPlata", "#Tequila",
+                  "#TakeYourShot", "#TequilaNight", "#ShotTime"],
 }
 
 CREATOR_HANDLES = [
@@ -519,6 +561,8 @@ def generate_sample_profiles(output_dir: str) -> str:
         "Teremana": "Small batch tequila crafted with Mana. @therock | Responsibly enjoyed. 21+",
         "1800 Tequila": "100% blue Weber agave tequila since 1800. Crafted in Mexico. 21+",
         "818 Tequila": "Hand-selected tequila from Jalisco, Mexico. @kendalljenner. 21+",
+        "Casadores": "Bold tequila for bold moments. Crafted in Mexico. 21+",
+        "Hornitos": "Take your shot. Premium tequila made for good times. 21+",
     }
 
     handles = {
@@ -530,6 +574,8 @@ def generate_sample_profiles(output_dir: str) -> str:
         "Teremana": {"Instagram": "@teremana", "TikTok": "@teremanatequila"},
         "1800 Tequila": {"Instagram": "@1800tequila", "TikTok": "@1800tequila"},
         "818 Tequila": {"Instagram": "@drink818", "TikTok": "@drink818"},
+        "Casadores": {"Instagram": "@casadores", "TikTok": "@casadores"},
+        "Hornitos": {"Instagram": "@hornitos", "TikTok": "@hornitos"},
     }
 
     with open(filepath, "w", newline="", encoding="utf-8") as f:

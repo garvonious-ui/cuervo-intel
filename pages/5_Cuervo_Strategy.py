@@ -527,7 +527,7 @@ if _has_autostrat:
     st.caption("Audience psychographics, strategic territories, and partnership opportunities from autostrat.ai reports")
 
     # ── 1. Winning Territories ────────────────────────────────────────
-    all_htw = get_all_how_to_win(autostrat)
+    all_htw = get_all_how_to_win(autostrat, exclude_reference=True)
     if all_htw:
         render_section_label("Winning Territories")
         st.caption("Strategic territories identified across all autostrat reports")
@@ -559,7 +559,7 @@ if _has_autostrat:
         st.markdown("---")
 
     # ── 2. Audience Psychographics (NOPD) ─────────────────────────────
-    all_profiles = get_all_audience_profiles(autostrat)
+    all_profiles = get_all_audience_profiles(autostrat, exclude_reference=True)
     if all_profiles:
         render_section_label("Audience Psychographics")
         st.caption("NOPD profiles from autostrat reports — understand who Cuervo needs to reach")
@@ -643,7 +643,7 @@ if _has_autostrat:
         st.markdown("---")
 
     # ── 6. Partnership Opportunities ──────────────────────────────────
-    all_suggestions = get_all_sponsorship_suggestions(autostrat)
+    all_suggestions = get_all_sponsorship_suggestions(autostrat, exclude_reference=True)
     if all_suggestions:
         render_section_label("Partnership Opportunities")
         st.caption("Sponsorship and partnership recommendations from profile analysis")

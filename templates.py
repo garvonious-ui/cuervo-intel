@@ -1,6 +1,6 @@
 """
 CSV Template Generator for Social Media Intelligence Data Collection.
-Generates structured templates for manual data entry across all 7 tequila brands
+Generates structured templates for manual data entry across all 10 tequila brands
 on Instagram and TikTok.
 """
 
@@ -17,6 +17,8 @@ BRANDS = [
     "Teremana",
     "1800 Tequila",
     "818 Tequila",
+    "Casadores",
+    "Hornitos",
 ]
 
 PLATFORMS = ["Instagram", "TikTok"]
@@ -207,6 +209,8 @@ def generate_hashtag_template(output_dir: str) -> str:
             "Espolon": ["#Espolon", "#EspolonTequila"],
             "Teremana": ["#Teremana", "#TeremanaTequila", "#TeremanaTime"],
             "1800 Tequila": ["#1800Tequila", "#1800", "#1800Cristalino", "#1800Reposado"],
+            "Casadores": ["#Casadores", "#CasadoresTequila"],
+            "Hornitos": ["#Hornitos", "#HornitosTequila", "#HornitosPlata"],
         }
         for brand, tags in known_hashtags.items():
             for tag in tags:
@@ -280,6 +284,8 @@ def generate_collection_guide(output_dir: str) -> str:
 | Espolon | @espolontequila | @espolontequila |
 | Teremana | @teaborhardstuff | @teremana |
 | 1800 Tequila | @1800tequila | @1800tequila |
+| Casadores | @casadores | @casadores |
+| Hornitos | @hornitos | @hornitos |
 
 > **Note:** Verify handles are current before collecting. Some brands may have
 > regional accounts — use the primary US/global account.

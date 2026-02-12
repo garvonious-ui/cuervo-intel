@@ -19,12 +19,24 @@ BRAND_COLORS = {
     "Teremana": "#C9A87E",      # Sandy tan
     "1800 Tequila": "#6B8FA3",  # Steel blue
     "818 Tequila": "#B88BBF",   # Soft purple
+    "Casadores": "#8B7355",     # Warm brown
+    "Hornitos": "#D4A574",      # Golden amber
 }
 
 BRAND_ORDER = [
     "Jose Cuervo", "Patron", "Don Julio", "Casamigos",
     "Espolon", "Teremana", "1800 Tequila", "818 Tequila",
+    "Casadores", "Hornitos",
 ]
+
+# Reference / inspiration brands (non-tequila) — autostrat profiles only
+# Keys are lowercase identifiers matching JSON filenames in data/autostrat/
+REFERENCE_BRANDS = ["duolingo", "drinkpoppi"]
+
+REFERENCE_BRAND_LABELS = {
+    "duolingo": "Duolingo",
+    "drinkpoppi": "Poppi (drinkpoppi)",
+}
 
 PLATFORM_COLORS = {
     "Instagram": "#D4956A",

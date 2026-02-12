@@ -233,6 +233,12 @@ with c3:
 with c4:
     st.metric("Top Brand (ER)", f"{best_brand}", delta=f"{best_er:.2f}%")
 
+# Show info if selected brands have no post data
+brands_no_data = [b for b in sel_brands if b not in df["brand"].values]
+if brands_no_data:
+    st.info(f"No post data yet for: {', '.join(brands_no_data)}. "
+            f"These brands will appear once Sprout Social data is imported.")
+
 st.markdown("---")
 st.subheader("Navigate")
 st.markdown("""
@@ -243,7 +249,7 @@ st.markdown("""
 | **Hashtag & Creator** | Hashtag strategy, creator collab rates, collab engagement lift |
 | **Data Explorer** | Filter, sort, and query every post — download CSV or Excel |
 | **Cuervo Strategy** | Format strategy, content pillars, posting cadence, Gen Z recs, 30-day action plan |
-| **Autostrat Intelligence** | Strategic playbook, conversation trends, profile deep dives, audience psychographics |
+| **Autostrat Intelligence** | Strategic playbook, conversation trends, profile deep dives, audience psychographics, reference brand analysis |
 """)
 
 # Excel export
