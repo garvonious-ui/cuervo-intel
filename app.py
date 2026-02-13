@@ -256,6 +256,7 @@ st.markdown("""
 | **Competitive Landscape** | 13-brand comparison, content gaps, "What to Steal" cards, competitor autostrat intel |
 | **2026 Strategy & Brief** | Social Brief scorecard, GOAT content pillars & mix funnel, 30-day action plan |
 | **Inspiration & Explorer** | Duolingo & Poppi reference profiles, audience comparison, full data explorer |
+| **Hashtag & Search Intel** | Brand hashtag comparison (#JoseCuervo vs #Cazadores vs #Hornitos), search term intelligence (#MargaritaTime) |
 """)
 
 # Excel export

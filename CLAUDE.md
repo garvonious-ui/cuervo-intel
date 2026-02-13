@@ -9,7 +9,7 @@ Jose Cuervo, Patron, Don Julio, Casamigos, Espolon, Teremana, 1800 Tequila, 818 
 ## Reference Brands (non-tequila, inspiration only)
 Duolingo, Poppi — studied for Gen Z content strategy, not tequila competitors
 
-## Architecture (4 pages)
+## Architecture (5 pages)
 ```
 app.py                 # Entry point — data loading, sidebar filters, session state, home page
 pages/
@@ -17,6 +17,7 @@ pages/
   2_Competitive_Landscape.py   # "The Window" — 13-brand comparison, content gaps, competitor intel
   3_2026_Strategy.py           # "The Playbook" — Social Brief scorecard, GOAT frameworks, action plan
   4_Inspiration_&_Explorer.py  # "The Toolbox" — Reference brands + full data explorer
+  5_Hashtag_&_Search_Intel.py  # "The Landscape" — Brand hashtag comparison + search term intelligence
 autostrat_parser.py    # PDF-to-JSON parser for autostrat.ai report exports
 autostrat_loader.py    # JSON loader + cross-report extraction helpers
 autostrat_components.py # Reusable UI components for narrative content
@@ -54,6 +55,11 @@ Uses UNFILTERED data — sidebar filters do NOT apply. Dedicated to the Social B
 ### Page 4: Inspiration & Explorer ("The Toolbox")
 - **Tab 1: Inspiration** — Duolingo/Poppi reference brand profiles, "What Cuervo Can Steal" section, side-by-side audience comparison (NOPD), How to Win territories
 - **Tab 2: Data Explorer** — Advanced filters, caption search, full data table, quick insights, CSV/Excel export
+
+### Page 5: Hashtag & Search Intel ("The Landscape")
+Uses autostrat hashtag reports only — sidebar filters do NOT apply. No quantitative metrics, purely qualitative intelligence.
+- **Tab 1: Brand Hashtags** — Side-by-side comparison of #JoseCuervo vs #Cazadores vs #Hornitos: key insights, NOPD audience profiles, opportunities & strategic actions, How to Win territories, "What This Means for Cuervo" narrative
+- **Tab 2: Search Terms & Categories** — #MargaritaTime deep dive: executive summary, audience profile (NOPD), content opportunities, How to Win territories, "Cuervo's Play" narrative bridging brand and category hashtags
 
 ## Data Sources (3 modes, selected in sidebar)
 1. **Demo Data** — synthetic data from `sample_data.py` (BRAND_PROFILES based on real research but posts are fake)
