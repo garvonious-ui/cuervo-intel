@@ -175,51 +175,165 @@ with tab_brands:
         # ── What This Means for Cuervo ──────────────────────
         render_section_label("What This Means for Cuervo")
 
-        # Build comparison narrative from territories
-        cuervo_terrs = set()
-        comp_terrs = set()
+        # Gather territories per brand
+        cuervo_terrs = []
         if cuervo_ht:
-            cuervo_terrs = set(cuervo_ht.get("how_to_win", {}).get("territories", []))
-        for rpt in [cazadores_ht, hornitos_ht, lunazul_ht, milagro_ht]:
+            cuervo_terrs = cuervo_ht.get("how_to_win", {}).get("territories", [])
+        comp_terr_map = {}
+        for name, rpt in [("#Cazadores", cazadores_ht), ("#Hornitos", hornitos_ht),
+                          ("#Lunazul", lunazul_ht), ("#MilagroTequila", milagro_ht)]:
             if rpt:
-                comp_terrs.update(rpt.get("how_to_win", {}).get("territories", []))
+                comp_terr_map[name] = rpt.get("how_to_win", {}).get("territories", [])
+        all_comp_terrs = set()
+        for terrs in comp_terr_map.values():
+            all_comp_terrs.update(terrs)
+        cuervo_unique = set(cuervo_terrs) - all_comp_terrs
+        comp_unique = all_comp_terrs - set(cuervo_terrs)
 
-        # Unique to Cuervo
-        cuervo_unique = cuervo_terrs - comp_terrs
-        # Competitor-only
-        comp_unique = comp_terrs - cuervo_terrs
-
-        narrative_parts = []
-        if cuervo_unique:
-            narrative_parts.append(
-                "**Where Cuervo leads:** " +
-                " | ".join(t[:80] for t in list(cuervo_unique)[:3])
+        # ── Cuervo's Winning Territories ──
+        if cuervo_terrs:
+            items_html = "".join(
+                f"<li style='margin-bottom:6px;'>{t}</li>" for t in cuervo_terrs
             )
-        if comp_unique:
-            narrative_parts.append(
-                "**Where competitors are winning:** " +
-                " | ".join(t[:80] for t in list(comp_unique)[:3])
-            )
+            unique_note = ""
+            if cuervo_unique:
+                unique_tags = "".join(
+                    f"<span style='background:#C8E6C9; color:#2E7D32; padding:2px 8px; "
+                    f"border-radius:10px; font-size:0.8rem; font-weight:600; "
+                    f"margin-right:6px;'>Unique to Cuervo</span>"
+                    for _ in range(1)
+                )
+                unique_items = "".join(
+                    f"<li style='margin-bottom:4px;'>{t}</li>" for t in cuervo_unique
+                )
+                unique_note = (
+                    f"<div style='margin-top:12px; padding-top:10px; border-top:1px solid #E0D8D0;'>"
+                    f"{unique_tags} Territories no competitor is claiming:"
+                    f"<ul style='margin:6px 0 0 0; padding-left:20px; color:#2E7D32; "
+                    f"font-size:0.88rem;'>{unique_items}</ul></div>"
+                )
+            st.markdown(f"""
+            <div style="background:white; border-radius:10px; padding:18px 20px;
+                        margin-bottom:14px; border:1px solid #E0D8D0;
+                        border-left:5px solid #5CB85C;">
+                <h4 style="font-family:'Barlow Condensed',sans-serif; font-weight:700;
+                           color:#5CB85C; margin:0 0 10px 0; font-size:1rem;">
+                    Where Cuervo Leads</h4>
+                <ul style="margin:0; padding-left:20px; color:#444; font-size:0.92rem;
+                           line-height:1.55;">{items_html}</ul>
+                {unique_note}
+            </div>
+            """, unsafe_allow_html=True)
 
-        # Common gaps — look at NOPD objections across all brands
-        all_objections = []
-        for rpt in [cuervo_ht, cazadores_ht, hornitos_ht, lunazul_ht, milagro_ht]:
+        # ── Where Competitors Are Winning ──
+        if comp_terr_map:
+            cards_html = ""
+            for brand_label, terrs in comp_terr_map.items():
+                if not terrs:
+                    continue
+                terr_items = "".join(
+                    f"<li style='margin-bottom:4px;'>{t}</li>" for t in terrs
+                )
+                cards_html += (
+                    f"<div style='margin-bottom:12px;'>"
+                    f"<strong style='color:#D9534F; font-size:0.95rem;'>{brand_label}</strong>"
+                    f"<ul style='margin:4px 0 0 0; padding-left:20px; color:#444; "
+                    f"font-size:0.88rem; line-height:1.5;'>{terr_items}</ul></div>"
+                )
+            if comp_unique:
+                threat_items = "".join(
+                    f"<li style='margin-bottom:4px;'>{t}</li>"
+                    for t in list(comp_unique)[:5]
+                )
+                cards_html += (
+                    f"<div style='margin-top:12px; padding-top:10px; border-top:1px solid #E0D8D0;'>"
+                    f"<span style='background:#FFCDD2; color:#C62828; padding:2px 8px; "
+                    f"border-radius:10px; font-size:0.8rem; font-weight:600;'>"
+                    f"Not in Cuervo's playbook</span> "
+                    f"Territories competitors own that Cuervo does not:"
+                    f"<ul style='margin:6px 0 0 0; padding-left:20px; color:#C62828; "
+                    f"font-size:0.88rem;'>{threat_items}</ul></div>"
+                )
+            st.markdown(f"""
+            <div style="background:white; border-radius:10px; padding:18px 20px;
+                        margin-bottom:14px; border:1px solid #E0D8D0;
+                        border-left:5px solid #D9534F;">
+                <h4 style="font-family:'Barlow Condensed',sans-serif; font-weight:700;
+                           color:#D9534F; margin:0 0 10px 0; font-size:1rem;">
+                    Where Competitors Are Winning</h4>
+                {cards_html}
+            </div>
+            """, unsafe_allow_html=True)
+
+        # ── Common Audience Friction ──
+        brand_objections = {}
+        for name, rpt in [("#JoseCuervo", cuervo_ht), ("#Cazadores", cazadores_ht),
+                          ("#Hornitos", hornitos_ht), ("#Lunazul", lunazul_ht),
+                          ("#MilagroTequila", milagro_ht)]:
             if rpt:
-                all_objections.extend(rpt.get("audience_profile", {}).get("objections", []))
-        if all_objections:
-            # Find recurring themes
-            narrative_parts.append(
-                "**Common audience friction across all brands:** " +
-                all_objections[0][:120]
-            )
+                objs = rpt.get("audience_profile", {}).get("objections", [])
+                if objs:
+                    brand_objections[name] = objs
 
-        if narrative_parts:
-            render_narrative_card(
-                "Strategic Takeaway",
-                "<br>".join(narrative_parts),
-                accent_color=POPLIFE_PEACH,
-            )
-        else:
+        if brand_objections:
+            obj_html = ""
+            for brand_label, objs in brand_objections.items():
+                obj_items = "".join(
+                    f"<li style='margin-bottom:4px;'>{o}</li>" for o in objs
+                )
+                obj_html += (
+                    f"<div style='margin-bottom:10px;'>"
+                    f"<strong style='color:#E65100; font-size:0.95rem;'>{brand_label}</strong>"
+                    f"<ul style='margin:4px 0 0 0; padding-left:20px; color:#444; "
+                    f"font-size:0.88rem; line-height:1.5;'>{obj_items}</ul></div>"
+                )
+            st.markdown(f"""
+            <div style="background:white; border-radius:10px; padding:18px 20px;
+                        margin-bottom:14px; border:1px solid #E0D8D0;
+                        border-left:5px solid #F8C090;">
+                <h4 style="font-family:'Barlow Condensed',sans-serif; font-weight:700;
+                           color:#E65100; margin:0 0 4px 0; font-size:1rem;">
+                    Common Audience Friction</h4>
+                <p style="color:#777; font-size:0.85rem; margin:0 0 12px 0;">
+                    Objections and pushback themes across all brand hashtag audiences —
+                    shared friction points signal category-wide opportunities.</p>
+                {obj_html}
+            </div>
+            """, unsafe_allow_html=True)
+
+        # ── Cuervo's Strategic Summary ──
+        if cuervo_ht:
+            summary = cuervo_ht.get("how_to_win", {}).get("summary", "")
+            cuervo_desires = cuervo_ht.get("audience_profile", {}).get("desires", [])
+            if summary or cuervo_desires:
+                desires_html = ""
+                if cuervo_desires:
+                    d_items = "".join(
+                        f"<li style='margin-bottom:4px;'>{d}</li>" for d in cuervo_desires
+                    )
+                    desires_html = (
+                        f"<div style='margin-top:10px;'>"
+                        f"<strong style='font-size:0.9rem;'>What the #JoseCuervo audience wants:</strong>"
+                        f"<ul style='margin:4px 0 0 0; padding-left:20px; color:#444; "
+                        f"font-size:0.88rem; line-height:1.5;'>{d_items}</ul></div>"
+                    )
+                summary_html = (
+                    f"<p style='color:#444; font-size:0.92rem; line-height:1.55; "
+                    f"margin:0;'>{summary}</p>" if summary else ""
+                )
+                st.markdown(f"""
+                <div style="background:linear-gradient(135deg, #FDEBD6 0%, #FFF8F0 100%);
+                            border-radius:10px; padding:18px 20px; margin-bottom:14px;
+                            border-left:5px solid {POPLIFE_PEACH};">
+                    <h4 style="font-family:'Barlow Condensed',sans-serif; font-weight:700;
+                               color:{POPLIFE_DARK}; margin:0 0 10px 0; font-size:1rem;">
+                        Cuervo's Path Forward</h4>
+                    {summary_html}
+                    {desires_html}
+                </div>
+                """, unsafe_allow_html=True)
+
+        if not cuervo_terrs and not comp_terr_map and not brand_objections:
             st.caption("Add more hashtag reports to unlock cross-brand comparison.")
 
 
