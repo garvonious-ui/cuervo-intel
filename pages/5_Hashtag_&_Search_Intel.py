@@ -8,7 +8,7 @@ Sidebar filters do NOT apply — this page uses autostrat data directly.
 import streamlit as st
 
 from config import CUSTOM_CSS, POPLIFE_PEACH, POPLIFE_BLUE, POPLIFE_BG, POPLIFE_DARK
-from autostrat_loader import get_report
+from autostrat_loader import get_report, load_all_reports
 from autostrat_components import (
     render_nopd_cards,
     render_territory_cards,
@@ -118,7 +118,13 @@ def _render_opp_action_card(pair, accent="#2ea3f2"):
 
 # ── Tabs ─────────────────────────────────────────────────────────────
 
-tab_brands, tab_search = st.tabs(["Brand Hashtags", "Search Terms & Categories"])
+# Google News reports
+news_reports = autostrat.get("google_news", {})
+has_news_data = len(news_reports) > 0
+
+tab_brands, tab_search, tab_news = st.tabs(
+    ["Brand Hashtags", "Search Terms & Categories", "Google Search News"]
+)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -445,3 +451,173 @@ with tab_search:
                 "Import both #JoseCuervo and #MargaritaTime reports to see "
                 "how Cuervo can bridge brand and category territory."
             )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# TAB 3: GOOGLE SEARCH NEWS
+# ═══════════════════════════════════════════════════════════════════════
+with tab_news:
+    if not has_news_data:
+        st.info(
+            "No Google News reports loaded. Drop autostrat Google News PDF exports "
+            "into `data/autostrat/pdfs/` and click **Import PDFs** in the sidebar."
+        )
+    else:
+        st.markdown(
+            "What the news is saying about tequila brands — sentiment, narratives, "
+            "and strategic implications from Google News intelligence."
+        )
+
+        for query_id, report in news_reports.items():
+            query_label = report.get("search_query", query_id).replace("_", " ").title()
+
+            with st.expander(f"{query_label} — News Intelligence", expanded=True):
+
+                # ── Executive Summary ─────────────────────
+                exec_sum = report.get("executive_summary", {})
+                overview = exec_sum.get("overview", "")
+                insights = exec_sum.get("key_insights", [])
+                # Skip first element if it duplicates the search prompt
+                if len(insights) > 1:
+                    insights = insights[1:]
+
+                if overview:
+                    render_narrative_card("Overview", overview, accent_color=POPLIFE_BLUE)
+
+                if insights:
+                    render_section_label("Key Insights")
+                    for insight in insights:
+                        st.markdown(f"- {insight}")
+
+                # ── News Analysis ─────────────────────────
+                news_analysis = report.get("news_analysis", {})
+                na_summary = news_analysis.get("summary", "")
+                if na_summary:
+                    st.markdown("---")
+                    render_section_label("News Analysis")
+                    st.markdown(na_summary)
+
+                # Sentiment breakdown
+                sentiment = news_analysis.get("sentiment_breakdown", {})
+                pos = sentiment.get("positive_pct", 0)
+                neu = sentiment.get("neutral_pct", 0)
+                neg = sentiment.get("negative_pct", 0)
+                if pos or neu or neg:
+                    s1, s2, s3 = st.columns(3)
+                    with s1:
+                        st.markdown(f"""
+                        <div style="background:#F0FFF0; border-left:4px solid #5CB85C;
+                                    border-radius:0 8px 8px 0; padding:12px 16px; text-align:center;">
+                            <div style="font-size:1.5rem; font-weight:700; color:#2E7D32;">{pos}%</div>
+                            <div style="font-size:0.85rem; color:#555;">Positive</div>
+                        </div>""", unsafe_allow_html=True)
+                    with s2:
+                        st.markdown(f"""
+                        <div style="background:#F5F5F5; border-left:4px solid #9E9E9E;
+                                    border-radius:0 8px 8px 0; padding:12px 16px; text-align:center;">
+                            <div style="font-size:1.5rem; font-weight:700; color:#616161;">{neu}%</div>
+                            <div style="font-size:0.85rem; color:#555;">Neutral</div>
+                        </div>""", unsafe_allow_html=True)
+                    with s3:
+                        st.markdown(f"""
+                        <div style="background:#FFF5F5; border-left:4px solid #D9534F;
+                                    border-radius:0 8px 8px 0; padding:12px 16px; text-align:center;">
+                            <div style="font-size:1.5rem; font-weight:700; color:#C62828;">{neg}%</div>
+                            <div style="font-size:0.85rem; color:#555;">Negative</div>
+                        </div>""", unsafe_allow_html=True)
+
+                # Key topics
+                topics = news_analysis.get("key_topics", [])
+                if topics:
+                    render_section_label("Key Topics")
+                    for topic in topics:
+                        st.markdown(f"- {topic}")
+
+                # Opportunities & Risks
+                opps = news_analysis.get("opportunities", [])
+                risks = news_analysis.get("risks", [])
+                if opps or risks:
+                    st.markdown("---")
+                    o_col, r_col = st.columns(2)
+                    with o_col:
+                        if opps:
+                            st.markdown(f"""
+                            <div style="background:#F0FFF0; border-left:4px solid #5CB85C;
+                                        border-radius:0 8px 8px 0; padding:14px 16px;">
+                                <h4 style="color:#2E7D32; font-family:'Barlow Condensed',sans-serif;
+                                           font-weight:700; margin:0 0 8px 0; font-size:0.95rem;">
+                                    OPPORTUNITIES</h4>
+                                <ul style="margin:0; padding-left:18px; color:#444;
+                                           font-size:0.9rem; line-height:1.5;">
+                                    {''.join(f'<li style="margin-bottom:4px;">{o}</li>' for o in opps)}
+                                </ul>
+                            </div>""", unsafe_allow_html=True)
+                    with r_col:
+                        if risks:
+                            st.markdown(f"""
+                            <div style="background:#FFF5F5; border-left:4px solid #D9534F;
+                                        border-radius:0 8px 8px 0; padding:14px 16px;">
+                                <h4 style="color:#C62828; font-family:'Barlow Condensed',sans-serif;
+                                           font-weight:700; margin:0 0 8px 0; font-size:0.95rem;">
+                                    RISKS</h4>
+                                <ul style="margin:0; padding-left:18px; color:#444;
+                                           font-size:0.9rem; line-height:1.5;">
+                                    {''.join(f'<li style="margin-bottom:4px;">{r}</li>' for r in risks)}
+                                </ul>
+                            </div>""", unsafe_allow_html=True)
+
+                # ── Brand Mentions ────────────────────────
+                mentions = report.get("brand_mentions", [])
+                if mentions:
+                    st.markdown("---")
+                    render_section_label("Brand Mentions")
+                    for mention in mentions:
+                        from autostrat_components import render_brand_mention
+                        render_brand_mention({
+                            "brand": mention.get("brand", ""),
+                            "context": mention.get("context", ""),
+                            "sentiment": mention.get("sentiment", ""),
+                            "source_label": "Google News",
+                            "source_identifier": query_label,
+                        })
+
+                # ── Trending Narratives ───────────────────
+                narratives = report.get("trending_narratives", [])
+                if narratives:
+                    st.markdown("---")
+                    render_section_label("Trending Narratives")
+                    for narr in narratives:
+                        title = narr.get("narrative", narr.get("trend", ""))
+                        desc = narr.get("description", "")
+                        brands = narr.get("brands_involved", [])
+                        brands_tag = ""
+                        if brands:
+                            brands_tag = (
+                                f"<div style='margin-top:6px; font-size:0.82rem; color:#999;'>"
+                                f"Brands: {', '.join(brands)}</div>"
+                            )
+                        if title or desc:
+                            st.markdown(f"""
+                            <div style="background:white; border-radius:10px; padding:16px 18px;
+                                        margin-bottom:10px; border:1px solid #E0D8D0;
+                                        border-top:3px solid {POPLIFE_BLUE};">
+                                <strong style="font-family:'Barlow Condensed',sans-serif;
+                                               font-size:1rem; color:#333;">{title}</strong>
+                                <p style="color:#444; font-size:0.9rem; line-height:1.5;
+                                          margin:6px 0 0 0;">{desc}</p>
+                                {brands_tag}
+                            </div>""", unsafe_allow_html=True)
+
+                # ── Strategic Implications ────────────────
+                strat = report.get("strategic_implications", {})
+                strat_summary = strat.get("summary", "")
+                action_items = strat.get("action_items", [])
+                if strat_summary or action_items:
+                    st.markdown("---")
+                    render_section_label("Strategic Implications")
+                    if strat_summary:
+                        render_narrative_card(
+                            "What This Means", strat_summary, accent_color=POPLIFE_PEACH
+                        )
+                    if action_items:
+                        render_territory_cards(action_items)
