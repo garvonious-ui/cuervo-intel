@@ -97,7 +97,7 @@ Uses autostrat hashtag/keyword/news reports only — sidebar filters do NOT appl
 - `st.session_state["autostrat"]` stores `{report_type: {identifier: report_data}}`
 - 6 report types: instagram_profiles, tiktok_profiles, instagram_hashtags, tiktok_hashtags, tiktok_keywords, google_news
 - Current hashtag data: josecuervo.json, cuervo.json, cazadores.json, hornitos.json, lunazul.json, milagrotequila.json, eljimador.json, teremanatequila.json, 1800tequila.json, margaritatime.json
-- Current profile data: duolingo.json, drinkpoppi.json, chipotle.json, dunkin.json, paige_desorbo.json, entrapranure.json
+- Current profile data: duolingo.json, drinkpoppi.json, chipotle.json, dunkin.json
 - Current Google News data: jose_cuervo_tequila.json (full report with NOPD, SWOT, news trends/topics, campaigns, quotes, statistics)
 - Report classification whitelists in config.py: `BRAND_HASHTAGS` (10 brands → Page 5 Tab 1), `CATEGORY_HASHTAGS` (category conversations → Page 5 Tab 2), `CUERVO_HASHTAG_IDS` (Cuervo-specific subset for Page 1 Tab 3 + cross-brand comparison logic)
 - NOPD framework: Needs (#2ea3f2), Objections (#D9534F), Desires (#5CB85C), Pain Points (#F8C090)

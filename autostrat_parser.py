@@ -277,7 +277,7 @@ def detect_report_type(text: str) -> tuple[str, str, str]:
         raise ValueError("PDF text too short to detect report type")
 
     identifier = lines[0].strip("'").strip()
-    # Handle cases like "entrapranure's TikTok Profile Analysis"
+    # Handle possessive forms like "Brand's TikTok Profile Analysis"
     if "'s " in identifier:
         identifier = identifier.split("'s ")[0]
 
