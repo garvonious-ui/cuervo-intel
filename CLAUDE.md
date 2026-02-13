@@ -58,8 +58,9 @@ Uses UNFILTERED data — sidebar filters do NOT apply. Dedicated to the Social B
 
 ### Page 5: Hashtag & Search Intel ("The Landscape")
 Uses autostrat hashtag reports only — sidebar filters do NOT apply. No quantitative metrics, purely qualitative intelligence.
-- **Tab 1: Brand Hashtags** — Accordion comparison of #JoseCuervo, #Cuervo, #Cazadores, #Hornitos, #Lunazul, #MilagroTequila, #ElJimador: key insights, NOPD audience profiles, opportunities & strategic actions, How to Win territories. "What This Means for Cuervo" strategic takeaway with four cards: Where Cuervo Leads (unique territories), Where Competitors Are Winning (per-brand breakdown + gaps), Common Audience Friction (objections per brand), Cuervo's Path Forward (summary + desires)
+- **Tab 1: Brand Hashtags** — Accordion comparison of #JoseCuervo, #Cuervo, #Cazadores, #Hornitos, #Lunazul, #MilagroTequila, #ElJimador, #TeremanaTequila, #1800Tequila: key insights, NOPD audience profiles, opportunities & strategic actions, How to Win territories. "What This Means for Cuervo" strategic takeaway with four cards: Where Cuervo Leads (unique territories), Where Competitors Are Winning (per-brand breakdown + gaps), Common Audience Friction (objections per brand), Cuervo's Path Forward (summary + desires)
 - **Tab 2: Search Terms & Categories** — #MargaritaTime deep dive: executive summary, audience profile (NOPD), content opportunities, How to Win territories, "Cuervo's Play" narrative bridging brand and category hashtags
+- **Tab 3: Google Search News** — Per-report accordions with: executive summary + key insights, news analysis with sentiment breakdown (positive/neutral/negative gauges), key topics, opportunities & risks (side-by-side), brand mentions with sentiment badges, trending narratives, strategic implications + action items
 
 ## Data Sources (3 modes, selected in sidebar)
 1. **Demo Data** — synthetic data from `sample_data.py` (BRAND_PROFILES based on real research but posts are fake)
@@ -95,8 +96,9 @@ Uses autostrat hashtag reports only — sidebar filters do NOT apply. No quantit
 - Qualitative reports from autostrat.ai — audience psychographics, competitive positioning, content trends, creator archetypes
 - `st.session_state["autostrat"]` stores `{report_type: {identifier: report_data}}`
 - 6 report types: instagram_profiles, tiktok_profiles, instagram_hashtags, tiktok_hashtags, tiktok_keywords, google_news
-- Current hashtag data: josecuervo.json, cuervo.json, cazadores.json, hornitos.json, lunazul.json, milagrotequila.json, eljimador.json, margaritatime.json
+- Current hashtag data: josecuervo.json, cuervo.json, cazadores.json, hornitos.json, lunazul.json, milagrotequila.json, eljimador.json, teremanatequila.json, 1800tequila.json, margaritatime.json
 - Current profile data: duolingo.json, drinkpoppi.json, chipotle.json, dunkin.json
+- Current Google News data: (none yet — awaiting PDF imports)
 - NOPD framework: Needs (#2ea3f2), Objections (#D9534F), Desires (#5CB85C), Pain Points (#F8C090)
 - PDF import: sidebar button triggers parser, outputs JSON to correct subdirectory
 
