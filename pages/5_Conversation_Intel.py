@@ -5,6 +5,9 @@ and Google News. Multi-platform (Instagram + TikTok).
 Sidebar filters do NOT apply -- this page uses autostrat data directly.
 """
 
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+
 import streamlit as st
 
 from config import (
