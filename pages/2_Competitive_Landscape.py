@@ -152,59 +152,6 @@ with tab_overview:
                      annotation_position="bottom right")
     st.plotly_chart(fig_er, width="stretch")
 
-    st.markdown("---")
-
-    # ── Creator Collab Comparison ──────────────────────────────────────
-    st.subheader("Creator Collaboration Rates")
-
-    cols = st.columns(min(len(order), 4))
-    for i, brand in enumerate(order):
-        cr = results["creators"].get(brand, {})
-        pct = cr.get("collab_pct", 0)
-        with cols[i % len(cols)]:
-            fig_g = go.Figure(go.Indicator(
-                mode="gauge+number",
-                value=pct,
-                title={"text": brand, "font": {"size": 13}},
-                number={"suffix": "%"},
-                gauge={
-                    "axis": {"range": [0, 50]},
-                    "bar": {"color": BRAND_COLORS.get(brand, "#888")},
-                    "steps": [
-                        {"range": [0, 15], "color": "#FFCDD2"},
-                        {"range": [15, 30], "color": "#FDEBD6"},
-                        {"range": [30, 50], "color": "#C8E6C9"},
-                    ],
-                },
-            ))
-            fig_g.update_layout(height=200, margin=dict(t=50, b=10, l=20, r=20))
-            st.plotly_chart(fig_g, width="stretch")
-
-    # Collab vs Non-Collab ER
-    st.subheader("Collab vs Non-Collab Engagement")
-
-    collab_rows = []
-    for brand in order:
-        cr = results["creators"].get(brand, {})
-        collab_rows.append({"brand": brand, "type": "Collab", "er": cr.get("avg_collab_engagement_rate", 0)})
-        collab_rows.append({"brand": brand, "type": "Non-Collab", "er": cr.get("avg_non_collab_engagement_rate", 0)})
-
-    cdf = pd.DataFrame(collab_rows)
-    fig_collab = px.bar(cdf, x="brand", y="er", color="type", barmode="group",
-                        color_discrete_map={"Collab": "#F8C090", "Non-Collab": "#D9D3CC"},
-                        category_orders={"brand": order},
-                        labels={"er": "Avg ER %", "brand": "", "type": ""},
-                        template=CHART_TEMPLATE)
-    fig_collab.update_layout(font=CHART_FONT, height=400, legend=dict(orientation="h", y=1.12))
-    st.plotly_chart(fig_collab, width="stretch")
-
-    # So What
-    cuervo_cr = results["creators"].get(CUERVO, {})
-    cuervo_collab_lift = cuervo_cr.get("collab_engagement_lift", 0)
-    best_collab_brand = max(order, key=lambda b: results["creators"].get(b, {}).get("collab_pct", 0))
-    best_collab_pct = results["creators"].get(best_collab_brand, {}).get("collab_pct", 0)
-    st.info(f"**Creator collab leader:** {best_collab_brand} at {best_collab_pct:.0f}% collab rate. "
-            f"Cuervo's collab ER lift is {cuervo_collab_lift:+.2f}pp vs non-collab content.")
 
 
 # ══════════════════════════════════════════════════════════════════════
