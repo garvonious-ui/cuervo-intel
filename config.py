@@ -34,11 +34,13 @@ BRAND_ORDER = [
 
 # Reference / inspiration brands (non-tequila) — autostrat profiles only
 # Keys are lowercase identifiers matching JSON filenames in data/autostrat/
-REFERENCE_BRANDS = ["duolingo", "drinkpoppi"]
+REFERENCE_BRANDS = ["duolingo", "drinkpoppi", "chipotle", "dunkin"]
 
 REFERENCE_BRAND_LABELS = {
     "duolingo": "Duolingo",
     "drinkpoppi": "Poppi (drinkpoppi)",
+    "chipotle": "Chipotle",
+    "dunkin": "Dunkin'",
 }
 
 PLATFORM_COLORS = {
