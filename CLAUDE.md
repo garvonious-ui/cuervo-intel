@@ -17,7 +17,7 @@ pages/
   2_Competitive_Landscape.py   # "The Window" — 13-brand comparison, content gaps, competitor intel
   3_2026_Strategy.py           # "The Playbook" — Social Brief scorecard, GOAT frameworks, action plan
   4_Inspiration_&_Explorer.py  # "The Toolbox" — Reference brands + full data explorer
-  5_Hashtag_&_Search_Intel.py  # "The Landscape" — Brand hashtag comparison + search term intelligence
+  5_Conversation_Intel.py      # "The Landscape" — Brand hashtag comparison, category intel, Google News
 autostrat_parser.py    # PDF/PPTX-to-JSON parser for autostrat.ai report exports
 autostrat_loader.py    # JSON loader + cross-report extraction helpers
 autostrat_components.py # Reusable UI components for narrative content
@@ -38,13 +38,13 @@ data/autostrat/pdfs/   # Drop autostrat PDF/PPTX exports here for import
 Uses UNFILTERED data — sidebar filters do NOT apply. Cuervo-only view.
 - **Tab 1: KPI Dashboard** — Social Brief KPI scorecard (ER vs 3%, Reel ratio vs 50%, Reel views vs 10K, posts/week vs targets), "So What" narrative, platform cadence scorecard, engagement signals (save/share/comment rates)
 - **Tab 2: Content Performance** — Format breakdown (pie + ER by format), theme performance chart, best & worst 5 posts with caption previews
-- **Tab 3: Self-Audit Intelligence** — josecuervo + margaritatime autostrat reports (key insights, NOPD, How to Win, strategic actions, verbatims)
+- **Tab 3: Self-Audit Intelligence** — All Cuervo-related autostrat reports across platforms (dynamically loaded via `CUERVO_HASHTAG_IDS` + `CATEGORY_HASHTAGS`). Each report in a collapsible accordion. Hashtag reports: key insights, NOPD, How to Win, strategic actions, verbatims. Google News accordion: overview, sentiment breakdown, SWOT analysis, action items. Platform badges (IG/TT) on each expander.
 
 ### Page 2: Competitive Landscape ("The Window")
 Uses FILTERED data — sidebar brand/platform/type filters apply.
 - **Tab 1: Competitive Overview** — Side-by-side comparison table, "Who's Winning & Why" narrative, ER bar chart with 3% target line
 - **Tab 2: Content Gaps** — Cuervo vs category theme gap analysis, format strategy stacked bar, posting frequency comparison, "What to Steal" cards for brands beating Cuervo
-- **Tab 3: Competitor Intelligence** — Cazadores + Hornitos autostrat reports, competitive brand mentions
+- *(Purely quantitative — all qualitative competitor intel moved to Page 5)*
 
 ### Page 3: 2026 Strategy & Brief ("The Playbook")
 Uses UNFILTERED data — sidebar filters do NOT apply. Dedicated to the Social Brief.
@@ -56,10 +56,10 @@ Uses UNFILTERED data — sidebar filters do NOT apply. Dedicated to the Social B
 - **Tab 1: Inspiration** — Duolingo/Poppi/Chipotle/Dunkin' reference brand profiles, "What Cuervo Can Steal" section, side-by-side audience comparison (NOPD), How to Win territories, Sponsorship Intelligence, Performance Statistics (min/max/median/avg for views/likes/comments), Top & Bottom Posts (most/least by likes, comments, engagement)
 - **Tab 2: Data Explorer** — Advanced filters, caption search, full data table, quick insights, CSV/Excel export
 
-### Page 5: Hashtag & Search Intel ("The Landscape")
-Uses autostrat hashtag reports only — sidebar filters do NOT apply. No quantitative metrics, purely qualitative intelligence.
-- **Tab 1: Brand Hashtags** — Accordion comparison of #JoseCuervo, #Cuervo, #Cazadores, #Hornitos, #Lunazul, #MilagroTequila, #ElJimador, #TeremanaTequila, #1800Tequila: key insights, NOPD audience profiles, opportunities & strategic actions, How to Win territories. "What This Means for Cuervo" strategic takeaway with four cards: Where Cuervo Leads (unique territories), Where Competitors Are Winning (per-brand breakdown + gaps), Common Audience Friction (objections per brand), Cuervo's Path Forward (summary + desires)
-- **Tab 2: Search Terms & Categories** — #MargaritaTime deep dive: executive summary, audience profile (NOPD), content opportunities, How to Win territories, "Cuervo's Play" narrative bridging brand and category hashtags
+### Page 5: Conversation Intel ("The Landscape")
+Uses autostrat hashtag/keyword/news reports only — sidebar filters do NOT apply. No quantitative metrics, purely qualitative intelligence. Dynamic multi-platform support (Instagram + TikTok) with platform badges (IG/TT) on each expander.
+- **Tab 1: Brand Hashtags** — Dynamically loaded via `get_brand_hashtag_reports()` using `BRAND_HASHTAGS` config whitelist. Covers all brands across Instagram hashtags, TikTok hashtags, and TikTok keywords. Per-report: key insights, NOPD audience profiles, opportunities & strategic actions, How to Win territories. "What This Means for Cuervo" strategic takeaway with four cards: Where Cuervo Leads (unique territories), Where Competitors Are Winning (per-brand breakdown + gaps), Common Audience Friction (objections per brand), Cuervo's Path Forward (summary + desires). Brand Mentions section at bottom (moved from former Page 2 Tab 3).
+- **Tab 2: Category & Cultural** — Dynamically loaded via `get_category_reports()` using `CATEGORY_HASHTAGS` config whitelist (only explicitly listed identifiers appear — unlisted identifiers like "oilchange" are excluded). Per-report: executive summary, audience profile (NOPD), content opportunities, How to Win territories. "Cuervo's Play" bridge narrative dynamically pairs first Cuervo brand report with first category report.
 - **Tab 3: Google Search News** — Per-report accordions with: executive summary + key insights, news analysis with sentiment breakdown (positive/neutral/negative gauges), key topics, opportunities & risks (side-by-side), audience profile (NOPD), SWOT analysis (strengths/weaknesses/opportunities/threats), brand mentions with sentiment badges, trending narratives, strategic implications + action items, in-market campaigns, key statistics, news quotes
 
 ## Data Sources (3 modes, selected in sidebar)
@@ -86,7 +86,7 @@ Uses autostrat hashtag reports only — sidebar filters do NOT apply. No quantit
 - `results` dict from `analysis.py` has keys: `posts`, `engagement`, `frequency`, `content`, `hashtags`, `creators`, `recommendations`
 - Pages 1, 3 use unfiltered `st.session_state["df"]` — sidebar filters don't apply
 - Pages 2, 4 use `st.session_state["filtered_df"]` — sidebar filters apply
-- Page 5 uses `st.session_state["autostrat"]` directly — no quantitative data, sidebar filters do NOT apply
+- Page 5 uses `st.session_state["autostrat"]` directly — no quantitative data, sidebar filters do NOT apply. Reports are classified via `BRAND_HASHTAGS` and `CATEGORY_HASHTAGS` config whitelists.
 - Brand colors and CSS match poplife99.com palette (peach #F8C090, blue #2ea3f2, dark #333333)
 - `st.logo("logo.png")` and `st.markdown(CUSTOM_CSS)` must be called in every page file
 - Plotly charts use `width="stretch"` (not deprecated `use_container_width=True`)
@@ -99,6 +99,7 @@ Uses autostrat hashtag reports only — sidebar filters do NOT apply. No quantit
 - Current hashtag data: josecuervo.json, cuervo.json, cazadores.json, hornitos.json, lunazul.json, milagrotequila.json, eljimador.json, teremanatequila.json, 1800tequila.json, margaritatime.json
 - Current profile data: duolingo.json, drinkpoppi.json, chipotle.json, dunkin.json, paige_desorbo.json, entrapranure.json
 - Current Google News data: jose_cuervo_tequila.json (full report with NOPD, SWOT, news trends/topics, campaigns, quotes, statistics)
+- Report classification whitelists in config.py: `BRAND_HASHTAGS` (10 brands → Page 5 Tab 1), `CATEGORY_HASHTAGS` (category conversations → Page 5 Tab 2), `CUERVO_HASHTAG_IDS` (Cuervo-specific subset for Page 1 Tab 3 + cross-brand comparison logic)
 - NOPD framework: Needs (#2ea3f2), Objections (#D9534F), Desires (#5CB85C), Pain Points (#F8C090)
 - PDF/PPTX import: sidebar button triggers parser, outputs JSON to correct subdirectory. Supports both PDF (via pdfplumber) and PPTX (via python-pptx) autostrat exports. PPTX extractor handles shape positioning, row clustering, group shapes, and NOPD table detection.
 

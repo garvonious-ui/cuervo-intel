@@ -12,13 +12,6 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from config import BRAND_COLORS, CHART_TEMPLATE, CHART_FONT, BRAND_ORDER, CUSTOM_CSS
-from autostrat_loader import (
-    has_autostrat_data, get_report, get_all_brand_mentions,
-)
-from autostrat_components import (
-    render_section_label, render_territory_cards, render_nopd_cards,
-    render_narrative_card, render_brand_mention, render_verbatim_quotes,
-)
 
 st.logo("logo.png")
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
@@ -39,8 +32,8 @@ CUERVO = "Jose Cuervo"
 ER_TARGET = 3.0
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-tab_overview, tab_gaps, tab_intel = st.tabs([
-    "Competitive Overview", "Content Gaps", "Competitor Intelligence",
+tab_overview, tab_gaps = st.tabs([
+    "Competitive Overview", "Content Gaps",
 ])
 
 # ══════════════════════════════════════════════════════════════════════
@@ -286,75 +279,3 @@ with tab_gaps:
                 """, unsafe_allow_html=True)
     else:
         st.success("Cuervo is outperforming all competitors — keep it up!")
-
-
-# ══════════════════════════════════════════════════════════════════════
-# TAB 3 — Competitor Intelligence
-# ══════════════════════════════════════════════════════════════════════
-
-with tab_intel:
-
-    autostrat = st.session_state.get("autostrat", {})
-    _has_autostrat = has_autostrat_data(autostrat)
-
-    if not _has_autostrat:
-        st.info("No autostrat reports loaded. Import PDFs from the home page to see "
-                "competitor intelligence from Cazadores and Hornitos reports.")
-    else:
-        # ── Cazadores Intel ────────────────────────────────────────────
-        caz_report = get_report(autostrat, "instagram_hashtags", "cazadores")
-        horn_report = get_report(autostrat, "instagram_hashtags", "hornitos")
-
-        competitor_reports = []
-        if caz_report:
-            competitor_reports.append(("Cazadores (#cazadores)", caz_report))
-        if horn_report:
-            competitor_reports.append(("Hornitos (#hornitos)", horn_report))
-
-        if not competitor_reports:
-            st.info("No competitor autostrat reports found. Import cazadores or hornitos PDFs.")
-        else:
-            for report_label, report in competitor_reports:
-                st.subheader(report_label)
-
-                # Executive Summary
-                es = report.get("executive_summary", {})
-                if es.get("key_insights"):
-                    render_section_label("Key Insights")
-                    cols = st.columns(min(len(es["key_insights"]), 2))
-                    for i, insight in enumerate(es["key_insights"][:4]):
-                        with cols[i % len(cols)]:
-                            render_narrative_card(f"Insight {i+1}", insight)
-
-                # Audience Profile (NOPD)
-                ap = report.get("audience_profile", {})
-                if any(ap.get(k) for k in ["needs", "objections", "desires", "pain_points"]):
-                    render_section_label("Audience Profile (NOPD)")
-                    if ap.get("summary"):
-                        st.markdown(ap["summary"])
-                    render_nopd_cards(ap)
-
-                # Opportunities
-                ha = report.get("hashtag_analysis", {})
-                if ha.get("opportunities"):
-                    render_section_label("Opportunities")
-                    for opp in ha["opportunities"][:4]:
-                        st.success(opp)
-
-                # How to Win
-                hw = report.get("how_to_win", {})
-                if hw.get("territories"):
-                    render_section_label("How to Win")
-                    if hw.get("summary"):
-                        st.markdown(f"*{hw['summary']}*")
-                    render_territory_cards(hw["territories"][:5])
-
-                st.markdown("---")
-
-        # ── Competitive Brand Mentions ─────────────────────────────────
-        all_mentions = get_all_brand_mentions(autostrat)
-        if all_mentions:
-            render_section_label("Competitive Brand Mentions")
-            st.caption("How brands appear in the conversation space across all reports")
-            for mention in all_mentions[:8]:
-                render_brand_mention(mention)

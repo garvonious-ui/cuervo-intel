@@ -10,6 +10,35 @@ from __future__ import annotations
 import streamlit as st
 
 
+# ── Platform Badges ──────────────────────────────────────────────────
+
+PLATFORM_BADGE_STYLES = {
+    "instagram_hashtags": {"bg": "#D4956A", "label": "IG"},
+    "instagram_profiles": {"bg": "#D4956A", "label": "IG"},
+    "tiktok_hashtags": {"bg": "#2ea3f2", "label": "TT"},
+    "tiktok_profiles": {"bg": "#2ea3f2", "label": "TT"},
+    "tiktok_keywords": {"bg": "#2ea3f2", "label": "TT"},
+    "google_news": {"bg": "#5CB85C", "label": "News"},
+}
+
+
+def platform_badge_html(report_type: str) -> str:
+    """Return HTML for an inline platform badge (IG, TT, or News)."""
+    style = PLATFORM_BADGE_STYLES.get(report_type, {"bg": "#9E9E9E", "label": "?"})
+    return (
+        f'<span style="background:{style["bg"]};color:white;'
+        f'padding:2px 8px;border-radius:10px;font-size:0.75rem;'
+        f'font-weight:700;margin-left:6px;vertical-align:middle;">'
+        f'{style["label"]}</span>'
+    )
+
+
+def platform_label(report_type: str) -> str:
+    """Return plain text platform label for use in expander titles (no HTML)."""
+    style = PLATFORM_BADGE_STYLES.get(report_type, {"label": "?"})
+    return style["label"]
+
+
 # ── NOPD Quadrant Cards ──────────────────────────────────────────────
 
 NOPD_STYLES = {

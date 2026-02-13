@@ -16,13 +16,16 @@ from config import (
     BRAND_COLORS, CHART_TEMPLATE, CHART_FONT, BRAND_ORDER, CUSTOM_CSS,
     GOAT_CADENCE_TARGETS,
 )
+from config import CUERVO_HASHTAG_IDS, BRAND_HASHTAGS, CATEGORY_HASHTAGS, POPLIFE_BLUE
 from autostrat_loader import (
     has_autostrat_data, get_report, get_all_how_to_win,
     get_all_audience_profiles, get_all_strategic_actions,
+    get_brand_hashtag_reports, get_category_reports,
+    CONVERSATION_TYPES,
 )
 from autostrat_components import (
     render_section_label, render_territory_cards, render_nopd_cards,
-    render_narrative_card, render_verbatim_quotes,
+    render_narrative_card, render_verbatim_quotes, platform_label,
 )
 
 st.logo("logo.png")
@@ -363,58 +366,122 @@ with tab_audit:
         st.info("No autostrat reports loaded. Import PDFs from the home page to see "
                 "Cuervo's self-audit intelligence — audience psychographics, winning territories, and strategic actions.")
     else:
-        # ── Jose Cuervo Report ─────────────────────────────────────────
-        jc_report = get_report(autostrat, "instagram_hashtags", "josecuervo")
-        marg_report = get_report(autostrat, "instagram_hashtags", "margaritatime")
-
+        # ── Gather all Cuervo-related hashtag reports dynamically ──────
         cuervo_reports = []
-        if jc_report:
-            cuervo_reports.append(("josecuervo", "Jose Cuervo (#josecuervo)", jc_report))
-        if marg_report:
-            cuervo_reports.append(("margaritatime", "Margarita Time (#margaritatime)", marg_report))
+
+        # Brand hashtags (josecuervo, cuervo) across all platforms
+        for rt in CONVERSATION_TYPES:
+            for ident in CUERVO_HASHTAG_IDS:
+                rpt = get_report(autostrat, rt, ident)
+                if rpt:
+                    plat = platform_label(rt)
+                    label = BRAND_HASHTAGS.get(ident, f"#{ident}")
+                    cuervo_reports.append((ident, f"{label} ({plat})", rpt))
+
+        # Category hashtags (margaritatime, etc.) across all platforms
+        for rt in CONVERSATION_TYPES:
+            for ident, display in CATEGORY_HASHTAGS.items():
+                rpt = get_report(autostrat, rt, ident)
+                if rpt:
+                    plat = platform_label(rt)
+                    cuervo_reports.append((ident, f"{display} ({plat})", rpt))
 
         if not cuervo_reports:
             st.info("No Cuervo self-audit reports found. Import josecuervo or margaritatime autostrat PDFs.")
         else:
             for report_id, report_label, report in cuervo_reports:
-                st.subheader(report_label)
+                with st.expander(report_label):
 
-                # Executive Summary
-                es = report.get("executive_summary", {})
-                if es.get("key_insights"):
-                    render_section_label("Key Insights")
-                    cols = st.columns(min(len(es["key_insights"]), 2))
-                    for i, insight in enumerate(es["key_insights"][:4]):
-                        with cols[i % len(cols)]:
-                            render_narrative_card(f"Insight {i+1}", insight)
+                    # Executive Summary
+                    es = report.get("executive_summary", {})
+                    if es.get("key_insights"):
+                        render_section_label("Key Insights")
+                        insights = es["key_insights"]
+                        # Skip first if it duplicates the search prompt
+                        if len(insights) > 1:
+                            insights = insights[1:]
+                        cols = st.columns(min(len(insights), 2))
+                        for i, insight in enumerate(insights[:4]):
+                            with cols[i % len(cols)]:
+                                render_narrative_card(f"Insight {i+1}", insight)
 
-                # Audience Profile (NOPD)
-                ap = report.get("audience_profile", {})
-                if any(ap.get(k) for k in ["needs", "objections", "desires", "pain_points"]):
-                    render_section_label("Audience Profile (NOPD)")
-                    if ap.get("summary"):
-                        st.markdown(ap["summary"])
-                    render_nopd_cards(ap)
+                    # Audience Profile (NOPD)
+                    ap = report.get("audience_profile", {})
+                    if any(ap.get(k) for k in ["needs", "objections", "desires", "pain_points"]):
+                        render_section_label("Audience Profile (NOPD)")
+                        if ap.get("summary"):
+                            st.markdown(ap["summary"])
+                        render_nopd_cards(ap)
 
-                # How to Win
-                hw = report.get("how_to_win", {})
-                if hw.get("territories"):
-                    render_section_label("How to Win")
-                    if hw.get("summary"):
-                        st.markdown(f"*{hw['summary']}*")
-                    render_territory_cards(hw["territories"])
+                    # How to Win
+                    hw = report.get("how_to_win", {})
+                    if hw.get("territories"):
+                        render_section_label("How to Win")
+                        if hw.get("summary"):
+                            st.markdown(f"*{hw['summary']}*")
+                        render_territory_cards(hw["territories"])
 
-                # Strategic Actions
-                ha = report.get("hashtag_analysis", {})
-                if ha.get("strategic_actions"):
-                    render_section_label("Strategic Actions")
-                    for i, action in enumerate(ha["strategic_actions"][:6], 1):
-                        st.markdown(f"**{i}.** {action}")
+                    # Strategic Actions
+                    ha = report.get("hashtag_analysis", {})
+                    if ha.get("strategic_actions"):
+                        render_section_label("Strategic Actions")
+                        for i, action in enumerate(ha["strategic_actions"][:6], 1):
+                            st.markdown(f"**{i}.** {action}")
 
-                # Audience Verbatims
-                verbatims = hw.get("audience_verbatims", [])
-                if verbatims:
-                    with st.expander(f"Audience Verbatims ({len(verbatims)})"):
+                    # Audience Verbatims
+                    verbatims = hw.get("audience_verbatims", [])
+                    if verbatims:
+                        render_section_label("Audience Verbatims")
                         render_verbatim_quotes(verbatims, max_quotes=8)
 
-                st.markdown("---")
+        # ── Google News: Jose Cuervo ──────────────────────────────────
+        news_report = get_report(autostrat, "google_news", "jose_cuervo_tequila")
+        if news_report:
+            with st.expander("Google News: Jose Cuervo Tequila"):
+
+                # Overview
+                exec_sum = news_report.get("executive_summary", {})
+                overview = exec_sum.get("overview", "")
+                if overview:
+                    render_narrative_card("News Overview", overview, accent_color=POPLIFE_BLUE)
+
+                # Sentiment breakdown
+                news_analysis = news_report.get("news_analysis", {})
+                sentiment = news_analysis.get("sentiment_breakdown", {})
+                pos = sentiment.get("positive_pct", 0)
+                neu = sentiment.get("neutral_pct", 0)
+                neg = sentiment.get("negative_pct", 0)
+                if pos or neu or neg:
+                    s1, s2, s3 = st.columns(3)
+                    with s1:
+                        st.metric("Positive", f"{pos}%")
+                    with s2:
+                        st.metric("Neutral", f"{neu}%")
+                    with s3:
+                        st.metric("Negative", f"{neg}%")
+
+                # SWOT
+                swot = news_report.get("swot_analysis", {})
+                has_swot = any(swot.get(k) for k in ["strengths", "weaknesses", "opportunities", "threats"])
+                if has_swot:
+                    render_section_label("SWOT Analysis")
+                    sw_col, ot_col = st.columns(2)
+                    with sw_col:
+                        for key, label, color in [("strengths", "Strengths", "#5CB85C"), ("weaknesses", "Weaknesses", "#D9534F")]:
+                            items = swot.get(key, [])
+                            if items:
+                                for item in items:
+                                    st.markdown(f"- **{label}:** {item}")
+                    with ot_col:
+                        for key, label, color in [("opportunities", "Opportunities", "#2ea3f2"), ("threats", "Threats", "#F8C090")]:
+                            items = swot.get(key, [])
+                            if items:
+                                for item in items:
+                                    st.markdown(f"- **{label}:** {item}")
+
+                # Strategic Implications
+                strat = news_report.get("strategic_implications", {})
+                action_items = strat.get("action_items", [])
+                if action_items:
+                    render_section_label("News Action Items")
+                    render_territory_cards(action_items)

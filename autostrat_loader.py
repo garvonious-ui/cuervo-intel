@@ -300,3 +300,41 @@ def get_all_sponsorship_suggestions(
 def get_report_counts(autostrat: dict) -> dict[str, int]:
     """Get count of reports per type."""
     return {rt: len(reports) for rt, reports in autostrat.items()}
+
+
+def get_brand_hashtag_reports(
+    autostrat: dict,
+) -> dict[str, list[tuple[str, str, dict]]]:
+    """Get all brand hashtag reports grouped by identifier, across platforms.
+
+    Returns {identifier: [(report_type, display_label, report), ...]}.
+    Only includes identifiers listed in BRAND_HASHTAGS config.
+    """
+    from config import BRAND_HASHTAGS
+
+    results: dict[str, list] = {}
+    for rt in CONVERSATION_TYPES:
+        for identifier, report in autostrat.get(rt, {}).items():
+            if identifier in BRAND_HASHTAGS:
+                label = BRAND_HASHTAGS[identifier]
+                results.setdefault(identifier, []).append((rt, label, report))
+    return results
+
+
+def get_category_reports(
+    autostrat: dict,
+) -> list[tuple[str, str, str, dict]]:
+    """Get all category/cultural conversation reports (whitelisted only).
+
+    Returns [(report_type, identifier, display_label, report), ...].
+    Only includes identifiers listed in CATEGORY_HASHTAGS config.
+    """
+    from config import CATEGORY_HASHTAGS
+
+    results = []
+    for rt in CONVERSATION_TYPES:
+        for identifier, report in autostrat.get(rt, {}).items():
+            if identifier in CATEGORY_HASHTAGS:
+                label = CATEGORY_HASHTAGS[identifier]
+                results.append((rt, identifier, label, report))
+    return results

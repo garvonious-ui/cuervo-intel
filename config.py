@@ -48,6 +48,31 @@ PLATFORM_COLORS = {
     "TikTok": "#2ea3f2",
 }
 
+# Brand hashtag identifiers → display names
+# Keys are lowercase slugs matching JSON filenames in data/autostrat/
+# Only identifiers listed here appear on the Brand Hashtags tab (Page 5 Tab 1)
+BRAND_HASHTAGS = {
+    "josecuervo": "#JoseCuervo",
+    "cuervo": "#Cuervo",
+    "cazadores": "#Cazadores",
+    "hornitos": "#Hornitos",
+    "lunazul": "#Lunazul",
+    "milagrotequila": "#MilagroTequila",
+    "eljimador": "#ElJimador",
+    "teremanatequila": "#TeremanaTequila",
+    "1800tequila": "#1800Tequila",
+    "casamigos": "#Casamigos",
+}
+
+# Cuervo's own hashtag identifiers (subset of BRAND_HASHTAGS)
+CUERVO_HASHTAG_IDS = {"josecuervo", "cuervo"}
+
+# Category / cultural hashtag identifiers → display names
+# Only identifiers listed here appear on the Category & Cultural tab (Page 5 Tab 2)
+CATEGORY_HASHTAGS = {
+    "margaritatime": "#MargaritaTime",
+}
+
 PRIORITY_COLORS = {
     "High": "#D9534F",
     "Medium": "#F8C090",
