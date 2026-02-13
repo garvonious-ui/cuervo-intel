@@ -6,7 +6,12 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-from config import BRAND_COLORS, CHART_TEMPLATE, CHART_FONT, BRAND_ORDER, PRIORITY_COLORS, CUSTOM_CSS
+from config import (
+    BRAND_COLORS, CHART_TEMPLATE, CHART_FONT, BRAND_ORDER, PRIORITY_COLORS, CUSTOM_CSS,
+    GOAT_PILLAR_MAP, GOAT_PILLAR_TARGETS, GOAT_PILLAR_COLORS,
+    CONTENT_MIX_MAP, CONTENT_MIX_TARGETS, CONTENT_MIX_COLORS,
+    GOAT_CADENCE_TARGETS,
+)
 from autostrat_loader import (
     has_autostrat_data, get_all_how_to_win, get_all_audience_profiles,
     get_all_content_trends, get_all_creator_archetypes,
@@ -118,7 +123,7 @@ fig_radar = px.bar(genz_df, x="Value", y="Driver", color="Brand", orientation="h
                    template=CHART_TEMPLATE, text_auto=".1f")
 fig_radar.update_layout(height=480, font=CHART_FONT,
                         legend=dict(orientation="h", y=-0.12))
-st.plotly_chart(fig_radar, use_container_width=True)
+st.plotly_chart(fig_radar, width="stretch")
 
 # ── Content Format Strategy ───────────────────────────────────────────
 
@@ -156,7 +161,7 @@ with col_fc1:
                     labels={"Pct": "% of IG Posts", "Format": ""},
                     template=CHART_TEMPLATE, text_auto=".0f")
     fig_fc.update_layout(font=CHART_FONT, height=380, legend=dict(orientation="h", y=-0.15))
-    st.plotly_chart(fig_fc, use_container_width=True)
+    st.plotly_chart(fig_fc, width="stretch")
 
 with col_fc2:
     st.markdown("**Avg ER by Format: Cuervo vs Gen Z Leaders**")
@@ -167,7 +172,7 @@ with col_fc2:
                       labels={"ER": "Avg ER %", "Format": ""},
                       template=CHART_TEMPLATE, text_auto=".2f")
     fig_fcer.update_layout(font=CHART_FONT, height=380, legend=dict(orientation="h", y=-0.15))
-    st.plotly_chart(fig_fcer, use_container_width=True)
+    st.plotly_chart(fig_fcer, width="stretch")
 
 # Format KPI cards
 reel_pct_now = len(cuervo_ig[cuervo_ig["post_type"] == "Reel"]) / max(len(cuervo_ig), 1) * 100
@@ -218,7 +223,7 @@ if cadence_rows:
                          labels={"Posts/Week": "Posts / Week", "Brand": ""},
                          template=CHART_TEMPLATE, text_auto=".1f")
         fig_cad.update_layout(font=CHART_FONT, height=380, legend=dict(orientation="h", y=-0.15))
-        st.plotly_chart(fig_cad, use_container_width=True)
+        st.plotly_chart(fig_cad, width="stretch")
 
     cuervo_total_ppw = sum(
         results["frequency"].get(CUERVO, {}).get(p, {}).get("posts_per_week", 0)
@@ -280,7 +285,7 @@ fig_gap.add_trace(go.Bar(x=gap_df["theme"], y=gap_df["Leaders %"],
 fig_gap.update_layout(barmode="group", template=CHART_TEMPLATE, font=CHART_FONT,
                       height=420, xaxis_tickangle=-35, yaxis_title="% of Content",
                       legend=dict(orientation="h", y=1.1))
-st.plotly_chart(fig_gap, use_container_width=True)
+st.plotly_chart(fig_gap, width="stretch")
 
 st.markdown("**Biggest content gaps (themes leaders use more):**")
 for _, row in gap_df.head(3).iterrows():
@@ -306,61 +311,61 @@ if recs:
                     st.markdown(f"**Action:** {r['recommendation']}")
                     st.markdown(f"**Platform:** {r['platform']}")
 
-# ── Content Pillars Framework ─────────────────────────────────────────
+# ── GOAT Content Pillars (Integration 1) ─────────────────────────────
 
 st.markdown("---")
-st.subheader("Content Pillars Framework")
-st.caption("Aligned to Cuervo's brand positioning: Cuervo = the social signal for fun. Content should ladder to SKU lanes while keeping Gen Z (21-24) as the core audience.")
+st.subheader("Content Pillars — GOAT Framework")
+st.caption("Marg Mode content strategy: 4 pillars from the GOAT Agency Social Playbook Q1 2026. Charts show Cuervo's actual distribution vs GOAT targets.")
 
 PILLARS = [
     {
-        "name": "Party Starter",
-        "icon": "🎉",
-        "sku": "Especial (Silver/Gold)",
-        "objective": "Position Especial as the go-to for social occasions — house parties, pregames, celebrations",
-        "themes": ["Lifestyle/Aspirational", "Music / Party", "Meme / Humor", "Cultural Moment / Holiday"],
-        "formats": "Reels (60%), Stories, TikTok duets",
-        "tone": "Playful, irreverent, meme-fluent",
-        "example": "POV: You showed up with Cuervo and suddenly everyone loves you",
-        "color": "#F8C090",
-    },
-    {
-        "name": "Elevated Sips",
-        "icon": "🥃",
-        "sku": "Tradicional / Reserva de la Familia",
-        "objective": "Showcase craft and heritage for cocktail-curious Gen Z who want to level up",
-        "themes": ["Cocktail Recipe", "Product Showcase", "Education (Tequila 101)", "Brand Heritage / Story"],
+        "name": "La Tradición",
+        "icon": "🏛️",
+        "target": 25,
+        "quality": "Educational / Product",
+        "objective": "Celebrate Cuervo's 250+ years of tequila craftsmanship, iconic heritage, and cultural legacy that shaped the margarita",
+        "themes": GOAT_PILLAR_MAP["La Tradición"],
         "formats": "Carousels (educational), Reels (recipe), Grid posts",
-        "tone": "Informative but not pretentious — approachable expert",
-        "example": "3 margarita upgrades that'll change your summer (Carousel)",
-        "color": "#2ea3f2",
+        "tone": "Approachable expert — informative but not pretentious",
+        "example": "3 margarita upgrades that'll change your summer",
     },
     {
-        "name": "Mix It Up",
-        "icon": "🫧",
-        "sku": "Cuervo RTD (Margarita cans, Playamar)",
-        "objective": "Drive trial of ready-to-drink line — convenience + fun positioning",
-        "themes": ["Lifestyle/Aspirational", "Event / Activation", "Giveaway / Promo"],
-        "formats": "Reels, Stories (polls/stickers), UGC reposts",
-        "tone": "Casual, spontaneous, summer vibes",
-        "example": "Beach bag check ✓ Playamar ✓ Sunscreen... eventually",
-        "color": "#66BB6A",
+        "name": "Cuervo Live",
+        "icon": "🎤",
+        "target": 15,
+        "quality": "Experiential / Entertainment",
+        "objective": "Front-row pass to cultural moments, events, and partnerships where Cuervo shows up and connects in real time",
+        "themes": GOAT_PILLAR_MAP["Cuervo Live"],
+        "formats": "Reels (event footage), Stories (live), Creator Reels",
+        "tone": "Energetic, FOMO-inducing, real-time",
+        "example": "Live from the Cuervo experience — who's here?",
     },
     {
-        "name": "Culture & Community",
-        "icon": "🤝",
-        "sku": "Brand-level (all SKUs)",
-        "objective": "Build cultural relevance through creator partnerships, UGC, and trending moments",
-        "themes": ["Creator Collab / UGC", "User Repost", "Sports Tie-in", "Cultural Moment / Holiday"],
-        "formats": "Creator Reels, UGC reposts, duets/stitches",
-        "tone": "Authentic, community-first, co-created",
-        "example": "Creator takeover series — 'My Cuervo Moment'",
-        "color": "#D4956A",
+        "name": "Life, with a Lime",
+        "icon": "🍋",
+        "target": 30,
+        "quality": "Aspirational / Relatable",
+        "objective": "Capture how Cuervo inspires everyday moments — from cocktails to culture — to feel bigger, brighter, and unmistakably more fun",
+        "themes": GOAT_PILLAR_MAP["Life, with a Lime"],
+        "formats": "Reels (lifestyle), Carousels (recipes), creative photography",
+        "tone": "Aspirational but relatable, lifestyle over product",
+        "example": "Sunsets taste better with Cuervo",
+    },
+    {
+        "name": "Culture, Shaken",
+        "icon": "🔥",
+        "target": 30,
+        "quality": "Entertainment / Timely",
+        "objective": "Reactive, trend-driven content that taps into cultural conversations with Cuervo's Marg Mode energy",
+        "themes": GOAT_PILLAR_MAP["Culture, Shaken"],
+        "formats": "Reels (trending formats), memes, UGC reposts, duets",
+        "tone": "Playful, quick-hitting, culturally plugged in",
+        "example": "POV: You showed up with Cuervo and suddenly everyone loves you",
     },
 ]
 
 for pillar in PILLARS:
-    with st.expander(f"{pillar['icon']}  **{pillar['name']}** — {pillar['sku']}", expanded=False):
+    with st.expander(f"{pillar['icon']}  **{pillar['name']}** — {pillar['quality']} (Target: {pillar['target']}%)", expanded=False):
         st.markdown(f"**Objective:** {pillar['objective']}")
         st.markdown(f"**Target Themes:** {', '.join(pillar['themes'])}")
         st.markdown(f"**Recommended Formats:** {pillar['formats']}")
@@ -372,16 +377,19 @@ for pillar in PILLARS:
             pct_of_cuervo = len(matching) / max(len(cuervo_df), 1) * 100
             avg_er_pillar = matching["engagement_rate"].mean()
             avg_er_pillar = 0 if pd.isna(avg_er_pillar) else avg_er_pillar
+            delta = pct_of_cuervo - pillar["target"]
             pk1, pk2, pk3 = st.columns(3)
             with pk1:
-                st.metric("Posts in Pillar", f"{len(matching)}", help=f"{pct_of_cuervo:.0f}% of Cuervo content")
+                st.metric("% of Content", f"{pct_of_cuervo:.0f}%",
+                          delta=f"{delta:+.0f}% vs {pillar['target']}% target")
             with pk2:
-                st.metric("Pillar ER", f"{avg_er_pillar:.2f}%")
+                st.metric("Posts in Pillar", f"{len(matching)}")
             with pk3:
-                st.metric("% of Content", f"{pct_of_cuervo:.0f}%")
+                st.metric("Pillar ER", f"{avg_er_pillar:.2f}%")
         else:
             st.info("No Cuervo posts currently match this pillar's themes in the dataset.")
 
+# Pillar distribution vs target chart
 pillar_data = []
 for pillar in PILLARS:
     matching = cuervo_df[cuervo_df["content_theme"].isin(pillar["themes"])]
@@ -390,29 +398,37 @@ for pillar in PILLARS:
     er = 0 if pd.isna(er) else er
     pillar_data.append({
         "Pillar": pillar["name"],
-        "% of Content": round(pct, 1),
+        "Actual %": round(pct, 1),
+        "Target %": pillar["target"],
         "Avg ER": round(er, 2),
     })
 
 pillar_df = pd.DataFrame(pillar_data)
 col_pd1, col_pd2 = st.columns(2)
 with col_pd1:
-    fig_pd = px.bar(pillar_df, x="Pillar", y="% of Content",
-                    color="Pillar",
-                    color_discrete_map={p["name"]: p["color"] for p in PILLARS},
-                    labels={"% of Content": "% of Cuervo Content", "Pillar": ""},
-                    template=CHART_TEMPLATE, text_auto=".0f")
-    fig_pd.update_layout(showlegend=False, font=CHART_FONT, height=350)
-    st.plotly_chart(fig_pd, use_container_width=True)
+    st.markdown("**Pillar Distribution: Actual vs Target**")
+    fig_pd = go.Figure()
+    fig_pd.add_trace(go.Bar(x=pillar_df["Pillar"], y=pillar_df["Actual %"],
+                            name="Actual", marker_color=[GOAT_PILLAR_COLORS[p] for p in pillar_df["Pillar"]],
+                            text=pillar_df["Actual %"], textposition="outside", texttemplate="%{text:.0f}%"))
+    fig_pd.add_trace(go.Scatter(x=pillar_df["Pillar"], y=pillar_df["Target %"],
+                                name="GOAT Target", mode="markers+lines",
+                                marker=dict(size=12, color="#333333", symbol="diamond"),
+                                line=dict(color="#333333", width=2, dash="dash")))
+    fig_pd.update_layout(template=CHART_TEMPLATE, font=CHART_FONT, height=380,
+                         yaxis_title="% of Content", legend=dict(orientation="h", y=-0.15),
+                         barmode="group")
+    st.plotly_chart(fig_pd, width="stretch")
 
 with col_pd2:
+    st.markdown("**Avg ER by Pillar**")
     fig_pe = px.bar(pillar_df, x="Pillar", y="Avg ER",
                     color="Pillar",
-                    color_discrete_map={p["name"]: p["color"] for p in PILLARS},
+                    color_discrete_map=GOAT_PILLAR_COLORS,
                     labels={"Avg ER": "Avg ER %", "Pillar": ""},
                     template=CHART_TEMPLATE, text_auto=".2f")
-    fig_pe.update_layout(showlegend=False, font=CHART_FONT, height=350)
-    st.plotly_chart(fig_pe, use_container_width=True)
+    fig_pe.update_layout(showlegend=False, font=CHART_FONT, height=380)
+    st.plotly_chart(fig_pe, width="stretch")
 
 # ── 30-Day action plan ────────────────────────────────────────────────
 
@@ -512,6 +528,195 @@ with col_o:
     st.markdown("- Brand heritage (250+ yrs) is a unique differentiator vs newer brands (Casamigos, Teremana)")
     st.markdown("- RTD line (Playamar, Margarita cans) offers untapped content pillar for casual/outdoor occasions")
     st.markdown("- 'Fun signal' positioning aligns with Gen Z values — Cuervo doesn't need to be luxury, it needs to be the brand you bring")
+
+# ── Content Mix Funnel (Integration 2) ────────────────────────────────
+
+st.markdown("---")
+st.subheader("Content Mix Funnel — Entertain / Educate / Connect / Convince")
+st.caption("GOAT Playbook flags Cuervo's current funnel as **inverted** — too much Convince, not enough Entertain. Target: grab attention first, then guide to action.")
+
+# Build a reverse lookup: theme → mix category
+_theme_to_mix = {}
+for cat, themes in CONTENT_MIX_MAP.items():
+    for t in themes:
+        _theme_to_mix[t] = cat
+
+cuervo_mix_data = []
+for cat in ["Entertain", "Educate", "Connect", "Convince"]:
+    cat_themes = CONTENT_MIX_MAP[cat]
+    matching = cuervo_df[cuervo_df["content_theme"].isin(cat_themes)]
+    pct = len(matching) / max(len(cuervo_df), 1) * 100
+    target = CONTENT_MIX_TARGETS[cat]
+    cuervo_mix_data.append({
+        "Category": cat,
+        "Actual %": round(pct, 1),
+        "Target %": target,
+        "Gap": round(pct - target, 1),
+        "Posts": len(matching),
+    })
+
+mix_df = pd.DataFrame(cuervo_mix_data)
+
+col_mix1, col_mix2 = st.columns(2)
+with col_mix1:
+    st.markdown("**Cuervo Content Mix: Actual vs GOAT Target**")
+    fig_mix = go.Figure()
+    fig_mix.add_trace(go.Bar(x=mix_df["Category"], y=mix_df["Actual %"],
+                             name="Actual", marker_color=[CONTENT_MIX_COLORS[c] for c in mix_df["Category"]],
+                             text=mix_df["Actual %"], textposition="outside", texttemplate="%{text:.0f}%"))
+    fig_mix.add_trace(go.Scatter(x=mix_df["Category"], y=mix_df["Target %"],
+                                 name="GOAT Target", mode="markers+lines",
+                                 marker=dict(size=12, color="#333333", symbol="diamond"),
+                                 line=dict(color="#333333", width=2, dash="dash")))
+    fig_mix.update_layout(template=CHART_TEMPLATE, font=CHART_FONT, height=380,
+                          yaxis_title="% of Content", legend=dict(orientation="h", y=-0.15))
+    st.plotly_chart(fig_mix, width="stretch")
+
+with col_mix2:
+    st.markdown("**Content Mix Scorecard**")
+    for _, row in mix_df.iterrows():
+        cat = row["Category"]
+        direction = "MORE" if row["Gap"] < 0 else ("LESS" if row["Gap"] > 5 else "ON TRACK")
+        icon = "🔺" if direction == "MORE" else ("🔻" if direction == "LESS" else "✅")
+        st.markdown(f"{icon} **{cat}**: {row['Actual %']:.0f}% actual / {row['Target %']}% target "
+                    f"({row['Gap']:+.0f}%) — Post **{direction}**")
+    st.markdown("")
+    st.info("**Funnel logic**: Entertain grabs attention → Educate builds relevance → Connect fosters relationships → Convince drives action")
+
+# ── Dynamic vs Static Performance (Integration 3) ────────────────────
+
+st.markdown("---")
+st.subheader("Dynamic vs Static Performance")
+st.caption("GOAT benchmark: Dynamic (video) delivers 2.8% ER vs Static (image) 2.2% ER, with -26% lower CPM")
+
+dynamic_types = ["Reel", "Video"]
+static_types = ["Static Image", "Carousel"]
+
+dyn_posts = cuervo_df[cuervo_df["post_type"].isin(dynamic_types)]
+stat_posts = cuervo_df[cuervo_df["post_type"].isin(static_types)]
+
+dyn_count = len(dyn_posts)
+stat_count = len(stat_posts)
+total_ds = dyn_count + stat_count or 1
+dyn_pct = dyn_count / total_ds * 100
+stat_pct = stat_count / total_ds * 100
+dyn_er = dyn_posts["engagement_rate"].mean() if len(dyn_posts) else 0
+stat_er = stat_posts["engagement_rate"].mean() if len(stat_posts) else 0
+dyn_er = 0 if pd.isna(dyn_er) else dyn_er
+stat_er = 0 if pd.isna(stat_er) else stat_er
+
+ds1, ds2, ds3, ds4 = st.columns(4)
+with ds1:
+    st.metric("Dynamic %", f"{dyn_pct:.0f}%", help="Reels + Video")
+with ds2:
+    st.metric("Dynamic ER", f"{dyn_er:.2f}%",
+              delta=f"{dyn_er - stat_er:+.2f}% vs Static" if stat_er > 0 else None)
+with ds3:
+    st.metric("Static %", f"{stat_pct:.0f}%", help="Static Image + Carousel")
+with ds4:
+    st.metric("Static ER", f"{stat_er:.2f}%")
+
+# Compare across all brands
+all_brand_ds_rows = []
+for brand in BRAND_ORDER:
+    bdf = df[df["brand"] == brand]
+    if len(bdf) == 0:
+        continue
+    b_dyn = bdf[bdf["post_type"].isin(dynamic_types)]
+    b_stat = bdf[bdf["post_type"].isin(static_types)]
+    b_dyn_er = b_dyn["engagement_rate"].mean() if len(b_dyn) else 0
+    b_stat_er = b_stat["engagement_rate"].mean() if len(b_stat) else 0
+    b_dyn_er = 0 if pd.isna(b_dyn_er) else b_dyn_er
+    b_stat_er = 0 if pd.isna(b_stat_er) else b_stat_er
+    b_dyn_pct = len(b_dyn) / max(len(bdf), 1) * 100
+    all_brand_ds_rows.append({"Brand": brand, "Dynamic ER": round(b_dyn_er, 2),
+                              "Static ER": round(b_stat_er, 2), "Dynamic %": round(b_dyn_pct, 0)})
+
+if all_brand_ds_rows:
+    ds_df = pd.DataFrame(all_brand_ds_rows)
+    ds_melt = pd.melt(ds_df, id_vars=["Brand"], value_vars=["Dynamic ER", "Static ER"],
+                      var_name="Format", value_name="ER")
+    fig_ds = px.bar(ds_melt, x="Brand", y="ER", color="Format", barmode="group",
+                    color_discrete_map={"Dynamic ER": "#2ea3f2", "Static ER": "#C9A87E"},
+                    labels={"ER": "Avg ER %", "Brand": ""},
+                    template=CHART_TEMPLATE, text_auto=".2f")
+    fig_ds.update_layout(font=CHART_FONT, height=380, legend=dict(orientation="h", y=-0.15))
+    st.plotly_chart(fig_ds, width="stretch")
+
+# ── Content Source Tracking (Integration 4) ──────────────────────────
+
+st.markdown("---")
+st.subheader("Content Source Mix — Creator / Brand / Events")
+st.caption("GOAT target: 70% Creator & Influencer, 15% Brand-Owned, 15% Events & Partnerships")
+
+event_themes = ["Event / Activation", "Music / Party"]
+creator_posts = cuervo_df[cuervo_df["has_creator_collab"] == "Yes"] if "has_creator_collab" in cuervo_df.columns else pd.DataFrame()
+event_posts = cuervo_df[(cuervo_df["content_theme"].isin(event_themes)) &
+                        (cuervo_df.get("has_creator_collab", pd.Series(dtype=str)) != "Yes")] if "has_creator_collab" in cuervo_df.columns else cuervo_df[cuervo_df["content_theme"].isin(event_themes)]
+brand_posts_count = len(cuervo_df) - len(creator_posts) - len(event_posts)
+
+src_total = max(len(cuervo_df), 1)
+src_data = pd.DataFrame([
+    {"Source": "Creators & Influencers", "Actual %": round(len(creator_posts) / src_total * 100, 1), "Target %": 70},
+    {"Source": "Events & Partnerships", "Actual %": round(len(event_posts) / src_total * 100, 1), "Target %": 15},
+    {"Source": "Brand-Owned", "Actual %": round(brand_posts_count / src_total * 100, 1), "Target %": 15},
+])
+
+src_colors = {"Creators & Influencers": "#2ea3f2", "Events & Partnerships": "#D4956A", "Brand-Owned": "#C9A87E"}
+
+col_src1, col_src2 = st.columns(2)
+with col_src1:
+    st.markdown("**Content Source: Actual vs GOAT Target**")
+    fig_src = go.Figure()
+    fig_src.add_trace(go.Bar(x=src_data["Source"], y=src_data["Actual %"],
+                             name="Actual", marker_color=[src_colors[s] for s in src_data["Source"]],
+                             text=src_data["Actual %"], textposition="outside", texttemplate="%{text:.0f}%"))
+    fig_src.add_trace(go.Scatter(x=src_data["Source"], y=src_data["Target %"],
+                                 name="GOAT Target", mode="markers+lines",
+                                 marker=dict(size=12, color="#333333", symbol="diamond"),
+                                 line=dict(color="#333333", width=2, dash="dash")))
+    fig_src.update_layout(template=CHART_TEMPLATE, font=CHART_FONT, height=380,
+                          yaxis_title="% of Content", legend=dict(orientation="h", y=-0.15))
+    st.plotly_chart(fig_src, width="stretch")
+
+with col_src2:
+    st.markdown("**Content Source Scorecard**")
+    for _, row in src_data.iterrows():
+        gap = row["Actual %"] - row["Target %"]
+        icon = "✅" if abs(gap) < 10 else ("🔺" if gap < 0 else "🔻")
+        st.markdown(f"{icon} **{row['Source']}**: {row['Actual %']:.0f}% actual / {row['Target %']}% target ({gap:+.0f}%)")
+    st.markdown("")
+    st.info("**GOAT strategy**: Creators & influencers are the primary content engine. Brand-owned content anchors the brand world. Events provide real-time cultural relevance.")
+
+# ── Platform Cadence Scorecard (Integration 5) ───────────────────────
+
+st.markdown("---")
+st.subheader("Platform Cadence Scorecard")
+st.caption("GOAT targets: Instagram 8-10 assets/month (2-3x/week), TikTok 12-16 assets/month (4-5x/week)")
+
+cad1, cad2 = st.columns(2)
+for plat, col in [("Instagram", cad1), ("TikTok", cad2)]:
+    with col:
+        freq = results["frequency"].get(CUERVO, {}).get(plat, {})
+        actual_ppm = freq.get("total_posts_30d", 0)
+        actual_ppw = freq.get("posts_per_week", 0)
+        target = GOAT_CADENCE_TARGETS.get(plat, {})
+        target_low = target.get("low", 0)
+        target_high = target.get("high", 0)
+        target_mid = (target_low + target_high) / 2
+
+        on_track = target_low <= actual_ppm <= target_high
+        status = "ON TRACK" if on_track else ("BELOW" if actual_ppm < target_low else "ABOVE")
+        icon = "✅" if on_track else ("🔻" if actual_ppm < target_low else "🔺")
+
+        st.markdown(f"### {plat} {icon}")
+        st.metric(f"Posts/Month", f"{actual_ppm}",
+                  delta=f"Target: {target_low}-{target_high}/mo",
+                  delta_color="off")
+        st.metric(f"Posts/Week", f"{actual_ppw:.1f}",
+                  delta=f"Target: {target_low / 4.3:.1f}-{target_high / 4.3:.1f}/wk",
+                  delta_color="off")
+        st.markdown(f"**Status: {status}**")
 
 # ══════════════════════════════════════════════════════════════════════
 # AUTOSTRAT QUALITATIVE INTELLIGENCE

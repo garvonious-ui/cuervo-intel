@@ -45,7 +45,7 @@ st.dataframe(
         lambda row: ["background-color: #FDEBD6" if row["Brand"] == "Jose Cuervo" else "" for _ in row],
         axis=1,
     ).format({"Avg/Post": "{:.1f}", "Branded %": "{:.1f}%"}),
-    use_container_width=True, hide_index=True,
+    width="stretch", hide_index=True,
 )
 
 # Top hashtags per brand
@@ -60,7 +60,7 @@ if tags:
                       template=CHART_TEMPLATE,
                       labels={"Times Used": "Uses (30d)", "Hashtag": ""})
     fig_tags.update_layout(font=CHART_FONT, height=380, xaxis_tickangle=-40)
-    st.plotly_chart(fig_tags, use_container_width=True)
+    st.plotly_chart(fig_tags, width="stretch")
 else:
     st.info("No hashtag data for this brand.")
 
@@ -94,7 +94,7 @@ for i, brand in enumerate(order):
             },
         ))
         fig_g.update_layout(height=200, margin=dict(t=50, b=10, l=20, r=20))
-        st.plotly_chart(fig_g, use_container_width=True)
+        st.plotly_chart(fig_g, width="stretch")
 
 # Collab vs non-collab ER
 st.subheader("Collab vs Non-Collab Engagement")
@@ -112,7 +112,7 @@ fig_collab = px.bar(cdf, x="brand", y="er", color="type", barmode="group",
                     labels={"er": "Avg ER %", "brand": "", "type": ""},
                     template=CHART_TEMPLATE)
 fig_collab.update_layout(font=CHART_FONT, height=400, legend=dict(orientation="h", y=1.12))
-st.plotly_chart(fig_collab, use_container_width=True)
+st.plotly_chart(fig_collab, width="stretch")
 
 # Engagement lift table
 st.subheader("Creator Collab Summary")
@@ -141,5 +141,5 @@ st.dataframe(
                   ("color: #C62828; font-weight:bold" if isinstance(v, (int, float)) and v < -0.3 else ""),
         subset=["ER Lift"],
     ),
-    use_container_width=True, hide_index=True,
+    width="stretch", hide_index=True,
 )

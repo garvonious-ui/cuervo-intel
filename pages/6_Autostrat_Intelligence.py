@@ -433,7 +433,7 @@ with tab_profile:
                     height=380, yaxis_title="Count",
                     legend=dict(orientation="h", y=1.12),
                 )
-                st.plotly_chart(fig_stats, use_container_width=True)
+                st.plotly_chart(fig_stats, width="stretch")
                 st.markdown("---")
 
             # ── Top & Bottom Posts ────────────────────────────────────
@@ -535,7 +535,7 @@ with tab_profile:
                         "Avg ER %": snap.get("avg_engagement_rate", 0),
                     })
                 comp_snap_df = pd.DataFrame(rows_snap)
-                st.dataframe(comp_snap_df, hide_index=True, use_container_width=True)
+                st.dataframe(comp_snap_df, hide_index=True, width="stretch")
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -741,7 +741,7 @@ with tab_reference:
                     height=380, yaxis_title="Count",
                     legend=dict(orientation="h", y=1.12),
                 )
-                st.plotly_chart(fig_stats_r, use_container_width=True)
+                st.plotly_chart(fig_stats_r, width="stretch")
                 st.markdown("---")
 
             # ── Top & Bottom Posts ────────────────────────────────────

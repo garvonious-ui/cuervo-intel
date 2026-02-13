@@ -80,7 +80,7 @@ with tab_exec:
     cat_avg = ig_df[ig_df["engagement_rate"] > 0]["engagement_rate"].mean() if len(ig_df[ig_df["engagement_rate"] > 0]) else 0
     fig.add_hline(y=cat_avg, line_dash="dash", line_color="gray",
                   annotation_text=f"Category avg {cat_avg:.2f}%", annotation_position="top right")
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     # ── Content Format & Engagement Signals ───────────────────────────
     st.subheader("Cuervo Content Format & Engagement Signals")
@@ -127,7 +127,7 @@ with tab_exec:
                   labels={"posts_per_week": "Posts / Week", "brand": ""},
                   template=CHART_TEMPLATE)
     fig2.update_layout(font=CHART_FONT, height=380, legend=dict(orientation="h", y=1.12))
-    st.plotly_chart(fig2, use_container_width=True)
+    st.plotly_chart(fig2, width="stretch")
 
     # ── Competitive comparison ────────────────────────────────────────
     st.subheader("Competitive Comparison — Cuervo vs Top 2 Competitors")
@@ -173,7 +173,7 @@ with tab_exec:
     fig3.update_traces(texttemplate="%{text}", textposition="outside")
     fig3.update_layout(height=450, font=CHART_FONT,
                        legend=dict(orientation="h", y=-0.15))
-    st.plotly_chart(fig3, use_container_width=True)
+    st.plotly_chart(fig3, width="stretch")
 
     # ── Priority recommendations ──────────────────────────────────────
     st.subheader("Priority Recommendations for Cuervo")
@@ -190,7 +190,7 @@ with tab_exec:
         styled = rec_df[["priority", "category", "platform", "insight", "recommendation"]].style.map(
             priority_style, subset=["priority"]
         )
-        st.dataframe(styled, use_container_width=True, height=400)
+        st.dataframe(styled, width="stretch", height=400)
     else:
         st.info("No recommendations generated — populate data and re-run.")
 
@@ -269,7 +269,7 @@ with tab_compare:
                  "Avg ER %": "{:.2f}", "Posts/Week": "{:.1f}",
                  "Collab %": "{:.1f}", "Hashtags/Post": "{:.1f}"})
     )
-    st.dataframe(styled_tbl, use_container_width=True, hide_index=True, height=320)
+    st.dataframe(styled_tbl, width="stretch", hide_index=True, height=320)
 
     # ── Content type distribution ─────────────────────────────────────
     st.subheader("Content Type Distribution")
@@ -283,7 +283,7 @@ with tab_compare:
                     labels={"pct": "% of Posts", "brand": "", "post_type": "Type"},
                     template=CHART_TEMPLATE, color_discrete_sequence=px.colors.qualitative.Set2)
     fig_ct.update_layout(font=CHART_FONT, height=400, legend=dict(orientation="h", y=1.12))
-    st.plotly_chart(fig_ct, use_container_width=True)
+    st.plotly_chart(fig_ct, width="stretch")
 
     # ── Followers & ER ────────────────────────────────────────────────
     st.subheader("Followers & Engagement Rate by Brand")
@@ -317,7 +317,7 @@ with tab_compare:
                              labels={"followers": "Followers", "brand": ""},
                              template=CHART_TEMPLATE, text_auto=".3s")
             fig_fol.update_layout(font=CHART_FONT, height=400, showlegend=False)
-            st.plotly_chart(fig_fol, use_container_width=True)
+            st.plotly_chart(fig_fol, width="stretch")
         with col_e:
             st.markdown("**Avg Engagement Rate**")
             fig_er = px.bar(fe_df, x="avg_er", y="brand", color="platform", orientation="h",
@@ -328,4 +328,4 @@ with tab_compare:
                             template=CHART_TEMPLATE, text_auto=".2f")
             fig_er.update_layout(font=CHART_FONT, height=400,
                                  legend=dict(orientation="h", y=1.12))
-            st.plotly_chart(fig_er, use_container_width=True)
+            st.plotly_chart(fig_er, width="stretch")

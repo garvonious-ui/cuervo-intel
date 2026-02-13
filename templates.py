@@ -1,6 +1,6 @@
 """
 CSV Template Generator for Social Media Intelligence Data Collection.
-Generates structured templates for manual data entry across all 10 tequila brands
+Generates structured templates for manual data entry across all 13 tequila brands
 on Instagram and TikTok.
 """
 
@@ -284,15 +284,19 @@ def generate_collection_guide(output_dir: str) -> str:
 
 | Brand | Instagram Handle | TikTok Handle |
 |-------|-----------------|---------------|
-| Jose Cuervo | @josecuervo | @josecuervo |
+| Jose Cuervo | @josecuervotequila | @josecuervo |
 | Patron | @patron | @patron |
 | Don Julio | @donjuliotequila | @donjulio |
 | Casamigos | @casamigos | @casamigos |
 | Espolon | @espolontequila | @espolontequila |
-| Teremana | @teaborhardstuff | @teremana |
+| Teremana | @teremana | @teremanatequila |
 | 1800 Tequila | @1800tequila | @1800tequila |
-| Casadores | @casadores | @casadores |
-| Hornitos | @hornitos | @hornitos |
+| 818 Tequila | @drink818 | @drink818 |
+| Lunazul | @lunazultequila | @lunazultequila |
+| Hornitos | @hornitostequila | @hornitostequila |
+| Cazadores | @tequilacazadores | @tequilacazadores |
+| Milagro | @milagrotequila | @milagrotequila |
+| El Jimador | @eljimadortequila | @eljimadortequila |
 
 > **Note:** Verify handles are current before collecting. Some brands may have
 > regional accounts — use the primary US/global account.

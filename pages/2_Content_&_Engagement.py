@@ -51,7 +51,7 @@ with tab_content:
                           template=CHART_TEMPLATE,
                           color_discrete_sequence=["#F8C090", "#2ea3f2", "#7B6B63", "#D4956A", "#A3C4D9"])
         fig_fmix.update_layout(font=CHART_FONT, height=420, legend=dict(orientation="h", y=-0.18))
-        st.plotly_chart(fig_fmix, use_container_width=True)
+        st.plotly_chart(fig_fmix, width="stretch")
 
     with col_fmt2:
         st.markdown("**Avg Engagement Rate by Format**")
@@ -67,7 +67,7 @@ with tab_content:
                              labels={"engagement_rate": "Avg ER %", "post_type": "", "brand": "Brand"},
                              template=CHART_TEMPLATE, text_auto=".2f")
             fig_fer.update_layout(font=CHART_FONT, height=420, legend=dict(orientation="h", y=-0.18))
-            st.plotly_chart(fig_fer, use_container_width=True)
+            st.plotly_chart(fig_fer, width="stretch")
         else:
             st.info("No engagement rate data available for format comparison.")
 
@@ -117,7 +117,7 @@ with tab_content:
     ))
     fig_hm_theme.update_layout(height=max(350, 50 * len(brands_for_hm)), template=CHART_TEMPLATE,
                                font=CHART_FONT, xaxis_tickangle=-40, margin=dict(b=120))
-    st.plotly_chart(fig_hm_theme, use_container_width=True)
+    st.plotly_chart(fig_hm_theme, width="stretch")
 
     # ── Caption analysis ──────────────────────────────────────────────
     st.subheader("Caption Analysis")
@@ -136,7 +136,7 @@ with tab_content:
                          labels={"avg_words": "Avg Word Count", "brand": ""},
                          template=CHART_TEMPLATE, text_auto=".0f")
         fig_box.update_layout(showlegend=False, height=380, font=CHART_FONT)
-        st.plotly_chart(fig_box, use_container_width=True)
+        st.plotly_chart(fig_box, width="stretch")
 
     with col2:
         st.markdown("**Avg Emoji Usage per Post**")
@@ -147,7 +147,7 @@ with tab_content:
                         labels={"avg_emojis": "Avg Emojis", "brand": ""},
                         template=CHART_TEMPLATE)
         fig_em.update_layout(showlegend=False, height=380, font=CHART_FONT)
-        st.plotly_chart(fig_em, use_container_width=True)
+        st.plotly_chart(fig_em, width="stretch")
 
     # ── Tone distribution ─────────────────────────────────────────────
     st.subheader("Caption Tone Distribution")
@@ -164,7 +164,7 @@ with tab_content:
                       labels={"pct": "% of Posts", "brand": "", "caption_tone": "Tone"},
                       template=CHART_TEMPLATE, color_discrete_sequence=px.colors.qualitative.Pastel)
     fig_tone.update_layout(font=CHART_FONT, height=420, legend=dict(orientation="h", y=-0.25))
-    st.plotly_chart(fig_tone, use_container_width=True)
+    st.plotly_chart(fig_tone, width="stretch")
 
     # ── CTA effectiveness ─────────────────────────────────────────────
     st.subheader("CTA Effectiveness (Avg ER by CTA Type)")
@@ -180,7 +180,7 @@ with tab_content:
                          template=CHART_TEMPLATE)
         fig_cta.update_layout(font=CHART_FONT, height=400, xaxis_tickangle=-30,
                               legend=dict(orientation="h", y=1.12))
-        st.plotly_chart(fig_cta, use_container_width=True)
+        st.plotly_chart(fig_cta, width="stretch")
 
     # ── Visual style performance ──────────────────────────────────────
     st.subheader("Visual Style Performance")
@@ -198,7 +198,7 @@ with tab_content:
                         template=CHART_TEMPLATE)
         fig_vs.update_layout(font=CHART_FONT, height=420, xaxis_tickangle=-20,
                              legend=dict(orientation="h", y=-0.20))
-        st.plotly_chart(fig_vs, use_container_width=True)
+        st.plotly_chart(fig_vs, width="stretch")
 
     # ── Posting Cadence by Format ────────────────────────────────────
     st.markdown("---")
@@ -229,7 +229,7 @@ with tab_content:
                              template=CHART_TEMPLATE,
                              color_discrete_sequence=["#F8C090", "#2ea3f2", "#7B6B63", "#D4956A", "#A3C4D9"])
         fig_cadence.update_layout(font=CHART_FONT, height=420, legend=dict(orientation="h", y=-0.18))
-        st.plotly_chart(fig_cadence, use_container_width=True)
+        st.plotly_chart(fig_cadence, width="stretch")
 
         cuervo_cadence = cadence_agg[cadence_agg["brand"] == "Jose Cuervo"]
         if len(cuervo_cadence):
@@ -295,7 +295,7 @@ with tab_engage:
                                   labels={"Save Rate": "Save Rate %", "Brand": ""},
                                   template=CHART_TEMPLATE, text_auto=".1f")
                 fig_save.update_layout(showlegend=False, font=CHART_FONT, height=380)
-                st.plotly_chart(fig_save, use_container_width=True)
+                st.plotly_chart(fig_save, width="stretch")
 
             with col_s2:
                 st.markdown("**Share Rate by Brand** (Shares ÷ Likes × 100)")
@@ -306,7 +306,7 @@ with tab_engage:
                                    labels={"Share Rate": "Share Rate %", "Brand": ""},
                                    template=CHART_TEMPLATE, text_auto=".1f")
                 fig_share.update_layout(showlegend=False, font=CHART_FONT, height=380)
-                st.plotly_chart(fig_share, use_container_width=True)
+                st.plotly_chart(fig_share, width="stretch")
 
             with st.expander("Full Engagement Signals Table"):
                 def highlight_cuervo_signal(row):
@@ -319,7 +319,7 @@ with tab_engage:
                               "Avg Likes": "{:,.0f}", "Avg Comments": "{:,.0f}",
                               "Avg Shares": "{:,.0f}", "Avg Saves": "{:,.0f}", "Avg Views": "{:,.0f}"})
                 )
-                st.dataframe(styled_sig, use_container_width=True, hide_index=True)
+                st.dataframe(styled_sig, width="stretch", hide_index=True)
 
         st.markdown("---")
 
@@ -334,7 +334,7 @@ with tab_engage:
                              labels={"engagement_rate": "Avg ER %", "post_type": "", "brand": "Brand"},
                              template=CHART_TEMPLATE)
             fig_ter.update_layout(font=CHART_FONT, height=400, legend=dict(orientation="h", y=1.12))
-            st.plotly_chart(fig_ter, use_container_width=True)
+            st.plotly_chart(fig_ter, width="stretch")
         else:
             st.info("No data for the selected platform/brands.")
 
@@ -371,7 +371,7 @@ with tab_engage:
             ))
             fig_hm.update_layout(height=350, template=CHART_TEMPLATE, font=CHART_FONT,
                                  xaxis_title="Hour of Day", yaxis_title="")
-            st.plotly_chart(fig_hm, use_container_width=True)
+            st.plotly_chart(fig_hm, width="stretch")
 
         # ── Top posts leaderboard ─────────────────────────────────────
         st.subheader("Top Performing Posts")
@@ -394,7 +394,7 @@ with tab_engage:
                 lambda v: "background-color: #FDEBD6" if v == "Jose Cuervo" else "",
                 subset=["brand"],
             ),
-            use_container_width=True,
+            width="stretch",
             height=min(700, 35 * top_n + 40),
         )
 
@@ -411,4 +411,4 @@ with tab_engage:
                        labels={"avg_er": "Avg ER %", "brand": ""},
                        template=CHART_TEMPLATE, text_auto=".2f")
         fig_v.update_layout(showlegend=False, font=CHART_FONT, height=420)
-        st.plotly_chart(fig_v, use_container_width=True)
+        st.plotly_chart(fig_v, width="stretch")
