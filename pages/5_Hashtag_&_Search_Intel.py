@@ -125,10 +125,8 @@ with tab_brands:
         # ── Key Insights ──────────────────────────────────────
         render_section_label("Key Insights")
         active_brands = {k: v for k, v in brand_reports.items() if v is not None}
-        cols = st.columns(min(len(active_brands), 3))
-        for idx, (label, report) in enumerate(active_brands.items()):
-            with cols[idx % len(cols)]:
-                st.markdown(f"**{label}**")
+        for label, report in active_brands.items():
+            with st.expander(f"{label} — Key Insights", expanded=label == "#JoseCuervo"):
                 for insight in _get_insights(report):
                     st.markdown(f"- {insight}")
 
