@@ -159,10 +159,8 @@ with tab_brands:
 
         # ── How to Win Territories ──────────────────────────
         render_section_label("How to Win Territories")
-        cols = st.columns(min(len(active_brands), 3))
-        for idx, (label, report) in enumerate(active_brands.items()):
-            with cols[idx % len(cols)]:
-                st.markdown(f"**{label}**")
+        for label, report in active_brands.items():
+            with st.expander(f"{label} — How to Win", expanded=label == "#JoseCuervo"):
                 htw = report.get("how_to_win", {})
                 if htw.get("summary"):
                     st.caption(htw["summary"])
