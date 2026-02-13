@@ -31,6 +31,7 @@ cazadores_ht = get_report(autostrat, "instagram_hashtags", "cazadores")
 hornitos_ht = get_report(autostrat, "instagram_hashtags", "hornitos")
 lunazul_ht = get_report(autostrat, "instagram_hashtags", "lunazul")
 milagro_ht = get_report(autostrat, "instagram_hashtags", "milagrotequila")
+eljimador_ht = get_report(autostrat, "instagram_hashtags", "eljimador")
 
 # General search terms
 margarita_ht = get_report(autostrat, "instagram_hashtags", "margaritatime")
@@ -41,6 +42,7 @@ brand_reports = {
     "#Hornitos": hornitos_ht,
     "#Lunazul": lunazul_ht,
     "#MilagroTequila": milagro_ht,
+    "#ElJimador": eljimador_ht,
 }
 
 has_brand_data = any(r is not None for r in brand_reports.values())
@@ -181,7 +183,8 @@ with tab_brands:
             cuervo_terrs = cuervo_ht.get("how_to_win", {}).get("territories", [])
         comp_terr_map = {}
         for name, rpt in [("#Cazadores", cazadores_ht), ("#Hornitos", hornitos_ht),
-                          ("#Lunazul", lunazul_ht), ("#MilagroTequila", milagro_ht)]:
+                          ("#Lunazul", lunazul_ht), ("#MilagroTequila", milagro_ht),
+                          ("#ElJimador", eljimador_ht)]:
             if rpt:
                 comp_terr_map[name] = rpt.get("how_to_win", {}).get("territories", [])
         all_comp_terrs = set()
@@ -269,7 +272,7 @@ with tab_brands:
         brand_objections = {}
         for name, rpt in [("#JoseCuervo", cuervo_ht), ("#Cazadores", cazadores_ht),
                           ("#Hornitos", hornitos_ht), ("#Lunazul", lunazul_ht),
-                          ("#MilagroTequila", milagro_ht)]:
+                          ("#MilagroTequila", milagro_ht), ("#ElJimador", eljimador_ht)]:
             if rpt:
                 objs = rpt.get("audience_profile", {}).get("objections", [])
                 if objs:
