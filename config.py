@@ -19,14 +19,17 @@ BRAND_COLORS = {
     "Teremana": "#C9A87E",      # Sandy tan
     "1800 Tequila": "#6B8FA3",  # Steel blue
     "818 Tequila": "#B88BBF",   # Soft purple
-    "Casadores": "#8B7355",     # Warm brown
-    "Hornitos": "#D4A574",      # Golden amber
+    "Lunazul": "#5B9BD5",       # Medium blue
+    "Hornitos": "#E8A838",      # Amber gold
+    "Cazadores": "#8B4513",     # Saddle brown
+    "Milagro": "#50C878",       # Emerald green
+    "El Jimador": "#CD5C5C",    # Indian red
 }
 
 BRAND_ORDER = [
     "Jose Cuervo", "Patron", "Don Julio", "Casamigos",
     "Espolon", "Teremana", "1800 Tequila", "818 Tequila",
-    "Casadores", "Hornitos",
+    "Lunazul", "Hornitos", "Cazadores", "Milagro", "El Jimador",
 ]
 
 # Reference / inspiration brands (non-tequila) — autostrat profiles only
@@ -47,6 +50,43 @@ PRIORITY_COLORS = {
     "High": "#D9534F",
     "Medium": "#F8C090",
     "Low": "#8CBF8C",
+}
+
+# ─── GOAT PLAYBOOK FRAMEWORKS (Q1 2026) ─────────────────────────────
+# Maps existing content_theme values to GOAT Agency strategy frameworks.
+
+GOAT_PILLAR_MAP = {
+    "La Tradición": ["Brand Heritage / Story", "Education (Tequila 101)", "Behind the Scenes"],
+    "Cuervo Live": ["Event / Activation", "Music / Party", "Sports Tie-in"],
+    "Life, with a Lime": ["Lifestyle/Aspirational", "Cocktail Recipe", "Product Showcase"],
+    "Culture, Shaken": ["Meme / Humor", "Creator Collab / UGC", "Cultural Moment / Holiday", "User Repost", "Giveaway / Promo"],
+}
+GOAT_PILLAR_TARGETS = {"La Tradición": 25, "Cuervo Live": 15, "Life, with a Lime": 30, "Culture, Shaken": 30}
+GOAT_PILLAR_COLORS = {
+    "La Tradición": "#C9A87E",     # Sandy tan — heritage
+    "Cuervo Live": "#D4956A",      # Burnt peach — live events
+    "Life, with a Lime": "#66BB6A", # Green — lifestyle
+    "Culture, Shaken": "#2ea3f2",   # Blue — culture/trends
+}
+
+CONTENT_MIX_MAP = {
+    "Entertain": ["Meme / Humor", "Music / Party", "Creator Collab / UGC"],
+    "Educate": ["Education (Tequila 101)", "Behind the Scenes", "Cocktail Recipe", "Brand Heritage / Story"],
+    "Connect": ["Lifestyle/Aspirational", "Cultural Moment / Holiday", "User Repost", "Sports Tie-in"],
+    "Convince": ["Product Showcase", "Giveaway / Promo", "Event / Activation"],
+}
+CONTENT_MIX_TARGETS = {"Entertain": 50, "Educate": 30, "Connect": 10, "Convince": 10}
+CONTENT_MIX_COLORS = {
+    "Entertain": "#F8C090",  # Peach — fun/playful
+    "Educate": "#2ea3f2",    # Blue — informative
+    "Connect": "#66BB6A",    # Green — community
+    "Convince": "#D9534F",   # Red — action/sales
+}
+
+# GOAT platform cadence targets (posts per month)
+GOAT_CADENCE_TARGETS = {
+    "Instagram": {"low": 8, "high": 10},   # 2-3x/week
+    "TikTok": {"low": 12, "high": 16},     # 4-5x/week
 }
 
 CHART_TEMPLATE = "plotly_white"

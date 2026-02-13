@@ -17,8 +17,11 @@ BRANDS = [
     "Teremana",
     "1800 Tequila",
     "818 Tequila",
-    "Casadores",
+    "Lunazul",
     "Hornitos",
+    "Cazadores",
+    "Milagro",
+    "El Jimador",
 ]
 
 PLATFORMS = ["Instagram", "TikTok"]
@@ -209,8 +212,12 @@ def generate_hashtag_template(output_dir: str) -> str:
             "Espolon": ["#Espolon", "#EspolonTequila"],
             "Teremana": ["#Teremana", "#TeremanaTequila", "#TeremanaTime"],
             "1800 Tequila": ["#1800Tequila", "#1800", "#1800Cristalino", "#1800Reposado"],
-            "Casadores": ["#Casadores", "#CasadoresTequila"],
-            "Hornitos": ["#Hornitos", "#HornitosTequila", "#HornitosPlata"],
+            "818 Tequila": ["#818Tequila", "#drink818", "#818"],
+            "Lunazul": ["#Lunazul", "#LunazulTequila"],
+            "Hornitos": ["#Hornitos", "#HornitosTequila", "#AShotWorthTaking"],
+            "Cazadores": ["#TequilaCazadores", "#Cazadores", "#RealTequilaForRealPeople", "#HuntForTheGoodStuff"],
+            "Milagro": ["#Milagro", "#MilagroTequila"],
+            "El Jimador": ["#ElJimador", "#ElJimadorTequila", "#SipForYourself"],
         }
         for brand, tags in known_hashtags.items():
             for tag in tags:
