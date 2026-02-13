@@ -38,27 +38,40 @@
   "hashtag_analysis": {
     "summary": "",
     "related_hashtags": [],
-    "key_findings": [],
-    "opportunities": [
+    "key_findings": [
       "El Jimador's cinematic bottle photography drives highest engagement,\nunderscoring premium visual identity.",
-      "Leverage the powerful premium bottle visuals to craft a unified narrative around\ncraftsmanship worldwide.",
       "Cocktail culture and sensory storytelling uniquely spark community\nexchange and drive shareability.",
-      "Amplify cocktail tutorials and sensory language to deepen authentic community\nengagement and UGC creation.",
       "Localized retail promotions fuel urgent purchase behavior but lack a\ncohesive global narrative.",
+      "El Jimador successfully bridges heritage pride with contemporary social\ncelebrations across global markets."
+    ],
+    "opportunities": [
+      "Leverage the powerful premium bottle visuals to craft a unified narrative around\ncraftsmanship worldwide.",
+      "Amplify cocktail tutorials and sensory language to deepen authentic community\nengagement and UGC creation.",
       "Integrate local retail activations with global storytelling to harmonize urgency with\nbrand prestige.",
-      "El Jimador successfully bridges heritage pride with contemporary social\ncelebrations across global markets.",
       "Exploit under-served micro-communities and cross-cultural mixology moments for\nstronger niche advocacy."
     ],
-    "gaps_risks_unmet_needs": [],
-    "strategic_actions": [
+    "gaps_risks_unmet_needs": [
       "Retail promo posts frequently feel transactional and low engagement,\nrisking dilution of brand affinity.",
-      "Elevate cinematic product photography as hallmark content pillar in all regional\nmarkets to reinforce premium positioning.",
       "Localized cultural references often resonate narrowly and fail to\ngenerate broad audience engagement.",
-      "Develop standardized but localized cocktail recipe series with sensory storytelling\nto boost shareability and community co-creation.",
       "Inconsistent multilingual and regional content weakens unified global\nbrand storytelling and recognition.",
+      "Over-reliance on discounts and broad hashtags risks commoditizing premium\ntequila perception."
+    ],
+    "strategic_actions": [
+      "Elevate cinematic product photography as hallmark content pillar in all regional\nmarkets to reinforce premium positioning.",
+      "Develop standardized but localized cocktail recipe series with sensory storytelling\nto boost shareability and community co-creation.",
       "Streamline multilingual content with curated cultural touchpoints ensuring global\nconsistency and local relevance.",
-      "Over-reliance on discounts and broad hashtags risks commoditizing premium\ntequila perception.",
       "Replace heavy discount reliance with experience-led activations and influencer\nmixology partnerships to uplift perceived value."
+    ]
+  },
+  "conversation_map": {
+    "summary": "Analysis",
+    "relationship_analysis": "El Jimador's bottle-centric content flows powerfully into cocktail\nculture conversations, intertwining premium heritage with mixology\nartistry.\nReady-to-drink New Mix posts connect local retailers and consumers\ntightly, signaling community commerce as a lively pulse point.\nDistinct hashtag clusters around Blanco, Anejo, and Reposado reveal\ndifferentiated audience motivations: authenticity, value, celebration.",
+    "overarching_patterns": [
+      "Cinematic product photography consistently drives peak engagement,\nreinforcing El Jimador's premium craftsmanship narrative.\nLocalized retail promos spark transactional buzz but lack global\ncoherence, risking fragmented brand perception.\nCocktail recipe and mixology content act as cultural glue, promoting\naspirational and participatory experiences across all product lines.",
+      "Leverage New Mix’s strong local retailer ties by expanding\ntargeted support for small business partnerships and\nexclusive launches.\nActivate micro-communities by spotlighting cross-cultural\nmixology innovations, heightening niche advocacy and\ndiversifying engagement."
+    ],
+    "action_opportunities": [
+      "Amplify cinematic bottle visuals globally as hallmark content\nto unify brand prestige and deepen emotional resonance.\nSwap discount-heavy promos for sensory-rich cocktail\ntutorials with UGC calls-to-action to boost authentic\ncommunity involvement.\nIntegrate local retail activations within a streamlined\nmultilingual storytelling framework to marry urgency with\nconsistent brand narrative."
     ]
   },
   "how_to_win": {

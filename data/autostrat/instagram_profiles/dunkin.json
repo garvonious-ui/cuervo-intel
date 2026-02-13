@@ -46,70 +46,51 @@
   },
   "future_sponsorship_suggestions": [
     {
-      "category": "frictionless, transparent brand experiences.",
-      "why_it_works": "Fans eagerly seek retro-themed merchandise and apparel that extend their emotional connection beyond coffee. Authentic vintage styles align with Dunkin’s brand legacy and deepen lifestyle integration.",
+      "category": "Vintage Apparel and Lifestyle",
+      "why_it_works": "Vintage merch creates lifestyle bonds and fuels passionate fan engagement. Fans eagerly seek retro-themed merchandise and apparel that extend their emotional connection",
       "how_to_activate": [
-        "Launch limited-edition sweater and windbreaker",
-        "drops timed with cultural holidays and events.",
-        "Feature fan-generated content styling vintage",
-        "merch, creating peer-driven brand advocacy.",
-        "Integrate behind-the-scenes stories on",
-        "production to emphasize authenticity and",
-        "quality.",
-        "Dunkin’s audience responds enthusiastically to",
-        "quiz and contest formats that invite playful",
-        "brand participation.",
-        "Gamified content amplifies community engagement",
-        "and shares, ideal for limited-edition product",
-        "reveals or promo codes.",
-        "Celebrity tie-ins and cultural references propel",
-        "Dunkin’s content to massive reach, inspiring fan",
-        "calls for sequels and expanded series.",
-        "Leveraging beloved public figures creates fresh",
-        "brand credibility and emotional juice.",
-        "Addressing community frustrations with app",
-        "glitches and promo redemption delays will",
-        "dramatically improve customer satisfaction and",
-        "retention.",
-        "Investing in reliable tech enhances operational",
-        "excellence essential for FMCG loyalty.",
-        "beverages, offering rewards for high scores.",
-        "Curate limited-time menu items inspired by",
-        "Implement fail-safe promo redemption flows with",
-        "Incorporate interactive Instagram stories polls",
-        "celebrity endorsements or favorite flavors.",
-        "clear UX messaging during peak campaigns.",
-        "and swipe-ups for smooth play and reward",
-        "Produce episodic content series featuring",
-        "Use social listening to preemptively address",
-        "redemption.",
-        "celebrity guests interacting with brand lore.",
-        "stock shortages and communicate transparently.",
-        "Collaborate with influencers to co-host",
-        "Co-create merch lines aligned with celebrity",
-        "Enhance app stability and introduce proactive",
-        "challenges that blend brand personality and",
-        "personas and fan expectations.",
-        "notifications for exclusive offers and restocks.",
-        "Develop branded mini-games tied to seasonal",
-        "audience hobbies."
+        "beverages, offering rewards for high scores. celebrity endorsements or favorite flavors.",
+        "Use social listening to preemptively address Collaborate with influencers to co-host personas and fan expectations."
+      ]
+    },
+    {
+      "category": "Interactive Digital Gaming",
+      "why_it_works": "Gamification drives fun, sustained brand engagement and community activation. beyond coffee.",
+      "how_to_activate": [
+        "Curate limited-time menu items inspired by clear UX messaging during peak campaigns. redemption.",
+        "Co-create merch lines aligned with celebrity notifications for exclusive offers and restocks."
+      ]
+    },
+    {
+      "category": "Celebrity-Driven Cultural Collaborations",
+      "why_it_works": "Celebrities enhance relevance, trust, and broaden audience appeal. Authentic vintage styles align with Dunkin’s",
+      "how_to_activate": [
+        "Implement fail-safe promo redemption flows with and swipe-ups for smooth play and reward celebrity guests interacting with brand lore.",
+        "Enhance app stability and introduce proactive Develop branded mini-games tied to seasonal"
+      ]
+    },
+    {
+      "category": "Food and Beverage Tech Solutions",
+      "why_it_works": "Reliable tech underpins loyalty via frictionless, transparent brand experiences. brand legacy and deepen lifestyle integration.",
+      "how_to_activate": [
+        "Incorporate interactive Instagram stories polls Produce episodic content series featuring stock shortages and communicate transparently. challenges that blend brand personality and audience hobbies."
       ]
     }
   ],
   "statistics": {
     "all_posts": {
-      "min_views": 0,
-      "max_views": 0,
-      "median_views": 0,
-      "avg_views": 0,
-      "min_likes": 0,
-      "max_likes": 0,
-      "median_likes": 0,
-      "avg_likes": 0,
-      "min_comments": 0,
-      "max_comments": 0,
-      "median_comments": 0,
-      "avg_comments": 0
+      "min_views": 100026,
+      "max_views": 3569266,
+      "median_views": 458745,
+      "avg_views": 879851,
+      "min_likes": 2169,
+      "max_likes": 110344,
+      "median_likes": 26097,
+      "avg_likes": 29948,
+      "min_comments": 24,
+      "max_comments": 4855,
+      "median_comments": 255,
+      "avg_comments": 592
     }
   },
   "engagement_analysis": {
@@ -143,15 +124,43 @@
   },
   "top_posts": {
     "most_liked": {
-      "caption": "",
-      "engagement_rate": 0,
-      "likes": 0,
-      "comments": 0,
-      "link": ""
+      "caption": "Finally, the iconic story in its purest form - a",
+      "engagement_rate": 3.75,
+      "likes": 110344,
+      "comments": 1210,
+      "link": "https://instagram.com/p/DUhJbikjY1r/"
+    },
+    "least_liked": {
+      "caption": "heavily-Dunkin’-branded Boston sitcom.",
+      "engagement_rate": 0.07,
+      "likes": 2169,
+      "comments": 24,
+      "link": "https://instagram.com/p/DUqxkTsj1-x/"
+    },
+    "most_comments": {
+      "caption": "comments should be fun",
+      "engagement_rate": 2.14,
+      "likes": 58651,
+      "comments": 4855,
+      "link": "https://instagram.com/p/DUQiVOEjUmR/"
+    },
+    "least_comments": {
+      "caption": "Congratulations to our math quiz winner and a big thank you to all the math whizzes that sent us answers and Dunkin’ memories. Ya’ll are really running those numbers on Dunkin’.",
+      "engagement_rate": 0.07,
+      "likes": 2169,
+      "comments": 24,
+      "link": "https://instagram.com/p/DUqxkTsj1-x/"
+    },
+    "most_engaged": {
+      "caption": "Finally, the iconic story in its purest form - a",
+      "engagement_rate": 3.75,
+      "likes": 110344,
+      "comments": 1210,
+      "link": "https://instagram.com/p/DUhJbikjY1r/"
     },
     "least_engaged": {
-      "caption": "",
-      "engagement_rate": 3.75,
+      "caption": "heavily-Dunkin’-branded Boston sitcom.",
+      "engagement_rate": 0,
       "likes": 2169,
       "comments": 24,
       "link": "https://instagram.com/p/DUqxkTsj1-x/"

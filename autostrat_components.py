@@ -191,6 +191,109 @@ def render_data_availability(autostrat: dict):
 
 # ── Sponsorship Suggestion Card ──────────────────────────────────────
 
+# ── Performance Statistics Table ─────────────────────────────────────
+
+def render_statistics_section(statistics: dict):
+    """Render performance statistics as a compact metric grid."""
+    all_posts = statistics.get("all_posts", {})
+    if not any(all_posts.values()):
+        return
+
+    metrics = [
+        ("Views", "views"),
+        ("Likes", "likes"),
+        ("Comments", "comments"),
+    ]
+
+    for label, key in metrics:
+        min_val = all_posts.get(f"min_{key}", 0)
+        max_val = all_posts.get(f"max_{key}", 0)
+        median_val = all_posts.get(f"median_{key}", 0)
+        avg_val = all_posts.get(f"avg_{key}", 0)
+
+        if not any([min_val, max_val, median_val, avg_val]):
+            continue
+
+        st.markdown(f"""
+        <div style="font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+                    color: #555; font-size: 0.85rem; letter-spacing: 0.5px;
+                    margin: 8px 0 4px 0;">{label}</div>
+        """, unsafe_allow_html=True)
+        c1, c2, c3, c4 = st.columns(4)
+        with c1:
+            st.metric("Min", f"{min_val:,.0f}")
+        with c2:
+            st.metric("Max", f"{max_val:,.0f}")
+        with c3:
+            st.metric("Median", f"{median_val:,.0f}")
+        with c4:
+            st.metric("Avg", f"{avg_val:,.0f}")
+
+
+# ── Top Post Card ───────────────────────────────────────────────────
+
+def render_top_post_card(post: dict, label: str, accent: str = "#2ea3f2"):
+    """Render a single top/bottom post card."""
+    caption = post.get("caption", "")
+    er = post.get("engagement_rate", 0)
+    likes = post.get("likes", 0)
+    comments = post.get("comments", 0)
+    link = post.get("link", "")
+
+    if not caption and not likes and not link:
+        return
+
+    link_html = ""
+    if link:
+        link_html = (f'<a href="{link}" target="_blank" style="color: #2ea3f2; '
+                     f'font-size: 0.82rem; text-decoration: none;">View Post</a>')
+
+    st.markdown(f"""
+    <div style="background: white; border-radius: 10px; padding: 16px 18px;
+                margin-bottom: 10px; border: 1px solid #E0D8D0;
+                border-top: 3px solid {accent};">
+        <div style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+                    color: {accent}; font-size: 0.82rem; letter-spacing: 1px;
+                    margin-bottom: 8px;">{label}</div>
+        <p style="color: #444; font-size: 0.9rem; line-height: 1.45; margin: 0 0 10px 0;
+                  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+                  overflow: hidden;">{caption}</p>
+        <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center;
+                    font-size: 0.85rem; color: #666;">
+            <span><strong>ER:</strong> {er}%</span>
+            <span><strong>Likes:</strong> {likes:,}</span>
+            <span><strong>Comments:</strong> {comments:,}</span>
+            {link_html}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def render_top_posts_section(top_posts: dict):
+    """Render all top post pairs (Most/Least) for Liked, Comments, Engaged."""
+    pairs = [
+        ("Liked", "most_liked", "least_liked"),
+        ("Comments", "most_comments", "least_comments"),
+        ("Engaged", "most_engaged", "least_engaged"),
+    ]
+
+    for pair_label, most_key, least_key in pairs:
+        most = top_posts.get(most_key, {})
+        least = top_posts.get(least_key, {})
+
+        has_most = most.get("caption") or most.get("likes") or most.get("link")
+        has_least = least.get("caption") or least.get("likes") or least.get("link")
+
+        if not has_most and not has_least:
+            continue
+
+        col_m, col_l = st.columns(2)
+        with col_m:
+            render_top_post_card(most, f"MOST {pair_label.upper()}", "#5CB85C")
+        with col_l:
+            render_top_post_card(least, f"LEAST {pair_label.upper()}", "#D9534F")
+
+
 def render_sponsorship_card(suggestion: dict):
     """Render a future sponsorship suggestion card."""
     cat = suggestion.get("category", "")

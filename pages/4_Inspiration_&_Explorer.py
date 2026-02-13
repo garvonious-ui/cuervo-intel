@@ -26,7 +26,7 @@ from autostrat_loader import (
 from autostrat_components import (
     render_section_label, render_territory_cards, render_nopd_cards,
     render_narrative_card, render_hits_misses, render_verbatim_quotes,
-    render_sponsorship_card,
+    render_sponsorship_card, render_statistics_section, render_top_posts_section,
 )
 
 st.logo("logo.png")
@@ -209,6 +209,22 @@ with tab_inspo:
                 for i, sug in enumerate(suggestions):
                     with cols_s[i % len(cols_s)]:
                         render_sponsorship_card(sug)
+                st.markdown("---")
+
+            # ── Performance Statistics ────────────────────────────────
+            stats = report_r.get("statistics", {})
+            if stats and any(stats.get("all_posts", {}).values()):
+                render_section_label("Performance Statistics")
+                st.caption("Min / Max / Median / Avg across all analyzed posts")
+                render_statistics_section(stats)
+                st.markdown("---")
+
+            # ── Top & Bottom Posts ────────────────────────────────────
+            top_posts = report_r.get("top_posts", {})
+            if top_posts:
+                render_section_label("Top & Bottom Posts")
+                st.caption("Best and worst performing posts by likes, comments, and overall engagement")
+                render_top_posts_section(top_posts)
 
 
 # ══════════════════════════════════════════════════════════════════════

@@ -63,9 +63,15 @@ SECTION_HEADINGS = [
     "Most / Least Comments",
     "Most / Least Engaged",
     "News Analysis",
+    "News Trends",
+    "News Topics",
     "Top Stories",
     "Competitor Coverage",
     "Trending Narratives",
+    "SWOT Analysis",
+    "Consideration Spaces",
+    "Potential Actions",
+    "Quotes",
     "Strategic Implications",
     "Appendix",
 ]
@@ -80,6 +86,185 @@ def extract_text_from_pdf(pdf_path: str) -> str:
     if result.returncode != 0:
         raise RuntimeError(f"pdftotext failed on {pdf_path}: {result.stderr}")
     return result.stdout
+
+
+def extract_text_from_pptx(pptx_path: str) -> str:
+    """Extract text from a PPTX file, producing output compatible with the PDF parser.
+
+    Handles shape ordering (by position), group shapes (section headings),
+    tables (NOPD, statistics, top posts, sponsorship), and injects a
+    report-type header line so detect_report_type() works.
+    """
+    from pptx import Presentation as PptxPresentation
+    from pptx.enum.shapes import MSO_SHAPE_TYPE
+
+    NOPD_LABELS = {"NEEDS", "OBJECTIONS", "DESIRES", "PAIN POINTS"}
+
+    def _extract_shape_text(shape) -> list[str]:
+        """Extract all text lines from a single shape."""
+        lines = []
+        if shape.has_text_frame:
+            for para in shape.text_frame.paragraphs:
+                t = para.text.strip()
+                if t:
+                    lines.append(t)
+        return lines
+
+    def _extract_table_text(shape) -> list[str]:
+        """Extract text from a table shape with smart formatting."""
+        lines = []
+        table = shape.table
+        n_cols = len(table.columns)
+        n_rows = len(list(table.rows))
+
+        # Detect NOPD table: has rows where first cell is a NOPD label
+        is_nopd = any(
+            row.cells[0].text.strip() in NOPD_LABELS
+            for row in table.rows
+        )
+
+        if is_nopd:
+            # Output: LABEL\n\nitem1\n\nitem2\n\nitem3\n\n (blank-line separated)
+            for row in table.rows:
+                cells = [c.text.strip() for c in row.cells]
+                first = cells[0]
+                if first in NOPD_LABELS:
+                    lines.append(first)
+                else:
+                    # Each non-empty cell is an individual item
+                    for cell in cells:
+                        if cell:
+                            lines.append(cell)
+                            lines.append("")  # blank line separator
+        elif n_cols == 2:
+            # Key-value table (stats, top posts): label then value
+            for row in table.rows:
+                cells = [c.text.strip() for c in row.cells]
+                lines.append(cells[0])
+                lines.append(cells[1])
+        else:
+            # Multi-column table (sponsorship): each cell on its own line
+            for row in table.rows:
+                for cell in row.cells:
+                    t = cell.text.strip()
+                    if t:
+                        lines.append(t)
+
+        return lines
+
+    # Row-clustering threshold: shapes within this vertical distance
+    # are considered the same row (50000 EMU ≈ 0.55 inch).
+    ROW_SNAP = 50000
+
+    prs = PptxPresentation(pptx_path)
+    slide_blocks: list[str] = []
+
+    for slide in prs.slides:
+        # Collect all shapes with their position for sorting
+        heading_lines: list[str] = []  # from group shapes (section headings)
+        positioned: list[tuple[int, int, list[str]]] = []  # (top, left, lines)
+
+        for shape in slide.shapes:
+            top = shape.top or 0
+            left = shape.left or 0
+
+            if shape.shape_type == MSO_SHAPE_TYPE.GROUP:
+                # Group shapes contain section headings — collect separately
+                for sub in shape.shapes:
+                    heading_lines.extend(_extract_shape_text(sub))
+            elif shape.has_table:
+                tlines = _extract_table_text(shape)
+                if tlines:
+                    positioned.append((top, left, tlines))
+            elif shape.has_text_frame:
+                tlines = _extract_shape_text(shape)
+                if tlines:
+                    positioned.append((top, left, tlines))
+
+        # Cluster shapes into rows by similar top positions, then sort by left
+        positioned.sort(key=lambda x: (x[0], x[1]))
+        if positioned:
+            rows: list[list[tuple[int, int, list[str]]]] = []
+            current_row: list[tuple[int, int, list[str]]] = [positioned[0]]
+            for item in positioned[1:]:
+                if abs(item[0] - current_row[0][0]) <= ROW_SNAP:
+                    current_row.append(item)
+                else:
+                    rows.append(current_row)
+                    current_row = [item]
+            rows.append(current_row)
+            # Sort within each row by left position
+            positioned = []
+            for row in rows:
+                row.sort(key=lambda x: x[1])
+                positioned.extend(row)
+
+        # Assemble slide text with blank lines between shapes.
+        # For the first slide, positioned content (identifier, date) goes before
+        # headings (report type title). For all other slides, headings (section
+        # names) go first.
+        slide_lines: list[str] = []
+        is_first_slide = (len(slide_blocks) == 0)
+
+        if is_first_slide:
+            # Put identifier + date before report type heading
+            for _, _, lines in positioned:
+                if slide_lines and slide_lines[-1] != "":
+                    slide_lines.append("")
+                slide_lines.extend(lines)
+            if heading_lines:
+                if slide_lines and slide_lines[-1] != "":
+                    slide_lines.append("")
+                slide_lines.extend(heading_lines)
+        else:
+            slide_lines.extend(heading_lines)
+            for _, _, lines in positioned:
+                if slide_lines and slide_lines[-1] != "":
+                    slide_lines.append("")
+                slide_lines.extend(lines)
+
+        slide_blocks.append("\n".join(slide_lines))
+
+    full_text = "\n\n".join(slide_blocks)
+
+    # Detect report type from content and inject it into the header
+    lower = full_text.lower()
+    if "this instagram profile" in lower or "instagram profile" in lower:
+        report_type_line = "Instagram Profile Analysis Presentation"
+    elif "this tiktok profile" in lower or "tiktok profile" in lower:
+        report_type_line = "TikTok Profile Analysis Presentation"
+    elif "instagram hashtag" in lower:
+        report_type_line = "Instagram Hashtag Analysis Presentation"
+    elif "tiktok hashtag" in lower:
+        report_type_line = "TikTok Hashtag Analysis Presentation"
+    elif "tiktok keyword" in lower:
+        report_type_line = "TikTok Keyword Analysis Presentation"
+    elif "google news" in lower:
+        report_type_line = "Google News Analysis Presentation"
+    else:
+        fname = os.path.basename(pptx_path).lower()
+        if "profile" in fname:
+            report_type_line = "Instagram Profile Analysis Presentation"
+        elif "hashtag" in fname:
+            report_type_line = "Instagram Hashtag Analysis Presentation"
+        else:
+            report_type_line = "Instagram Profile Analysis Presentation"
+
+    # Only inject report type line if not already present in the first few lines
+    first_lines = full_text[:500].lower()
+    already_has_type = any(
+        rt_key in first_lines for rt_key in REPORT_TYPE_MAP
+    )
+
+    if not already_has_type:
+        # Insert report type line after the first line (identifier)
+        first_nl = full_text.find("\n")
+        if first_nl > 0:
+            full_text = full_text[:first_nl] + "\n" + report_type_line + full_text[first_nl:]
+        else:
+            full_text = report_type_line + "\n" + full_text
+
+    return full_text
 
 
 def detect_report_type(text: str) -> tuple[str, str, str]:
@@ -156,6 +341,23 @@ def split_into_sections(text: str) -> dict[str, str]:
     # Sort by position
     found.sort(key=lambda x: x[0])
 
+    # Remove substring matches: when two headings overlap (one contains the other),
+    # keep only the longer heading at that position.
+    filtered = []
+    for pos, name, end in found:
+        # Check if this match is contained within a longer heading match
+        is_substring = False
+        for opos, oname, oend in found:
+            if oname == name:
+                continue
+            # If another heading starts at same position or contains this one
+            if opos <= pos and oend >= end and len(oname) > len(name):
+                is_substring = True
+                break
+        if not is_substring:
+            filtered.append((pos, name, end))
+    found = filtered
+
     # Deduplicate — if same heading appears multiple times, keep first before Appendix
     # and any after Appendix separately
     appendix_pos = None
@@ -228,10 +430,9 @@ def parse_nopd(text: str) -> dict:
 def parse_snapshot(text: str) -> dict:
     """Parse snapshot metrics (followers, following, avg likes, etc.).
 
-    The PDF text groups labels together then values together:
-      Followers / Following / 1624521 / 1999
-      Avg Likes / Avg Comments / Avg Engagement Rate / 101,198 / 1,019 / 6 %
-    So we collect label positions and value positions, then match in order.
+    Handles both PDF layout (labels grouped then values grouped) and
+    PPTX layout (labels and values may interleave in any order).
+    Strategy: find each label, then take the nearest following numeric line.
     """
     snapshot = {
         "followers": 0, "following": 0,
@@ -239,9 +440,6 @@ def parse_snapshot(text: str) -> dict:
     }
 
     lines = [ln.strip() for ln in text.split("\n")]
-
-    # Pass 1: Collect the ordered labels we care about and the pure-number lines
-    label_order = []
     LABEL_MAP = {
         "followers": "followers",
         "following": "following",
@@ -250,53 +448,31 @@ def parse_snapshot(text: str) -> dict:
         "avg engagement rate": "avg_engagement_rate",
     }
 
-    # Find the two groups: first group (followers/following), second group (avg*)
-    group1_labels = []  # followers, following
-    group1_values = []
-    group2_labels = []  # avg likes, avg comments, avg engagement rate
-    group2_values = []
-
-    in_group1 = False
-    in_group2 = False
-    past_group1_labels = False
-    past_group2_labels = False
-
-    for line in lines:
+    # Find indices of each label
+    label_positions: list[tuple[int, str]] = []
+    for i, line in enumerate(lines):
         low = line.lower()
-        if not line:
-            continue
+        if low in LABEL_MAP:
+            label_positions.append((i, LABEL_MAP[low]))
 
-        if low == "followers":
-            in_group1 = True
-            group1_labels.append("followers")
-        elif low == "following" and in_group1:
-            group1_labels.append("following")
-            past_group1_labels = True
-        elif past_group1_labels and not in_group2 and re.match(r'^[\d,]+\.?\d*\s*%?$', line):
-            group1_values.append(parse_number(line))
-            if len(group1_values) >= len(group1_labels):
-                past_group1_labels = False
-        elif low == "avg likes":
-            in_group2 = True
-            group2_labels.append("avg_likes")
-        elif "avg comments" in low and in_group2:
-            group2_labels.append("avg_comments")
-        elif "avg engagement rate" in low and in_group2:
-            group2_labels.append("avg_engagement_rate")
-            past_group2_labels = True
-        elif past_group2_labels and re.match(r'^[\d,]+\.?\d*\s*%?$', line):
-            group2_values.append(parse_number(line))
-            if len(group2_values) >= len(group2_labels):
+    # For each label, find the nearest following numeric line
+    # that isn't claimed by another label closer to it.
+    # Extended range (12) handles PPTX text where blank lines separate shapes.
+    claimed: set[int] = set()
+    for pos, key in label_positions:
+        for j in range(pos + 1, min(pos + 12, len(lines))):
+            if j in claimed:
+                continue
+            line = lines[j].strip()
+            if not line:
+                continue
+            # Skip other label lines
+            if line.lower() in LABEL_MAP:
+                continue
+            if re.match(r'^[\d,]+\.?\d*\s*%?$', line):
+                snapshot[key] = parse_number(line)
+                claimed.add(j)
                 break
-
-    # Map values to labels
-    for i, label in enumerate(group1_labels):
-        if i < len(group1_values):
-            snapshot[label] = group1_values[i]
-
-    for i, label in enumerate(group2_labels):
-        if i < len(group2_values):
-            snapshot[label] = group2_values[i]
 
     return snapshot
 
@@ -452,39 +628,185 @@ def parse_sponsorships(text: str) -> dict:
 
 
 def parse_future_sponsorships(text: str) -> list[dict]:
-    """Parse future sponsorship suggestions."""
-    suggestions = []
+    """Parse Future Sponsorship Suggestions from multi-column PDF layout.
 
-    # Look for category names followed by "Why it Works" and "How to Activate"
-    # The structure is: summary paragraph, then category blocks
-    lines = text.split("\n")
+    The section has a summary paragraph, then N category names, short
+    description snippets, "Why it Works" × N, Why text (interleaved),
+    "How to Activate" × N, and How text (may be interleaved or sequential).
+    """
+    lines_all = text.split("\n")
+    lines = [ln.strip() for ln in lines_all if ln.strip()]
+
+    # Count Why/How labels
+    why_label = {"Why it Works", "Why it works"}
+    how_label = {"How to Activate", "How to activate"}
+    why_indices = [i for i, ln in enumerate(lines) if ln in why_label]
+    how_indices = [i for i, ln in enumerate(lines) if ln in how_label]
+
+    n_cats = max(len(why_indices), len(how_indices), 1)
+
+    if n_cats <= 1:
+        # Single category or no labels — fall back to simple parsing
+        return _parse_future_sponsorships_simple(text)
+
+    # ── Summary: long lines at the start ────────────────────────────────
+    summary_parts = []
     summary_end = 0
-
-    # Find where categories start (look for "Why it Works" pattern)
-    for i, line in enumerate(lines):
-        if "Why it Works" in line or "Why it works" in line:
-            summary_end = i
+    for i, ln in enumerate(lines):
+        if len(ln) > 60:
+            summary_parts.append(ln)
+            summary_end = i + 1
+        elif summary_parts:
             break
 
-    # Parse the section before "Why it Works" for category names
-    pre_text = "\n".join(lines[:summary_end])
-    # Categories are typically short phrases (2-5 words) on their own lines
-    potential_cats = []
-    for line in lines[:summary_end]:
-        stripped = line.strip()
-        if stripped and 5 < len(stripped) < 60 and not stripped.endswith("."):
-            potential_cats.append(stripped)
+    # ── Category names: use blank-line-separated groups from raw text ────
+    # This correctly handles wrapped names like "Celebrity-Driven Cultural\nCollaborations"
+    # which appear as consecutive lines without a blank line between them.
 
-    # Build suggestions with available data
-    # This is a best-effort parse — the PDF format makes precise extraction hard
+    # Find summary end and first Why label in raw text (lines_all)
+    summary_end_raw = 0
+    in_summary = False
+    for i, ln in enumerate(lines_all):
+        if len(ln.strip()) > 60:
+            in_summary = True
+            summary_end_raw = i + 1
+        elif in_summary and ln.strip():
+            break
+
+    first_why_raw = len(lines_all)
+    for i, ln in enumerate(lines_all):
+        if ln.strip() in why_label:
+            first_why_raw = i
+            break
+
+    # Parse blank-line-separated groups between summary and first Why
+    groups: list[str] = []
+    current_group: list[str] = []
+    for i in range(summary_end_raw, first_why_raw):
+        ln = lines_all[i].strip()
+        if ln:
+            current_group.append(ln)
+        elif current_group:
+            groups.append(" ".join(current_group))
+            current_group = []
+    if current_group:
+        groups.append(" ".join(current_group))
+
+    # Separate names (short, no trailing period) from description snippets
+    cat_names = []
+    desc_lines = []
+    for g in groups:
+        if len(cat_names) < n_cats and not g.endswith((".", "!", "?")) and len(g) < 50:
+            cat_names.append(g)
+        else:
+            desc_lines.append(g)
+
+    # ── Description snippets: de-interleave by n_cats ───────────────────
+    desc_texts = [""] * n_cats
+    if desc_lines:
+        cols = deinterleave_columns(desc_lines, n_cats)
+        for ci, col_lines in enumerate(cols):
+            desc_texts[ci] = " ".join(col_lines)
+
+    # ── Why text: between last Why label and first How label ────────────
+    last_why = why_indices[-1] if why_indices else -1
+    first_how = how_indices[0] if how_indices else len(lines)
+
+    why_text_lines = []
+    for i in range(last_why + 1, first_how):
+        ln = lines[i]
+        if ln not in why_label:
+            why_text_lines.append(ln)
+
+    why_texts = [""] * n_cats
+    if why_text_lines:
+        cols = deinterleave_columns(why_text_lines, n_cats)
+        for ci, col_lines in enumerate(cols):
+            why_texts[ci] = " ".join(col_lines)
+
+    # ── How to Activate text: after last How label ──────────────────────
+    last_how = how_indices[-1] if how_indices else len(lines) - 1
+    # Use raw text (preserving blank lines) for paragraph splitting
+    # Find position of last How label in the original text
+    raw_after_how = ""
+    how_count = 0
+    for i, ln in enumerate(lines_all):
+        if ln.strip() in how_label:
+            how_count += 1
+            if how_count == len(how_indices):
+                raw_after_how = "\n".join(lines_all[i + 1:])
+                break
+
+    how_blocks_raw = [b.strip() for b in re.split(r'\n\n+', raw_after_how)
+                      if b.strip() and b.strip() not in how_label]
+    # Filter out blocks from the next section (Engagement Analysis, etc.)
+    how_blocks = []
+    for block in how_blocks_raw:
+        first_line = block.split("\n")[0].strip()
+        if first_line in ("Engagement Analysis", "Summary", "Snapshot",
+                          "Posting Analysis"):
+            break
+        how_blocks.append(block)
+
+    how_items: list[list[str]] = [[] for _ in range(n_cats)]
+    if how_blocks:
+        if len(how_blocks) == n_cats:
+            # Direct assignment: one block per category (cleanest case)
+            for ci, block in enumerate(how_blocks):
+                items = _split_action_items(block)
+                how_items[ci] = items
+        else:
+            # Variable layout — join all and de-interleave by n_cats
+            all_how_lines = []
+            for block in how_blocks:
+                for ln in block.split("\n"):
+                    ln = ln.strip()
+                    if ln and ln not in how_label:
+                        all_how_lines.append(ln)
+            if all_how_lines:
+                cols = deinterleave_columns(all_how_lines, n_cats)
+                for ci, col_lines in enumerate(cols):
+                    how_items[ci] = _split_action_items(" ".join(col_lines))
+
+    # ── Build suggestions ───────────────────────────────────────────────
+    suggestions = []
+    for ci in range(n_cats):
+        name = cat_names[ci] if ci < len(cat_names) else f"Category {ci + 1}"
+        why = why_texts[ci] if ci < len(why_texts) else ""
+        if ci < len(desc_texts) and desc_texts[ci]:
+            why = desc_texts[ci] + " " + why
+        suggestions.append({
+            "category": name,
+            "why_it_works": why.strip(),
+            "how_to_activate": how_items[ci] if ci < len(how_items) else [],
+        })
+
+    return suggestions
+
+
+def _split_action_items(text: str) -> list[str]:
+    """Split a text block into individual action items on sentence boundaries."""
+    items = []
+    for sentence in re.split(r'(?<=\.)\s+(?=[A-Z])', text):
+        sentence = " ".join(sentence.split()).strip()
+        if sentence and len(sentence) > 10:
+            items.append(sentence)
+    return items
+
+
+def _parse_future_sponsorships_simple(text: str) -> list[dict]:
+    """Fallback parser for single-category or unlabeled sponsorship sections."""
+    suggestions = []
     current_cat = None
-    why_text = []
-    how_text = []
+    why_text: list[str] = []
+    how_text: list[str] = []
     in_why = False
     in_how = False
 
-    for line in lines:
+    for line in text.split("\n"):
         stripped = line.strip()
+        if not stripped:
+            continue
         if "Why it Works" in stripped or "Why it works" in stripped:
             if current_cat and (why_text or how_text):
                 suggestions.append({
@@ -492,8 +814,7 @@ def parse_future_sponsorships(text: str) -> list[dict]:
                     "why_it_works": " ".join(why_text).strip(),
                     "how_to_activate": [h for h in how_text if h],
                 })
-                why_text = []
-                how_text = []
+                why_text, how_text = [], []
             in_why = True
             in_how = False
             continue
@@ -502,24 +823,20 @@ def parse_future_sponsorships(text: str) -> list[dict]:
             in_how = True
             continue
 
-        if in_why and stripped:
+        if in_why:
             why_text.append(stripped)
-        elif in_how and stripped:
+        elif in_how:
             how_text.append(stripped)
-        elif stripped and not in_why and not in_how and len(stripped) > 3:
-            # Might be a category name
-            if len(stripped) < 60 and stripped not in ["Why it Works", "How to Activate"]:
-                if current_cat and (why_text or how_text):
-                    suggestions.append({
-                        "category": current_cat,
-                        "why_it_works": " ".join(why_text).strip(),
-                        "how_to_activate": [h for h in how_text if h],
-                    })
-                    why_text = []
-                    how_text = []
-                current_cat = stripped
+        elif len(stripped) < 60 and not stripped.endswith("."):
+            if current_cat and (why_text or how_text):
+                suggestions.append({
+                    "category": current_cat,
+                    "why_it_works": " ".join(why_text).strip(),
+                    "how_to_activate": [h for h in how_text if h],
+                })
+                why_text, how_text = [], []
+            current_cat = stripped
 
-    # Don't forget the last one
     if current_cat and (why_text or how_text):
         suggestions.append({
             "category": current_cat,
@@ -673,7 +990,13 @@ def parse_brand_mentions(text: str) -> list[dict]:
 
 
 def parse_hashtag_analysis(text: str) -> dict:
-    """Parse hashtag analysis section with findings/opportunities/gaps/actions."""
+    """Parse hashtag analysis section with findings/opportunities/gaps/actions.
+
+    PDF 2-column layout produces paired headings on same row:
+      Key Findings  |  Opportunities     → items interleaved [finding, opp, ...]
+      Gaps/Risks    |  Strategic Actions  → items interleaved [gap, action, ...]
+    We detect this pattern and de-interleave.
+    """
     result = {
         "summary": "",
         "related_hashtags": [],
@@ -683,50 +1006,93 @@ def parse_hashtag_analysis(text: str) -> dict:
         "strategic_actions": [],
     }
 
-    # Split on sub-section headings
-    sections = {}
-    sub_headings = ["Summary", "Analysis", "Key Findings", "Opportunities",
-                    "Gaps, Risks or Unmet Needs", "Strategic Actions",
-                    "Themes", "Engagement\nTactics", "Sentiment", "Motivations"]
-
-    # Find Key Findings, Opportunities, Gaps, and Strategic Actions
+    # Locate headings by position
+    heading_positions = {}
     for heading in ["Key Findings", "Opportunities",
                     "Gaps, Risks or Unmet Needs", "Strategic Actions"]:
         idx = text.find(heading)
         if idx >= 0:
-            # Get text between this heading and the next
-            end_idx = len(text)
-            for other in ["Key Findings", "Opportunities",
-                          "Gaps, Risks or Unmet Needs", "Strategic Actions",
-                          "Interesting Conversations", "Content Trends"]:
-                if other == heading:
-                    continue
-                other_idx = text.find(other, idx + len(heading))
-                if other_idx > idx and other_idx < end_idx:
-                    end_idx = other_idx
+            heading_positions[heading] = idx
 
-            section_text = text[idx + len(heading):end_idx].strip()
-            items = [item.strip() for item in re.split(r'\n\n+', section_text)
-                     if item.strip() and len(item.strip()) > 10]
+    if not heading_positions:
+        result["summary"] = text.strip()
+        return result
 
+    # Sort headings by position
+    sorted_headings = sorted(heading_positions.items(), key=lambda x: x[1])
+
+    # Get summary (text before first heading)
+    first_pos = sorted_headings[0][1]
+    if first_pos > 0:
+        result["summary"] = text[:first_pos].strip()
+
+    # Determine heading groups — paired headings that appear close together
+    # are from the same 2-column row in the PDF
+    groups = []
+    i = 0
+    while i < len(sorted_headings):
+        name, pos = sorted_headings[i]
+        # Check if the next heading is close (on same row = within ~80 chars)
+        if i + 1 < len(sorted_headings):
+            next_name, next_pos = sorted_headings[i + 1]
+            gap_text = text[pos + len(name):next_pos].strip()
+            if len(gap_text) < 30:
+                # These two headings are a 2-column pair
+                groups.append((name, next_name))
+                i += 2
+                continue
+        groups.append((name,))
+        i += 1
+
+    # Extract content for each group
+    for gi, group in enumerate(groups):
+        # Find start of content (after all headings in this group)
+        last_heading = group[-1]
+        content_start = heading_positions[last_heading] + len(last_heading)
+
+        # Find end of content (start of next group, or end of major section)
+        if gi + 1 < len(groups):
+            next_group_first = groups[gi + 1][0]
+            content_end = heading_positions[next_group_first]
+        else:
+            # End at next major section or text end
+            content_end = len(text)
+            for boundary in ["Interesting Conversations", "Content Trends",
+                             "Brand Mentions", "How to Win"]:
+                bpos = text.find(boundary, content_start)
+                if content_start < bpos < content_end:
+                    content_end = bpos
+
+        section_text = text[content_start:content_end].strip()
+        items = [item.strip() for item in re.split(r'\n\n+', section_text)
+                 if item.strip() and len(item.strip()) > 10]
+
+        if len(group) == 2:
+            # De-interleave: even indices = left column, odd = right column
+            left_key = {
+                "Key Findings": "key_findings",
+                "Gaps, Risks or Unmet Needs": "gaps_risks_unmet_needs",
+            }.get(group[0], "key_findings")
+            right_key = {
+                "Opportunities": "opportunities",
+                "Strategic Actions": "strategic_actions",
+            }.get(group[1], "opportunities")
+
+            for idx, item in enumerate(items):
+                if idx % 2 == 0:
+                    result[left_key].append(item)
+                else:
+                    result[right_key].append(item)
+        else:
+            # Single heading — all items go to that key
             key_map = {
                 "Key Findings": "key_findings",
                 "Opportunities": "opportunities",
                 "Gaps, Risks or Unmet Needs": "gaps_risks_unmet_needs",
                 "Strategic Actions": "strategic_actions",
             }
-            if heading in key_map:
-                result[key_map[heading]] = items
-
-    # Get summary (text before first sub-heading)
-    first_heading_pos = len(text)
-    for heading in ["Key Findings", "Opportunities", "Gaps, Risks or Unmet Needs"]:
-        pos = text.find(heading)
-        if 0 <= pos < first_heading_pos:
-            first_heading_pos = pos
-
-    if first_heading_pos > 0:
-        result["summary"] = text[:first_heading_pos].strip()
+            key = key_map.get(group[0], "key_findings")
+            result[key] = items
 
     return result
 
@@ -838,6 +1204,202 @@ def parse_in_market_campaigns(text: str) -> list[dict]:
     return campaigns
 
 
+def parse_news_trends(text: str) -> list[dict]:
+    """Parse News Trends section into trending narratives.
+
+    PDF 2-column layout produces: [title1, title2, desc1, desc2, title3, title4, desc3, desc4].
+    Titles are short (<120 chars), descriptions are longer.
+    """
+    paragraphs = [p.strip() for p in re.split(r'\n\n+', text) if p.strip()]
+
+    titles = []
+    descriptions = []
+
+    for para in paragraphs:
+        clean = " ".join(para.split())
+        if len(clean) < 120:
+            titles.append(clean)
+        else:
+            descriptions.append(clean)
+
+    narratives = []
+    for i in range(min(len(titles), len(descriptions))):
+        narratives.append({
+            "narrative": titles[i],
+            "description": descriptions[i],
+            "brands_involved": [],
+        })
+
+    # If there are extra titles without descriptions, still include them
+    for i in range(len(descriptions), len(titles)):
+        narratives.append({
+            "narrative": titles[i],
+            "description": "",
+            "brands_involved": [],
+        })
+
+    return narratives
+
+
+def parse_news_topics(text: str) -> dict:
+    """Parse News Topics section into topic titles and detailed findings.
+
+    Same 2-column layout: short topic titles, then longer finding descriptions.
+    """
+    paragraphs = [p.strip() for p in re.split(r'\n\n+', text) if p.strip()]
+
+    topics = []
+    findings = []
+
+    for para in paragraphs:
+        clean = " ".join(para.split())
+        if len(clean) < 120:
+            topics.append(clean)
+        else:
+            findings.append(clean)
+
+    return {"topics": topics, "findings": findings}
+
+
+def parse_swot_overview(text: str) -> dict:
+    """Parse SWOT overview from Google News report.
+
+    2-column layout: Strengths/Weaknesses header, then interleaved S/W items,
+    then interleaved O/T items, then Opportunities/Threats label at bottom.
+    Even-indexed items = left column, odd-indexed = right column.
+    """
+    result = {"strengths": [], "weaknesses": [], "opportunities": [], "threats": []}
+
+    # Remove header labels
+    clean = text
+    clean = re.sub(r'\bStrengths\b', '', clean)
+    clean = re.sub(r'\bWeaknesses\b', '', clean)
+
+    # Find the Opportunities/Threats label line (appears at the bottom)
+    lines = clean.split("\n")
+    opp_label_idx = None
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if stripped == "Opportunities" or ("Opportunities" in stripped and "Threats" in stripped):
+            opp_label_idx = i
+            break
+
+    if opp_label_idx is not None:
+        # Remove the label line and anything after
+        clean = "\n".join(lines[:opp_label_idx])
+
+    clean = re.sub(r'\bOpportunities\b', '', clean)
+    clean = re.sub(r'\bThreats\b', '', clean)
+
+    # Get all items as paragraphs
+    items = [p.strip() for p in re.split(r'\n\n+', clean) if p.strip() and len(p.strip()) > 20]
+
+    # First half = S/W interleaved, second half = O/T interleaved
+    half = len(items) // 2
+    sw_items = items[:half]
+    ot_items = items[half:]
+
+    for i, item in enumerate(sw_items):
+        c = " ".join(item.split())
+        if i % 2 == 0:
+            result["strengths"].append(c)
+        else:
+            result["weaknesses"].append(c)
+
+    for i, item in enumerate(ot_items):
+        c = " ".join(item.split())
+        if i % 2 == 0:
+            result["opportunities"].append(c)
+        else:
+            result["threats"].append(c)
+
+    return result
+
+
+def parse_potential_actions(text: str) -> list[str]:
+    """Parse Potential Actions section into a list of action strings."""
+    actions = []
+    for para in re.split(r'\n\n+', text):
+        para = para.strip()
+        if not para or len(para) < 15:
+            continue
+        # Skip labels
+        if para in ("Short Term", "Long Term", "Potential Actions"):
+            continue
+        actions.append(" ".join(para.split()))
+    return actions
+
+
+def parse_news_quotes(text: str) -> list[str]:
+    """Parse Quotes section into individual quote strings.
+
+    Quotes are separated by single newlines where each quote may wrap across
+    multiple lines. Split on boundaries where a line ends with punctuation
+    and the next line starts a new sentence (capital letter, quote mark, or number).
+    """
+    # First try double-newline split
+    paras = [p.strip() for p in re.split(r'\n\n+', text) if p.strip()]
+
+    quotes = []
+    for para in paras:
+        # Split multi-quote paragraphs on sentence boundaries
+        lines = para.split("\n")
+        current = []
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            if (current and
+                    current[-1].rstrip().endswith((".","!","?",'"',"'")) and
+                    len(line) > 5 and
+                    (line[0].isupper() or line[0] == '"' or line[0] == "'")):
+                # This looks like the start of a new quote
+                joined = " ".join(current)
+                if len(joined) > 20:
+                    quotes.append(joined)
+                current = [line]
+            else:
+                current.append(line)
+        if current:
+            joined = " ".join(current)
+            if len(joined) > 20:
+                quotes.append(joined)
+
+    return quotes
+
+
+def parse_news_statistics(text: str) -> list[str]:
+    """Parse Statistics section into individual stat strings.
+
+    Stats are separated by newlines but may wrap. A new stat typically starts
+    with a capital letter or brand name and contains a number.
+    """
+    lines = [ln.strip() for ln in text.split("\n") if ln.strip()]
+    stats = []
+    current = []
+
+    for line in lines:
+        if not line:
+            continue
+        # A new stat starts with a capital letter and builds on a fresh sentence
+        if (current and
+                line[0].isupper() and
+                current[-1].rstrip().endswith((".", "!", "?", "%"))):
+            joined = " ".join(current)
+            if len(joined) > 15:
+                stats.append(joined)
+            current = [line]
+        else:
+            current.append(line)
+
+    if current:
+        joined = " ".join(current)
+        if len(joined) > 15:
+            stats.append(joined)
+
+    return stats
+
+
 def parse_executive_summary(text: str) -> dict:
     """Parse executive summary section."""
     result = {"overview": "", "key_insights": [], "search_term": "", "search_purpose": ""}
@@ -873,46 +1435,111 @@ def parse_executive_summary(text: str) -> dict:
     return result
 
 
-def parse_top_posts(text: str) -> dict:
-    """Parse a Most/Least section for top posts."""
-    result = {"caption": "", "engagement_rate": 0, "likes": 0, "comments": 0, "link": ""}
+def deinterleave_columns(lines: list[str], n_cols: int) -> list[list[str]]:
+    """De-interleave text lines from a multi-column PDF layout.
+
+    First columns may have more lines than later columns due to vertical
+    offset in the PDF grid. Pattern: partial first group (remainder columns),
+    then full groups of n_cols.
+    """
+    n_lines = len(lines)
+    remainder = n_lines % n_cols
+    columns: list[list[str]] = [[] for _ in range(n_cols)]
+    idx = 0
+    # Partial first group: first `remainder` columns get one extra line
+    for col in range(remainder):
+        if idx < n_lines:
+            columns[col].append(lines[idx])
+            idx += 1
+    # Full groups
+    while idx < n_lines:
+        for col in range(n_cols):
+            if idx < n_lines:
+                columns[col].append(lines[idx])
+                idx += 1
+    return columns
+
+
+def parse_top_posts_pair(text: str) -> tuple[dict, dict]:
+    """Parse a 2-column Most/Least section into (most_post, least_post).
+
+    Handles variable pdftotext layouts where Most (left) and Least (right)
+    column content interleaves. Strategy: first occurrence of each metric
+    label → Most, second → Least.
+    """
+    most = {"caption": "", "engagement_rate": 0, "likes": 0, "comments": 0, "link": ""}
+    least = {"caption": "", "engagement_rate": 0, "likes": 0, "comments": 0, "link": ""}
 
     lines = text.split("\n")
-    for i, line in enumerate(lines):
-        stripped = line.strip()
-        if stripped == "Caption":
-            # Next lines contain the caption
-            caption_lines = []
-            for j in range(i + 1, min(i + 5, len(lines))):
-                if lines[j].strip() and lines[j].strip() not in [
-                    "Engagement Rate", "Likes Count", "Comment Count", "Link"
-                ]:
-                    caption_lines.append(lines[j].strip())
-                else:
-                    break
-            result["caption"] = " ".join(caption_lines)
-        elif stripped == "Engagement Rate":
-            for j in range(i + 1, min(i + 3, len(lines))):
-                m = re.search(r'[\d,.]+', lines[j])
-                if m:
-                    result["engagement_rate"] = parse_number(m.group())
-                    break
-        elif stripped == "Likes Count":
-            for j in range(i + 1, min(i + 3, len(lines))):
-                m = re.search(r'[\d,]+', lines[j])
-                if m:
-                    result["likes"] = parse_number(m.group())
-                    break
-        elif stripped == "Comment Count":
-            for j in range(i + 1, min(i + 3, len(lines))):
-                m = re.search(r'[\d,]+', lines[j])
-                if m:
-                    result["comments"] = parse_number(m.group())
-                    break
-        elif "tiktok.com" in stripped or "instagram.com" in stripped:
-            result["link"] = stripped
 
-    return result
+    METRIC_LABELS = {"Caption", "Engagement Rate", "Likes Count", "Comment Count", "Link"}
+    HEADER_LABELS = {"Most Liked", "Least Liked", "Most Comments", "Least Comments",
+                     "Most Engaged", "Least Engaged"}
+    FOOTNOTE_STARTS = ("All performance", "Engagement rate calculated", "Note statistics")
+
+    # Collect labeled sections: list of (label, [value_lines])
+    label_groups: list[tuple[str, list[str]]] = []
+    i = 0
+    while i < len(lines):
+        stripped = lines[i].strip()
+
+        if not stripped or stripped in HEADER_LABELS:
+            i += 1
+            continue
+
+        if any(stripped.startswith(f) for f in FOOTNOTE_STARTS):
+            i += 1
+            continue
+
+        if stripped in METRIC_LABELS:
+            label = stripped
+            value_lines = []
+            j = i + 1
+            while j < len(lines):
+                val = lines[j].strip()
+                if not val:
+                    j += 1
+                    continue
+                if val in METRIC_LABELS:
+                    break
+                # Skip header labels (Most/Least markers) — they can appear
+                # between a metric label and its value in 2-column layouts
+                if val in HEADER_LABELS:
+                    j += 1
+                    continue
+                if any(val.startswith(f) for f in FOOTNOTE_STARTS):
+                    break
+                value_lines.append(val)
+                # For non-Caption metrics, stop after first value line
+                if label != "Caption":
+                    j += 1
+                    break
+                j += 1
+            label_groups.append((label, value_lines))
+            i = j
+        else:
+            i += 1
+
+    # Map: first occurrence of each label → Most, second → Least
+    seen_counts: dict[str, int] = {}
+    for label, value_lines in label_groups:
+        count = seen_counts.get(label, 0)
+        target = most if count == 0 else least
+
+        if label == "Caption":
+            target["caption"] = " ".join(value_lines)
+        elif label == "Engagement Rate" and value_lines:
+            target["engagement_rate"] = parse_number(value_lines[0])
+        elif label == "Likes Count" and value_lines:
+            target["likes"] = parse_number(value_lines[0])
+        elif label == "Comment Count" and value_lines:
+            target["comments"] = parse_number(value_lines[0])
+        elif label == "Link" and value_lines:
+            target["link"] = value_lines[0]
+
+        seen_counts[label] = count + 1
+
+    return most, least
 
 
 def parse_statistics(text: str) -> dict:
@@ -1034,26 +1661,20 @@ def parse_tiktok_profile(sections: dict, identifier: str, date_str: str) -> dict
         report["how_to_win"] = parse_how_to_win(
             sections["How to Win With This Audience"])
 
-    # Top posts
+    # Top posts — extract both Most and Least from each section
     top_posts = {}
     if "Most / Least Liked" in sections:
-        text = sections["Most / Least Liked"]
-        if "Most Liked" in text:
-            most_part = text.split("Least Liked")[0] if "Least Liked" in text else text
-            top_posts["most_liked"] = parse_top_posts(most_part)
-        if "Least Liked" in text:
-            least_part = text.split("Least Liked")[1]
-            top_posts["least_liked"] = parse_top_posts(least_part)
-
+        m, l = parse_top_posts_pair(sections["Most / Least Liked"])
+        top_posts["most_liked"] = m
+        top_posts["least_liked"] = l
+    if "Most / Least Comments" in sections:
+        m, l = parse_top_posts_pair(sections["Most / Least Comments"])
+        top_posts["most_comments"] = m
+        top_posts["least_comments"] = l
     if "Most / Least Engaged" in sections:
-        text = sections["Most / Least Engaged"]
-        if "Most Engaged" in text:
-            most_part = text.split("Least Engaged")[0] if "Least Engaged" in text else text
-            top_posts["most_engaged"] = parse_top_posts(most_part)
-        if "Least Engaged" in text:
-            least_part = text.split("Least Engaged")[1]
-            top_posts["least_engaged"] = parse_top_posts(least_part)
-
+        m, l = parse_top_posts_pair(sections["Most / Least Engaged"])
+        top_posts["most_engaged"] = m
+        top_posts["least_engaged"] = l
     if top_posts:
         report["top_posts"] = top_posts
 
@@ -1099,18 +1720,20 @@ def parse_instagram_profile(sections: dict, identifier: str, date_str: str) -> d
         report["how_to_win"] = parse_how_to_win(
             sections["How to Win With This Audience"])
 
-    # Top posts
+    # Top posts — extract both Most and Least from each section
     top_posts = {}
     if "Most / Least Liked" in sections:
-        text = sections["Most / Least Liked"]
-        if "Most Liked" in text:
-            most_part = text.split("Least Liked")[0] if "Least Liked" in text else text
-            top_posts["most_liked"] = parse_top_posts(most_part)
+        m, l = parse_top_posts_pair(sections["Most / Least Liked"])
+        top_posts["most_liked"] = m
+        top_posts["least_liked"] = l
+    if "Most / Least Comments" in sections:
+        m, l = parse_top_posts_pair(sections["Most / Least Comments"])
+        top_posts["most_comments"] = m
+        top_posts["least_comments"] = l
     if "Most / Least Engaged" in sections:
-        text = sections["Most / Least Engaged"]
-        if "Least Engaged" in text:
-            least_part = text.split("Least Engaged")[1]
-            top_posts["least_engaged"] = parse_top_posts(least_part)
+        m, l = parse_top_posts_pair(sections["Most / Least Engaged"])
+        top_posts["most_engaged"] = m
+        top_posts["least_engaged"] = l
     if top_posts:
         report["top_posts"] = top_posts
 
@@ -1134,6 +1757,9 @@ def parse_instagram_hashtag(sections: dict, identifier: str, date_str: str) -> d
 
     if "Hashtag Analysis" in sections:
         report["hashtag_analysis"] = parse_hashtag_analysis(sections["Hashtag Analysis"])
+
+    if "Conversation Map" in sections:
+        report["conversation_map"] = parse_conversation_map(sections["Conversation Map"])
 
     if "Content Trends" in sections:
         report["content_trends"] = parse_content_trends(sections["Content Trends"])
@@ -1191,21 +1817,128 @@ def parse_google_news(sections: dict, identifier: str, date_str: str) -> dict:
         "report_date": date_str,
     }
 
+    # ── Executive Summary ──────────────────────────────────────────────
     if "Executive Summary" in sections:
         report["executive_summary"] = parse_executive_summary(sections["Executive Summary"])
 
-    if "News Analysis" in sections:
-        report["news_analysis"] = {"summary": sections["News Analysis"].strip()}
+    # ── Audience Profile (NOPD) ────────────────────────────────────────
+    if "Audience Profile" in sections:
+        report["audience_profile"] = parse_nopd(sections["Audience Profile"])
 
+    # ── News Analysis (constructed from multiple sections) ─────────────
+    news_analysis = {
+        "summary": "",
+        "volume_trend": "",
+        "sentiment_breakdown": {
+            "positive_pct": 0,
+            "neutral_pct": 0,
+            "negative_pct": 0,
+        },
+        "key_topics": [],
+        "key_findings": [],
+        "opportunities": [],
+        "risks": [],
+    }
+
+    # News Topics → key_topics and key_findings
+    if "News Topics" in sections:
+        topics_data = parse_news_topics(sections["News Topics"])
+        news_analysis["key_topics"] = topics_data["topics"]
+        news_analysis["key_findings"] = topics_data["findings"]
+
+    # SWOT Analysis → opportunities and risks + standalone swot_analysis
+    if "SWOT Analysis" in sections:
+        swot = parse_swot_overview(sections["SWOT Analysis"])
+        news_analysis["opportunities"] = swot.get("opportunities", [])
+        news_analysis["risks"] = swot.get("threats", [])
+        report["swot_analysis"] = swot
+
+    # News Trends → summary for news analysis
+    if "News Trends" in sections:
+        paragraphs = [p.strip() for p in sections["News Trends"].split("\n\n")
+                      if p.strip() and len(p.strip()) > 50]
+        if paragraphs:
+            news_analysis["summary"] = " ".join(paragraphs[0].split())
+
+    # Fallback: raw News Analysis section text
+    if not news_analysis["summary"] and "News Analysis" in sections:
+        raw = sections["News Analysis"].strip()
+        # Skip boilerplate text about saving hours
+        if "saved yourself" not in raw.lower() and len(raw) > 30:
+            news_analysis["summary"] = raw
+
+    report["news_analysis"] = news_analysis
+
+    # ── Trending Narratives from News Trends ───────────────────────────
+    if "News Trends" in sections:
+        report["trending_narratives"] = parse_news_trends(sections["News Trends"])
+    elif "Trending Narratives" in sections:
+        report["trending_narratives"] = parse_content_trends(sections["Trending Narratives"])
+
+    # ── Brand Mentions ─────────────────────────────────────────────────
     if "Brand Mentions" in sections:
         report["brand_mentions"] = parse_brand_mentions(sections["Brand Mentions"])
 
-    if "Trending Narratives" in sections:
-        report["trending_narratives"] = parse_content_trends(sections["Trending Narratives"])
+    # ── In-Market Campaigns ────────────────────────────────────────────
+    if "In-Market Campaigns" in sections:
+        report["in_market_campaigns"] = parse_in_market_campaigns(
+            sections["In-Market Campaigns"])
 
-    if "Strategic Implications" in sections:
-        text = sections["Strategic Implications"].strip()
-        report["strategic_implications"] = {"summary": text, "action_items": []}
+    # ── Strategic Implications (from Consideration Spaces + Actions) ───
+    strat = {"summary": "", "action_items": []}
+    if "Consideration Spaces" in sections:
+        # Extract overview paragraph (first long paragraph)
+        paras = [p.strip() for p in re.split(r'\n\n+', sections["Consideration Spaces"])
+                 if p.strip()]
+        long_paras = [p for p in paras if len(p) > 100]
+        short_paras = [" ".join(p.split()) for p in paras if 20 < len(p) <= 100]
+        if long_paras:
+            strat["summary"] = " ".join(long_paras[0].split())
+        # Include the consideration area titles as part of the summary
+        if short_paras:
+            strat["summary"] += "\n\nKey strategic areas: " + " | ".join(short_paras)
+
+    if "Potential Actions" in sections:
+        strat["action_items"] = parse_potential_actions(sections["Potential Actions"])
+
+    # Fallback: use Strategic Implications section if present
+    if not strat["summary"] and "Strategic Implications" in sections:
+        strat["summary"] = sections["Strategic Implications"].strip()
+
+    report["strategic_implications"] = strat
+
+    # ── Quotes ─────────────────────────────────────────────────────────
+    if "Quotes" in sections:
+        quotes_text = sections["Quotes"]
+        # Statistics may be embedded after Quotes (with form-feed or newline before it)
+        stats_match = re.search(r'[\n\f]Statistics\n', quotes_text)
+        if stats_match:
+            report["quotes"] = parse_news_quotes(quotes_text[:stats_match.start()])
+            report["key_statistics"] = parse_news_statistics(
+                quotes_text[stats_match.end():])
+        else:
+            report["quotes"] = parse_news_quotes(quotes_text)
+
+    # ── Top Stories (if present as a section) ──────────────────────────
+    if "Top Stories" in sections:
+        stories = []
+        for para in re.split(r'\n\n+', sections["Top Stories"]):
+            para = para.strip()
+            if para and len(para) > 30:
+                stories.append({
+                    "headline": " ".join(para.split()),
+                    "source": "",
+                    "date": "",
+                    "summary": "",
+                    "sentiment": "",
+                    "url": "",
+                })
+        report["top_stories"] = stories
+
+    # ── Competitor Coverage (if present as a section) ──────────────────
+    if "Competitor Coverage" in sections:
+        report["competitor_coverage"] = parse_brand_mentions(
+            sections["Competitor Coverage"])
 
     return report
 
@@ -1223,11 +1956,14 @@ PARSERS = {
 
 
 def parse_pdf(pdf_path: str) -> tuple[str, str, dict]:
-    """Parse a single PDF file into structured JSON.
+    """Parse a single PDF or PPTX file into structured JSON.
 
     Returns (report_type_dir, identifier, report_dict).
     """
-    text = extract_text_from_pdf(pdf_path)
+    if pdf_path.lower().endswith(".pptx"):
+        text = extract_text_from_pptx(pdf_path)
+    else:
+        text = extract_text_from_pdf(pdf_path)
     report_type_dir, identifier, date_str = detect_report_type(text)
     sections = split_into_sections(text)
 
@@ -1271,7 +2007,7 @@ def parse_all_pdfs(pdf_dir: str = None) -> list[dict]:
 
     results = []
     for filename in sorted(os.listdir(pdf_dir)):
-        if not filename.lower().endswith(".pdf"):
+        if not (filename.lower().endswith(".pdf") or filename.lower().endswith(".pptx")):
             continue
 
         pdf_path = os.path.join(pdf_dir, filename)

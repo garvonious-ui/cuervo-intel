@@ -610,6 +610,74 @@ with tab_news:
                                 {brands_tag}
                             </div>""", unsafe_allow_html=True)
 
+                # ── Audience Profile (NOPD) ─────────────
+                ap = report.get("audience_profile", {})
+                has_nopd = any(ap.get(k) for k in ["needs", "objections", "desires", "pain_points"])
+                if has_nopd:
+                    st.markdown("---")
+                    render_section_label("News Audience Profile")
+                    if ap.get("summary"):
+                        st.markdown(f"*{ap['summary']}*")
+                    render_nopd_cards(ap)
+
+                # ── SWOT Analysis ──────────────────────────
+                swot = report.get("swot_analysis", {})
+                has_swot = any(swot.get(k) for k in ["strengths", "weaknesses", "opportunities", "threats"])
+                if has_swot:
+                    st.markdown("---")
+                    render_section_label("SWOT Analysis")
+                    sw_col, ot_col = st.columns(2)
+                    with sw_col:
+                        strengths = swot.get("strengths", [])
+                        if strengths:
+                            s_items = "".join(f'<li style="margin-bottom:6px;">{s}</li>' for s in strengths)
+                            st.markdown(f"""
+                            <div style="background:#F0FFF0; border-left:4px solid #5CB85C;
+                                        border-radius:0 8px 8px 0; padding:14px 16px; margin-bottom:12px;">
+                                <h4 style="color:#2E7D32; font-family:'Barlow Condensed',sans-serif;
+                                           font-weight:700; margin:0 0 8px 0; font-size:0.95rem;">
+                                    STRENGTHS</h4>
+                                <ul style="margin:0; padding-left:18px; color:#444;
+                                           font-size:0.88rem; line-height:1.5;">{s_items}</ul>
+                            </div>""", unsafe_allow_html=True)
+                        weaknesses = swot.get("weaknesses", [])
+                        if weaknesses:
+                            w_items = "".join(f'<li style="margin-bottom:6px;">{w}</li>' for w in weaknesses)
+                            st.markdown(f"""
+                            <div style="background:#FFF5F5; border-left:4px solid #D9534F;
+                                        border-radius:0 8px 8px 0; padding:14px 16px;">
+                                <h4 style="color:#C62828; font-family:'Barlow Condensed',sans-serif;
+                                           font-weight:700; margin:0 0 8px 0; font-size:0.95rem;">
+                                    WEAKNESSES</h4>
+                                <ul style="margin:0; padding-left:18px; color:#444;
+                                           font-size:0.88rem; line-height:1.5;">{w_items}</ul>
+                            </div>""", unsafe_allow_html=True)
+                    with ot_col:
+                        opportunities = swot.get("opportunities", [])
+                        if opportunities:
+                            o_items = "".join(f'<li style="margin-bottom:6px;">{o}</li>' for o in opportunities)
+                            st.markdown(f"""
+                            <div style="background:#E3F2FD; border-left:4px solid {POPLIFE_BLUE};
+                                        border-radius:0 8px 8px 0; padding:14px 16px; margin-bottom:12px;">
+                                <h4 style="color:#1565C0; font-family:'Barlow Condensed',sans-serif;
+                                           font-weight:700; margin:0 0 8px 0; font-size:0.95rem;">
+                                    OPPORTUNITIES</h4>
+                                <ul style="margin:0; padding-left:18px; color:#444;
+                                           font-size:0.88rem; line-height:1.5;">{o_items}</ul>
+                            </div>""", unsafe_allow_html=True)
+                        threats = swot.get("threats", [])
+                        if threats:
+                            t_items = "".join(f'<li style="margin-bottom:6px;">{t}</li>' for t in threats)
+                            st.markdown(f"""
+                            <div style="background:#FFF3E0; border-left:4px solid #F8C090;
+                                        border-radius:0 8px 8px 0; padding:14px 16px;">
+                                <h4 style="color:#E65100; font-family:'Barlow Condensed',sans-serif;
+                                           font-weight:700; margin:0 0 8px 0; font-size:0.95rem;">
+                                    THREATS</h4>
+                                <ul style="margin:0; padding-left:18px; color:#444;
+                                           font-size:0.88rem; line-height:1.5;">{t_items}</ul>
+                            </div>""", unsafe_allow_html=True)
+
                 # ── Strategic Implications ────────────────
                 strat = report.get("strategic_implications", {})
                 strat_summary = strat.get("summary", "")
@@ -623,3 +691,44 @@ with tab_news:
                         )
                     if action_items:
                         render_territory_cards(action_items)
+
+                # ── In-Market Campaigns ────────────────────
+                campaigns = report.get("in_market_campaigns", [])
+                if campaigns:
+                    st.markdown("---")
+                    render_section_label("In-Market Campaigns")
+                    for camp in campaigns:
+                        name = camp.get("campaign", "")
+                        desc = camp.get("description", "")
+                        if name and desc:
+                            st.markdown(f"""
+                            <div style="background:white; border-radius:10px; padding:16px 18px;
+                                        margin-bottom:10px; border:1px solid #E0D8D0;
+                                        border-left:4px solid {POPLIFE_BLUE};">
+                                <strong style="font-family:'Barlow Condensed',sans-serif;
+                                               font-size:0.95rem; color:#333;">
+                                    {' '.join(name.split())}</strong>
+                                <p style="color:#444; font-size:0.88rem; line-height:1.5;
+                                          margin:6px 0 0 0;">{' '.join(desc.split())}</p>
+                            </div>""", unsafe_allow_html=True)
+
+                # ── Key Statistics ─────────────────────────
+                key_stats = report.get("key_statistics", [])
+                if key_stats:
+                    st.markdown("---")
+                    render_section_label("Key Statistics")
+                    for stat in key_stats:
+                        st.markdown(f"- {stat}")
+
+                # ── Quotes ─────────────────────────────────
+                quotes = report.get("quotes", [])
+                if quotes:
+                    st.markdown("---")
+                    with st.expander("News Quotes & Sources", expanded=False):
+                        for quote in quotes:
+                            st.markdown(f"""
+                            <div style="background:#FAFAFA; border-left:3px solid #CCC;
+                                        padding:10px 14px; margin-bottom:8px; border-radius:0 6px 6px 0;
+                                        font-size:0.88rem; color:#555; line-height:1.5;">
+                                {quote}
+                            </div>""", unsafe_allow_html=True)

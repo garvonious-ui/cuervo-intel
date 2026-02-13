@@ -38,27 +38,39 @@
   "hashtag_analysis": {
     "summary": "",
     "related_hashtags": [],
-    "key_findings": [],
-    "opportunities": [
+    "key_findings": [
       "Milagro’s content thrives on festive cultural tie-ins like Cinco de Mayo\nand Margarita Month driving spikes in engagement.",
-      "Cuervo can aggressively own a distinctive voice by ramping up interactive prompts and\nuser challenges to boost authentic engagement.",
       "Authenticity through storytelling about 100% blue agave and heritage\nresonates deeply, building trust and pride.",
-      "Invest heavily in dynamic video series showcasing cocktail craftsmanship and festival\nactivations to captivate attention and invite participation.",
       "Visual formats capitalize on vivid cocktail imagery, recipe carousels,\nand local nightlife event promotions.",
+      "User-generated content and venue partnerships create a vibrant community\nfueled by shared celebrations and premium craft appreciation."
+    ],
+    "opportunities": [
+      "Cuervo can aggressively own a distinctive voice by ramping up interactive prompts and\nuser challenges to boost authentic engagement.",
+      "Invest heavily in dynamic video series showcasing cocktail craftsmanship and festival\nactivations to captivate attention and invite participation.",
       "Leverage tighter, branded hashtag ecosystems to consolidate brand community and\ndeepen cultural association effectively.",
-      "User-generated content and venue partnerships create a vibrant community\nfueled by shared celebrations and premium craft appreciation.",
       "Develop cross-channel campaigns linking local event sponsorships with elevated\nstorytelling on social to amplify real-world relevance and digital buzz."
     ],
-    "gaps_risks_unmet_needs": [],
-    "strategic_actions": [
+    "gaps_risks_unmet_needs": [
       "Milagro’s inconsistent use of interactive calls to action leaves\nengagement and sharing opportunities underleveraged across content.",
-      "Launch interactive cocktail challenges tied to cultural holidays, inviting user\nvideos and stories to fuel viral engagement.",
       "Sparse video content and limited behind-the-scenes storytelling reduce\npotential emotional connection and dynamic brand touchpoints.",
-      "Create ongoing high-quality video content spotlighting craftsmanship, sourcing\nstories, and bartenders behind Milagro’s cocktails.",
       "Hashtag proliferation without strategic narrowing fragments audience\nfocus, diluting brand message clarity.",
+      "Low engagement on generic product shots signals risk in overusing static\nvisuals without richer narrative or social context."
+    ],
+    "strategic_actions": [
+      "Launch interactive cocktail challenges tied to cultural holidays, inviting user\nvideos and stories to fuel viral engagement.",
+      "Create ongoing high-quality video content spotlighting craftsmanship, sourcing\nstories, and bartenders behind Milagro’s cocktails.",
       "Streamline hashtag use into focused clusters promoting community belonging,\nleveraging key cultural moments and brand narrative pillars.",
-      "Low engagement on generic product shots signals risk in overusing static\nvisuals without richer narrative or social context.",
       "Partner with select venues for exclusive events amplified digitally, marrying\nexperiential marketing with impactful storytelling to build lasting brand equity."
+    ]
+  },
+  "conversation_map": {
+    "summary": "Analysis",
+    "relationship_analysis": "Milagro Silver anchors the conversation, linking to diverse cocktail and\ntasting themes, signaling it as the flagship and cultural nucleus;\nevidenced by multiple links to shots, tastings, and related hashtags.\nMilagro Añejo content strongly interacts with social celebrations and\nquality-focused themes, connecting product nuance with cultural pride and\nevent-driven storytelling.\nThe vibrant exchange between Milagro Shots and venue-focused event\npromotions reveals a local nightlife ecosystem driving organic brand\namplification and user engagement.",
+    "overarching_patterns": [],
+    "action_opportunities": [
+      "Ramp up interactive cocktail challenges tied to core cultural\nholidays, inviting user-generated video content to amplify\nauthentic engagement and viral potential.\nInvest heavily in dynamic, behind-the-scenes video\nstorytelling showcasing master craftsmanship, cocktail\nartistry, and festival activations to deepen emotional brand\nconnection.\nStreamline hashtag use into focused clusters aligned with\ncore cultural moments and brand pillars to solidify community\nidentity and reduce audience fragmentation.\nForge exclusive partnerships with local nightlife venues for\namplified experiential events that merge real-world community\nbuilding with elevated digital storytelling.",
+      "Cultural celebrations like Cinco de Mayo and Margarita Month repeatedly\ncatalyze engagement spikes, underlining festive calendar integration as a\nmust-have tactic.\nContent gravitates towards visually rich cocktail and event imagery,\nfavoring detailed recipe carousels and lifestyle photos over generic\nproduct shots that show poor engagement.\nUser-generated content and collaborations with venues and artists form a\ntightly knit ecosystem blending authenticity, craft storytelling, and\ncommunity activation consistently across hashtags.",
+      "Add direct calls to action and interactive prompts in\ncaptions to convert passive viewers into active participants,\nmaximizing engagement and sharing opportunities."
     ]
   },
   "how_to_win": {

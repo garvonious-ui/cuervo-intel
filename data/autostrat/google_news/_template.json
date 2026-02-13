@@ -9,6 +9,14 @@
     "key_insights": []
   },
 
+  "audience_profile": {
+    "summary": "",
+    "needs": [],
+    "objections": [],
+    "desires": [],
+    "pain_points": []
+  },
+
   "news_analysis": {
     "summary": "",
     "volume_trend": "",
@@ -21,6 +29,13 @@
     "key_findings": [],
     "opportunities": [],
     "risks": []
+  },
+
+  "swot_analysis": {
+    "strengths": [],
+    "weaknesses": [],
+    "opportunities": [],
+    "threats": []
   },
 
   "top_stories": [
@@ -60,8 +75,18 @@
     }
   ],
 
+  "in_market_campaigns": [
+    {
+      "campaign": "",
+      "description": ""
+    }
+  ],
+
   "strategic_implications": {
     "summary": "",
     "action_items": []
-  }
+  },
+
+  "quotes": [],
+  "key_statistics": []
 }

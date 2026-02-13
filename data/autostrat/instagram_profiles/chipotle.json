@@ -44,52 +44,56 @@
   },
   "future_sponsorship_suggestions": [
     {
-      "category": "with entertainment momentum.",
-      "why_it_works": "Chipotle’s vibrant, sensory product storytelling Chipotle’s focus on product launches and and community buzz create an ideal platform for event-driven content creates prime moments for Chipotle’s cultural currency and transparency Chipotle’s strong cultural voice and viral-ready premium beverage brands to amplify launch delivery services to tap into heightened around ingredients position it well to partner Reels offer entertainment brands fertile ground excitement through authentic pairing ordering intent and real-time consumer with wellness brands emphasizing clean, ethical to boost event awareness and build shared experiences. conversations. living and quality food experiences. experiential excitement.",
+      "category": "Premium Beverage Brands",
+      "why_it_works": "participation and sustained engagement. Strong food-beverage synergy fuels authentic product storytelling and audience connection. Chipotle’s vibrant, sensory product storytelling and community buzz create an ideal platform for premium beverage brands to amplify launch excitement through authentic pairing experiences.",
       "how_to_activate": [
-        "Co-create exclusive cocktail recipes",
-        "highlighting pairing with Chipotle menu",
-        "favorites.",
-        "Launch interactive challenges encouraging",
-        "consumers to showcase beverage and food moments.",
-        "Host limited-time promotions featuring bundled",
-        "food-beverage experiences shared via Reels.",
-        "Sponsor limited-release menu launches with",
-        "exclusive delivery discounts on Instagram.",
-        "Enable user-generated content contests",
-        "showcasing delivery unboxing and enjoyment.",
-        "Activate geo-targeted promotions aligned with",
-        "Chipotle’s event calendar.",
-        "Develop co-branded content spotlighting",
-        "Chipotle’s ingredient sourcing alongside",
-        "wellness tips.",
-        "Run wellness-themed giveaways combining product",
-        "samples and healthy meal deals.",
-        "Integrate branded challenges promoting mindful",
-        "eating and active lifestyles.",
-        "Co-produce Instagram Reels integrating event",
-        "teasers with Chipotle meal moments.",
-        "Host exclusive giveaways for event tickets",
-        "combined with branded meals.",
-        "Partner on themed content series highlighting",
-        "cultural moments and live experiences."
+        "Co-create exclusive cocktail recipes highlighting pairing with Chipotle menu favorites.",
+        "Launch interactive challenges encouraging consumers to showcase beverage and food moments.",
+        "Host limited-time promotions featuring bundled food-beverage experiences shared via Reels."
+      ]
+    },
+    {
+      "category": "Food Delivery Services",
+      "why_it_works": "Timed promotions boost order volume and engagement via shared urgency. Chipotle’s focus on product launches and event-driven content creates prime moments for delivery services to tap into heightened ordering intent and real-time consumer conversations.",
+      "how_to_activate": [
+        "Sponsor limited-release menu launches with exclusive delivery discounts on Instagram.",
+        "Enable user-generated content contests showcasing delivery unboxing and enjoyment.",
+        "Activate geo-targeted promotions aligned with Chipotle’s event calendar."
+      ]
+    },
+    {
+      "category": "Health & Wellness Brands",
+      "why_it_works": "Shared brand values enable authentic wellness conversations and engagement. Chipotle’s cultural currency and transparency around ingredients position it well to partner with wellness brands emphasizing clean, ethical living and quality food experiences.",
+      "how_to_activate": [
+        "Develop co-branded content spotlighting Chipotle’s ingredient sourcing alongside wellness tips.",
+        "Run wellness-themed giveaways combining product samples and healthy meal deals.",
+        "Integrate branded challenges promoting mindful eating and active lifestyles."
+      ]
+    },
+    {
+      "category": "Entertainment & Events",
+      "why_it_works": "Viral, playful content formats link naturally with entertainment momentum. Chipotle’s strong cultural voice and viral-ready Reels offer entertainment brands fertile ground to boost event awareness and build shared experiential excitement.",
+      "how_to_activate": [
+        "Co-produce Instagram Reels integrating event teasers with Chipotle meal moments.",
+        "Host exclusive giveaways for event tickets combined with branded meals.",
+        "Partner on themed content series highlighting cultural moments and live experiences."
       ]
     }
   ],
   "statistics": {
     "all_posts": {
-      "min_views": 0,
-      "max_views": 0,
-      "median_views": 0,
-      "avg_views": 0,
-      "min_likes": 0,
-      "max_likes": 0,
-      "median_likes": 0,
-      "avg_likes": 0,
-      "min_comments": 0,
-      "max_comments": 0,
-      "median_comments": 0,
-      "avg_comments": 0
+      "min_views": 150853,
+      "max_views": 4396459,
+      "median_views": 651148,
+      "avg_views": 1132080,
+      "min_likes": 2309,
+      "max_likes": 89788,
+      "median_likes": 9514,
+      "avg_likes": 15161,
+      "min_comments": 51,
+      "max_comments": 8156,
+      "median_comments": 289,
+      "avg_comments": 715
     }
   },
   "engagement_analysis": {
@@ -127,15 +131,43 @@
   },
   "top_posts": {
     "most_liked": {
-      "caption": "",
+      "caption": "🔥 ALL CODES HAVE BEEN CLAIMED 🔥",
       "engagement_rate": 0.14,
       "likes": 2309,
       "comments": 51,
       "link": "https://instagram.com/p/DSp1_OQDkBD/"
     },
-    "least_engaged": {
-      "caption": "",
+    "least_liked": {
+      "caption": "guess i was real good this year 💅",
+      "engagement_rate": 5.61,
+      "likes": 0,
+      "comments": 0,
+      "link": ""
+    },
+    "most_comments": {
+      "caption": "🔥 ALL CODES HAVE BEEN CLAIMED 🔥",
+      "engagement_rate": 0.14,
+      "likes": 2309,
+      "comments": 51,
+      "link": "https://instagram.com/p/DSp1_OQDkBD/"
+    },
+    "least_comments": {
+      "caption": "guess i was real good this year 💅",
+      "engagement_rate": 5.61,
+      "likes": 0,
+      "comments": 0,
+      "link": ""
+    },
+    "most_engaged": {
+      "caption": "🔥 ALL CODES HAVE BEEN CLAIMED 🔥",
       "engagement_rate": 0,
+      "likes": 2309,
+      "comments": 51,
+      "link": "https://instagram.com/p/DSp1_OQDkBD/"
+    },
+    "least_engaged": {
+      "caption": "guess i was real good this year 💅",
+      "engagement_rate": 5.61,
       "likes": 0,
       "comments": 0,
       "link": ""

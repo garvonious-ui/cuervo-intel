@@ -18,7 +18,7 @@ pages/
   3_2026_Strategy.py           # "The Playbook" — Social Brief scorecard, GOAT frameworks, action plan
   4_Inspiration_&_Explorer.py  # "The Toolbox" — Reference brands + full data explorer
   5_Hashtag_&_Search_Intel.py  # "The Landscape" — Brand hashtag comparison + search term intelligence
-autostrat_parser.py    # PDF-to-JSON parser for autostrat.ai report exports
+autostrat_parser.py    # PDF/PPTX-to-JSON parser for autostrat.ai report exports
 autostrat_loader.py    # JSON loader + cross-report extraction helpers
 autostrat_components.py # Reusable UI components for narrative content
 config.py              # Brand colors, BRAND_ORDER, GOAT frameworks, CUSTOM_CSS (Poplife palette)
@@ -29,7 +29,7 @@ sprout_import.py       # Sprout Social CSV import adapter + AI content classifie
 dashboard.py           # Excel report generator (download button)
 data/sprout/           # Drop Sprout Social CSV exports here
 data/autostrat/        # Parsed autostrat JSON reports (6 subdirectories)
-data/autostrat/pdfs/   # Drop autostrat PDF exports here for import
+data/autostrat/pdfs/   # Drop autostrat PDF/PPTX exports here for import
 ```
 
 ## Page Structure
@@ -53,14 +53,14 @@ Uses UNFILTERED data — sidebar filters do NOT apply. Dedicated to the Social B
 - **Tab 3: Action Plan** — 30-day weekly plan, threats & opportunities, all recommendations, qualitative intelligence (winning territories, content trends, creator archetypes, partnership opportunities)
 
 ### Page 4: Inspiration & Explorer ("The Toolbox")
-- **Tab 1: Inspiration** — Duolingo/Poppi/Chipotle/Dunkin' reference brand profiles, "What Cuervo Can Steal" section, side-by-side audience comparison (NOPD), How to Win territories
+- **Tab 1: Inspiration** — Duolingo/Poppi/Chipotle/Dunkin' reference brand profiles, "What Cuervo Can Steal" section, side-by-side audience comparison (NOPD), How to Win territories, Sponsorship Intelligence, Performance Statistics (min/max/median/avg for views/likes/comments), Top & Bottom Posts (most/least by likes, comments, engagement)
 - **Tab 2: Data Explorer** — Advanced filters, caption search, full data table, quick insights, CSV/Excel export
 
 ### Page 5: Hashtag & Search Intel ("The Landscape")
 Uses autostrat hashtag reports only — sidebar filters do NOT apply. No quantitative metrics, purely qualitative intelligence.
 - **Tab 1: Brand Hashtags** — Accordion comparison of #JoseCuervo, #Cuervo, #Cazadores, #Hornitos, #Lunazul, #MilagroTequila, #ElJimador, #TeremanaTequila, #1800Tequila: key insights, NOPD audience profiles, opportunities & strategic actions, How to Win territories. "What This Means for Cuervo" strategic takeaway with four cards: Where Cuervo Leads (unique territories), Where Competitors Are Winning (per-brand breakdown + gaps), Common Audience Friction (objections per brand), Cuervo's Path Forward (summary + desires)
 - **Tab 2: Search Terms & Categories** — #MargaritaTime deep dive: executive summary, audience profile (NOPD), content opportunities, How to Win territories, "Cuervo's Play" narrative bridging brand and category hashtags
-- **Tab 3: Google Search News** — Per-report accordions with: executive summary + key insights, news analysis with sentiment breakdown (positive/neutral/negative gauges), key topics, opportunities & risks (side-by-side), brand mentions with sentiment badges, trending narratives, strategic implications + action items
+- **Tab 3: Google Search News** — Per-report accordions with: executive summary + key insights, news analysis with sentiment breakdown (positive/neutral/negative gauges), key topics, opportunities & risks (side-by-side), audience profile (NOPD), SWOT analysis (strengths/weaknesses/opportunities/threats), brand mentions with sentiment badges, trending narratives, strategic implications + action items, in-market campaigns, key statistics, news quotes
 
 ## Data Sources (3 modes, selected in sidebar)
 1. **Demo Data** — synthetic data from `sample_data.py` (BRAND_PROFILES based on real research but posts are fake)
@@ -97,16 +97,19 @@ Uses autostrat hashtag reports only — sidebar filters do NOT apply. No quantit
 - `st.session_state["autostrat"]` stores `{report_type: {identifier: report_data}}`
 - 6 report types: instagram_profiles, tiktok_profiles, instagram_hashtags, tiktok_hashtags, tiktok_keywords, google_news
 - Current hashtag data: josecuervo.json, cuervo.json, cazadores.json, hornitos.json, lunazul.json, milagrotequila.json, eljimador.json, teremanatequila.json, 1800tequila.json, margaritatime.json
-- Current profile data: duolingo.json, drinkpoppi.json, chipotle.json, dunkin.json
-- Current Google News data: (none yet — awaiting PDF imports)
+- Current profile data: duolingo.json, drinkpoppi.json, chipotle.json, dunkin.json, paige_desorbo.json, entrapranure.json
+- Current Google News data: jose_cuervo_tequila.json (full report with NOPD, SWOT, news trends/topics, campaigns, quotes, statistics)
 - NOPD framework: Needs (#2ea3f2), Objections (#D9534F), Desires (#5CB85C), Pain Points (#F8C090)
-- PDF import: sidebar button triggers parser, outputs JSON to correct subdirectory
+- PDF/PPTX import: sidebar button triggers parser, outputs JSON to correct subdirectory. Supports both PDF (via pdfplumber) and PPTX (via python-pptx) autostrat exports. PPTX extractor handles shape positioning, row clustering, group shapes, and NOPD table detection.
 
 ## Running
 ```bash
 python3 -m streamlit run app.py --server.headless true
 # Opens at http://localhost:8501
 ```
+
+## Dependencies
+- streamlit, plotly, pandas, openpyxl, pdfplumber, python-pptx
 
 ## Pending / Known Issues
 - TikTok data not yet in Sprout exports — TikTok sections show zeros on Sprout import mode
