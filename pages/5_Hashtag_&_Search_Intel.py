@@ -27,6 +27,7 @@ autostrat = st.session_state.get("autostrat", {})
 
 # Brand hashtags
 cuervo_ht = get_report(autostrat, "instagram_hashtags", "josecuervo")
+cuervo2_ht = get_report(autostrat, "instagram_hashtags", "cuervo")
 cazadores_ht = get_report(autostrat, "instagram_hashtags", "cazadores")
 hornitos_ht = get_report(autostrat, "instagram_hashtags", "hornitos")
 lunazul_ht = get_report(autostrat, "instagram_hashtags", "lunazul")
@@ -38,6 +39,7 @@ margarita_ht = get_report(autostrat, "instagram_hashtags", "margaritatime")
 
 brand_reports = {
     "#JoseCuervo": cuervo_ht,
+    "#Cuervo": cuervo2_ht,
     "#Cazadores": cazadores_ht,
     "#Hornitos": hornitos_ht,
     "#Lunazul": lunazul_ht,
@@ -177,10 +179,12 @@ with tab_brands:
         # ── What This Means for Cuervo ──────────────────────
         render_section_label("What This Means for Cuervo")
 
-        # Gather territories per brand
+        # Gather territories per brand (both Cuervo hashtags count as Cuervo)
         cuervo_terrs = []
         if cuervo_ht:
-            cuervo_terrs = cuervo_ht.get("how_to_win", {}).get("territories", [])
+            cuervo_terrs.extend(cuervo_ht.get("how_to_win", {}).get("territories", []))
+        if cuervo2_ht:
+            cuervo_terrs.extend(cuervo2_ht.get("how_to_win", {}).get("territories", []))
         comp_terr_map = {}
         for name, rpt in [("#Cazadores", cazadores_ht), ("#Hornitos", hornitos_ht),
                           ("#Lunazul", lunazul_ht), ("#MilagroTequila", milagro_ht),
@@ -270,9 +274,10 @@ with tab_brands:
 
         # ── Common Audience Friction ──
         brand_objections = {}
-        for name, rpt in [("#JoseCuervo", cuervo_ht), ("#Cazadores", cazadores_ht),
-                          ("#Hornitos", hornitos_ht), ("#Lunazul", lunazul_ht),
-                          ("#MilagroTequila", milagro_ht), ("#ElJimador", eljimador_ht)]:
+        for name, rpt in [("#JoseCuervo", cuervo_ht), ("#Cuervo", cuervo2_ht),
+                          ("#Cazadores", cazadores_ht), ("#Hornitos", hornitos_ht),
+                          ("#Lunazul", lunazul_ht), ("#MilagroTequila", milagro_ht),
+                          ("#ElJimador", eljimador_ht)]:
             if rpt:
                 objs = rpt.get("audience_profile", {}).get("objections", [])
                 if objs:
