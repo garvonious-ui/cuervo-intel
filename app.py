@@ -211,26 +211,34 @@ with title_col:
 
 st.markdown("---")
 
-# KPI row
-c1, c2, c3, c4 = st.columns(4)
+# KPI row — Brief-target-aware
+c1, c2, c3, c4, c5 = st.columns(5)
 
-cuervo_posts = filtered_df[filtered_df["brand"] == "Jose Cuervo"]
-all_ers = filtered_df.groupby("brand")["engagement_rate"].mean().dropna()
+cuervo_posts = df[df["brand"] == "Jose Cuervo"]
+cuervo_ig = cuervo_posts[cuervo_posts["platform"] == "Instagram"]
+all_ers = df.groupby("brand")["engagement_rate"].mean().dropna()
 nonzero_ers = all_ers[all_ers > 0]
 cuervo_er = all_ers.get("Jose Cuervo", 0)
 cuervo_er = 0 if pd.isna(cuervo_er) else cuervo_er
-cat_avg_er = nonzero_ers.mean() if len(nonzero_ers) else 0
+reel_ratio = len(cuervo_ig[cuervo_ig["post_type"] == "Reel"]) / max(len(cuervo_ig), 1) * 100
+cuervo_reels = cuervo_posts[cuervo_posts["post_type"] == "Reel"]
+avg_reel_views = cuervo_reels["views"].mean() if len(cuervo_reels) else 0
+avg_reel_views = 0 if pd.isna(avg_reel_views) else avg_reel_views
 best_brand = nonzero_ers.idxmax() if len(nonzero_ers) else "N/A"
 best_er = nonzero_ers.max() if len(nonzero_ers) else 0
 
 with c1:
-    st.metric("Matching Posts", f"{len(filtered_df):,}")
+    st.metric("Posts Analyzed", f"{len(df):,}")
 with c2:
-    st.metric("Cuervo Avg ER", f"{cuervo_er:.2f}%",
-              delta=f"{cuervo_er - cat_avg_er:+.2f}% vs avg")
+    st.metric("Cuervo ER", f"{cuervo_er:.2f}%",
+              delta=f"{cuervo_er - 3.0:+.2f}% vs 3% target")
 with c3:
-    st.metric("Category Avg ER", f"{cat_avg_er:.2f}%")
+    st.metric("Reel Ratio", f"{reel_ratio:.0f}%",
+              delta=f"{reel_ratio - 50:+.0f}% vs 50% target")
 with c4:
+    st.metric("Avg Reel Views", f"{avg_reel_views:,.0f}",
+              delta=f"{'On target' if avg_reel_views >= 10000 else 'Below 10K'}")
+with c5:
     st.metric("Top Brand (ER)", f"{best_brand}", delta=f"{best_er:.2f}%")
 
 # Show info if selected brands have no post data
@@ -244,12 +252,10 @@ st.subheader("Navigate")
 st.markdown("""
 | Page | What you'll find |
 |------|-----------------|
-| **Brand Intelligence** | KPIs, engagement comparison, priority recommendations, side-by-side metrics, followers & ER |
-| **Content & Engagement** | Format breakdown, theme heatmap, posting cadence, engagement signals, schedule heatmap, top posts |
-| **Hashtag & Creator** | Hashtag strategy, creator collab rates, collab engagement lift |
-| **Data Explorer** | Filter, sort, and query every post — download CSV or Excel |
-| **Cuervo Strategy** | Format strategy, content pillars, posting cadence, Gen Z recs, 30-day action plan |
-| **Autostrat Intelligence** | Strategic playbook, conversation trends, profile deep dives, audience psychographics, reference brand analysis |
+| **Cuervo Performance** | KPI scorecard vs Brief targets, content format & theme performance, self-audit intelligence |
+| **Competitive Landscape** | 13-brand comparison, content gaps, "What to Steal" cards, competitor autostrat intel |
+| **2026 Strategy & Brief** | Social Brief scorecard, GOAT content pillars & mix funnel, 30-day action plan |
+| **Inspiration & Explorer** | Duolingo & Poppi reference profiles, audience comparison, full data explorer |
 """)
 
 # Excel export
