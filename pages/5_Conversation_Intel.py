@@ -12,7 +12,7 @@ import streamlit as st
 
 from config import (
     CUSTOM_CSS, POPLIFE_PEACH, POPLIFE_BLUE, POPLIFE_BG, POPLIFE_DARK,
-    BRAND_HASHTAGS, CUERVO_HASHTAG_IDS,
+    BRAND_HASHTAGS, CUERVO_HASHTAG_IDS, CATEGORY_HASHTAGS,
 )
 from autostrat_loader import (
     get_report, get_all_brand_mentions,
@@ -43,7 +43,9 @@ autostrat = st.session_state.get("autostrat", {})
 brand_ht_map = get_brand_hashtag_reports(autostrat)
 category_reports = get_category_reports(autostrat)
 news_reports = autostrat.get("google_news", {})
-all_mentions = get_all_brand_mentions(autostrat)
+_all_mentions_raw = get_all_brand_mentions(autostrat)
+_allowed_ids = set(BRAND_HASHTAGS) | set(CATEGORY_HASHTAGS)
+all_mentions = [m for m in _all_mentions_raw if m.get("source_identifier") in _allowed_ids]
 
 has_brand_data = len(brand_ht_map) > 0
 has_category_data = len(category_reports) > 0
