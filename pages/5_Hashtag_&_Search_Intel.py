@@ -29,6 +29,8 @@ autostrat = st.session_state.get("autostrat", {})
 cuervo_ht = get_report(autostrat, "instagram_hashtags", "josecuervo")
 cazadores_ht = get_report(autostrat, "instagram_hashtags", "cazadores")
 hornitos_ht = get_report(autostrat, "instagram_hashtags", "hornitos")
+lunazul_ht = get_report(autostrat, "instagram_hashtags", "lunazul")
+milagro_ht = get_report(autostrat, "instagram_hashtags", "milagrotequila")
 
 # General search terms
 margarita_ht = get_report(autostrat, "instagram_hashtags", "margaritatime")
@@ -37,6 +39,8 @@ brand_reports = {
     "#JoseCuervo": cuervo_ht,
     "#Cazadores": cazadores_ht,
     "#Hornitos": hornitos_ht,
+    "#Lunazul": lunazul_ht,
+    "#MilagroTequila": milagro_ht,
 }
 
 has_brand_data = any(r is not None for r in brand_reports.values())
@@ -118,17 +122,15 @@ with tab_brands:
     else:
         st.markdown("Compare how each brand's hashtag space looks on Instagram.")
 
-        # ── Key Insights (3-column) ─────────────────────────
+        # ── Key Insights ──────────────────────────────────────
         render_section_label("Key Insights")
-        cols = st.columns(3)
-        for col, (label, report) in zip(cols, brand_reports.items()):
-            with col:
+        active_brands = {k: v for k, v in brand_reports.items() if v is not None}
+        cols = st.columns(min(len(active_brands), 3))
+        for idx, (label, report) in enumerate(active_brands.items()):
+            with cols[idx % len(cols)]:
                 st.markdown(f"**{label}**")
-                if report:
-                    for insight in _get_insights(report):
-                        st.markdown(f"- {insight}")
-                else:
-                    st.caption("No data")
+                for insight in _get_insights(report):
+                    st.markdown(f"- {insight}")
 
         st.markdown("---")
 
@@ -159,21 +161,18 @@ with tab_brands:
 
         # ── How to Win Territories ──────────────────────────
         render_section_label("How to Win Territories")
-        cols = st.columns(3)
-        for col, (label, report) in zip(cols, brand_reports.items()):
-            with col:
+        cols = st.columns(min(len(active_brands), 3))
+        for idx, (label, report) in enumerate(active_brands.items()):
+            with cols[idx % len(cols)]:
                 st.markdown(f"**{label}**")
-                if report:
-                    htw = report.get("how_to_win", {})
-                    if htw.get("summary"):
-                        st.caption(htw["summary"])
-                    territories = htw.get("territories", [])
-                    if territories:
-                        render_territory_cards(territories)
-                    else:
-                        st.caption("No territories")
+                htw = report.get("how_to_win", {})
+                if htw.get("summary"):
+                    st.caption(htw["summary"])
+                territories = htw.get("territories", [])
+                if territories:
+                    render_territory_cards(territories)
                 else:
-                    st.caption("No data")
+                    st.caption("No territories")
 
         st.markdown("---")
 
@@ -185,7 +184,7 @@ with tab_brands:
         comp_terrs = set()
         if cuervo_ht:
             cuervo_terrs = set(cuervo_ht.get("how_to_win", {}).get("territories", []))
-        for name, rpt in [("Cazadores", cazadores_ht), ("Hornitos", hornitos_ht)]:
+        for rpt in [cazadores_ht, hornitos_ht, lunazul_ht, milagro_ht]:
             if rpt:
                 comp_terrs.update(rpt.get("how_to_win", {}).get("territories", []))
 
@@ -208,7 +207,7 @@ with tab_brands:
 
         # Common gaps — look at NOPD objections across all brands
         all_objections = []
-        for rpt in [cuervo_ht, cazadores_ht, hornitos_ht]:
+        for rpt in [cuervo_ht, cazadores_ht, hornitos_ht, lunazul_ht, milagro_ht]:
             if rpt:
                 all_objections.extend(rpt.get("audience_profile", {}).get("objections", []))
         if all_objections:
