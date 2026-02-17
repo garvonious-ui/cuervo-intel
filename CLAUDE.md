@@ -28,7 +28,7 @@ sample_data.py         # Demo data generator with realistic brand profiles
 sprout_import.py       # Sprout Social CSV import adapter + AI content classifiers
 dashboard.py           # Excel report generator (download button)
 data/sprout/           # Drop Sprout Social CSV exports here
-data/autostrat/        # Parsed autostrat JSON reports (7 subdirectories: 6 report types + pdfs/)
+data/autostrat/        # Parsed autostrat JSON reports (8 subdirectories: 7 report types + pdfs/)
 data/autostrat/pdfs/   # Drop autostrat PDF/PPTX exports here for import
 ```
 
@@ -103,13 +103,14 @@ Uses autostrat hashtag/keyword/news reports only — sidebar filters do NOT appl
 ## Autostrat Intelligence
 - Qualitative reports from autostrat.ai — audience psychographics, competitive positioning, content trends, creator archetypes
 - `st.session_state["autostrat"]` stores `{report_type: {identifier: report_data}}`
-- 7 report type directories: instagram_profiles, tiktok_profiles, instagram_hashtags, tiktok_hashtags, tiktok_keywords, google_news (+ pdfs/ for imports)
+- 8 report type directories: instagram_profiles, tiktok_profiles, instagram_hashtags, tiktok_hashtags, instagram_keywords, tiktok_keywords, google_news (+ pdfs/ for imports)
 - Current Instagram hashtag data (12 reports): josecuervo, cuervo, cazadores, hornitos, lunazul, milagrotequila, eljimador, teremanatequila, 1800tequila, casamigos, margaritatime
+- Current Instagram keyword data (2 Cuervo reports): jose_cuervo, cuervo_tequila
 - Current Instagram profile data (4 reference brands): duolingo, drinkpoppi, chipotle, dunkin
 - Current TikTok profile data (4 reference brands): duolingo, drinkpoppi, chipotle, dunkin
 - Current TikTok hashtag/keyword data: none yet (directories exist with templates only — TikTok reports to be added)
 - Current Google News data: jose_cuervo_tequila.json (full report with NOPD, SWOT, news trends/topics, campaigns, quotes, statistics)
-- Report classification whitelists in config.py: `BRAND_HASHTAGS` (10 brands → Page 5 Tab 1), `CATEGORY_HASHTAGS` (category conversations → Page 5 Tab 2), `CUERVO_HASHTAG_IDS` (Cuervo-specific subset for Page 1 Tab 3 + cross-brand comparison logic)
+- Report classification whitelists in config.py: `BRAND_HASHTAGS` (12 identifiers → Page 5 Tab 1, includes 10 brand hashtags + 2 Cuervo keywords), `CATEGORY_HASHTAGS` (category conversations → Page 5 Tab 2), `CUERVO_HASHTAG_IDS` (Cuervo-specific subset for Page 1 Tab 3 + cross-brand comparison logic)
 - NOPD framework: Needs (#2ea3f2), Objections (#D9534F), Desires (#5CB85C), Pain Points (#F8C090)
 - PDF/PPTX import: sidebar button triggers parser, outputs JSON to correct subdirectory. Supports both PDF (via pdfplumber) and PPTX (via python-pptx) autostrat exports. PPTX extractor handles shape positioning, row clustering, group shapes, and NOPD table detection.
 - To add new reports: drop JSON into the correct `data/autostrat/{report_type}/` directory, or drop PDF/PPTX into `data/autostrat/pdfs/` and click "Import PDFs" in sidebar. For brand hashtags, add the identifier to `BRAND_HASHTAGS` in config.py. For category hashtags, add to `CATEGORY_HASHTAGS`.
@@ -136,7 +137,7 @@ Currently 7 CSV exports covering Oct 1, 2025 – Jan 31, 2026:
 ## Pending / Known Issues
 - TikTok data not yet in Sprout exports — TikTok sections show zeros on Sprout import mode
 - TikTok autostrat reports (hashtags, keywords) not yet imported — directories exist with templates only. TikTok profiles imported for 4 reference brands.
-- Instagram keyword autostrat reports not yet imported
+- Instagram keyword autostrat reports: 2 Cuervo reports imported (jose_cuervo, cuervo_tequila); no competitor keyword reports yet
 - Don Julio and 1800 Tequila awaiting data population in Sprout (using fallback follower counts)
 - Content theme classifier is keyword-based (~80-85% accuracy) — can be improved
 - Follower growth % not trackable from single-month static exports

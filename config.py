@@ -54,6 +54,8 @@ PLATFORM_COLORS = {
 BRAND_HASHTAGS = {
     "josecuervo": "#JoseCuervo",
     "cuervo": "#Cuervo",
+    "jose_cuervo": "Jose Cuervo (keyword)",
+    "cuervo_tequila": "cuervo tequila (keyword)",
     "cazadores": "#Cazadores",
     "hornitos": "#Hornitos",
     "lunazul": "#Lunazul",
@@ -65,7 +67,7 @@ BRAND_HASHTAGS = {
 }
 
 # Cuervo's own hashtag identifiers (subset of BRAND_HASHTAGS)
-CUERVO_HASHTAG_IDS = {"josecuervo", "cuervo"}
+CUERVO_HASHTAG_IDS = {"josecuervo", "cuervo", "jose_cuervo", "cuervo_tequila"}
 
 # Category / cultural hashtag identifiers → display names
 # Only identifiers listed here appear on the Category & Cultural tab (Page 5 Tab 2)

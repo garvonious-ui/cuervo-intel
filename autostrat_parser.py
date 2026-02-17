@@ -34,6 +34,10 @@ REPORT_TYPE_MAP = {
     "tiktok keywords analysis presentation": "tiktok_keywords",
     "tiktok keyword search analysis presentation": "tiktok_keywords",
     "tiktok keywords search analysis presentation": "tiktok_keywords",
+    "instagram keyword analysis presentation": "instagram_keywords",
+    "instagram keyword search analysis presentation": "instagram_keywords",
+    "instagram keywords analysis presentation": "instagram_keywords",
+    "instagram keywords search analysis presentation": "instagram_keywords",
     "google news analysis presentation": "google_news",
     "google news presentation": "google_news",
 }
@@ -1809,6 +1813,54 @@ def parse_tiktok_keywords(sections: dict, identifier: str, date_str: str) -> dic
     return report
 
 
+def parse_instagram_keywords(sections: dict, identifier: str, date_str: str) -> dict:
+    """Build JSON for an Instagram keyword search analysis report.
+
+    Same structure as TikTok keywords but adds Interesting Conversations,
+    In-Market Campaigns, and Verbatim sections when present.
+    """
+    report = {
+        "report_type": "instagram_keywords",
+        "keyword": identifier,
+        "report_date": date_str,
+    }
+
+    if "Executive Summary" in sections:
+        report["executive_summary"] = parse_executive_summary(sections["Executive Summary"])
+
+    if "Audience Profile" in sections:
+        report["audience_profile"] = parse_nopd(sections["Audience Profile"])
+
+    if "Content Trends" in sections:
+        report["content_trends"] = parse_content_trends(sections["Content Trends"])
+
+    if "Brand Mentions" in sections:
+        report["brand_mentions"] = parse_brand_mentions(sections["Brand Mentions"])
+
+    if "Creator Archetypes" in sections:
+        report["creator_archetypes"] = parse_creator_archetypes(
+            sections["Creator Archetypes"])
+
+    if "How to Win With This Audience" in sections:
+        report["how_to_win"] = parse_how_to_win(
+            sections["How to Win With This Audience"])
+
+    if "Interesting Conversations" in sections:
+        report["interesting_conversations"] = parse_interesting_conversations(
+            sections["Interesting Conversations"])
+
+    if "In-Market Campaigns" in sections:
+        report["in_market_campaigns"] = parse_in_market_campaigns(
+            sections["In-Market Campaigns"])
+
+    if "Verbatim" in sections:
+        # Verbatim is typically raw quotes — store as list of lines
+        raw = sections["Verbatim"].strip()
+        report["verbatim"] = [ln.strip() for ln in raw.split("\n") if ln.strip()]
+
+    return report
+
+
 def parse_google_news(sections: dict, identifier: str, date_str: str) -> dict:
     """Build JSON for a Google News analysis report."""
     report = {
@@ -1950,6 +2002,7 @@ PARSERS = {
     "tiktok_profiles": parse_tiktok_profile,
     "instagram_profiles": parse_instagram_profile,
     "instagram_hashtags": parse_instagram_hashtag,
+    "instagram_keywords": parse_instagram_keywords,
     "tiktok_keywords": parse_tiktok_keywords,
     "google_news": parse_google_news,
 }

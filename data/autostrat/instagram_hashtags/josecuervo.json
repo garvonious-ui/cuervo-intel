@@ -44,27 +44,39 @@
   "hashtag_analysis": {
     "summary": "",
     "related_hashtags": [],
-    "key_findings": [],
-    "opportunities": [
+    "key_findings": [
       "José Cuervo's Instagram blends aspirational luxury events with authentic,\ncasual user moments.",
-      "Leverage UGC storytelling to amplify authentic, emotional user moments and deepen\ncommunity bonds.",
       "Millennial dominance shapes content: urban, party, and global lifestyle\ncues prevail.",
-      "Expand engagement with emerging Gen-Z cohorts by integrating trend-driven, relatable\ncontent formats.",
       "Visual storytelling thrives via multi-image carousels and lifestyle shots\nshowcasing real experiences.",
+      "Positive, communal sentiment centers on cultural pride and festive social\nconnection."
+    ],
+    "opportunities": [
+      "Leverage UGC storytelling to amplify authentic, emotional user moments and deepen\ncommunity bonds.",
+      "Expand engagement with emerging Gen-Z cohorts by integrating trend-driven, relatable\ncontent formats.",
       "Activate geo-targeted campaigns using localized hashtags to capture regional pride\nand drive micro-community loyalty.",
-      "Positive, communal sentiment centers on cultural pride and festive social\nconnection.",
       "Collaborate with mixologists and influencers to innovate cocktail creations, blending\nheritage with contemporary culture."
     ],
-    "gaps_risks_unmet_needs": [],
-    "strategic_actions": [
+    "gaps_risks_unmet_needs": [
       "Limited Gen-Z representation reveals a generational blind spot and\nengagement risk.",
-      "Prioritize boosting user-generated lifestyle content to nurture authenticity and\nmaximize reach.",
       "Brand-heavy posts underperform compared to authentic user-generated\ncontent.",
-      "Develop tailored Gen-Z campaigns that pivot from pure party themes toward social\ncauses and self-expression.",
       "Sparse direct content targeting localized micro-communities outside core\nmarkets misses growth potential.",
+      "Overreliance on party lifestyle may alienate wellness-focused or more\ndiverse audience segments."
+    ],
+    "strategic_actions": [
+      "Prioritize boosting user-generated lifestyle content to nurture authenticity and\nmaximize reach.",
+      "Develop tailored Gen-Z campaigns that pivot from pure party themes toward social\ncauses and self-expression.",
       "Implement localized event activations linked to Instagram CTAs to convert digital\nengagement into offline experiences.",
-      "Overreliance on party lifestyle may alienate wellness-focused or more\ndiverse audience segments.",
       "Diversify brand storytelling by integrating wellness and experiential lifestyle\nnarratives alongside festive occasions."
+    ]
+  },
+  "conversation_map": {
+    "summary": "Analysis",
+    "relationship_analysis": "José Cuervo’s hashtag connects tightly with ‘spicymargarita’ and\n‘cuervopaloma,’ signaling a cocktail innovation hub anchored by brand\nheritage. ‘Spicymargarita’ breathes contemporary heat into Cuervo's\nclassic profile, boosting mixology relevance: 'Descubre nuestro nuevo\ncoctel #cuervopaloma A qué esperas para venir a probarlo?'\n‘Margarita’ and ‘paloma’ operate as lifestyle connectors blending food,\ntravel, and leisure, reflecting ‘margarita’ as more than a drink but a\ncultural escape: 'Tulum — where the views are unreal and so are the\nmargaritas.'\nThe bartender and mixology hashtags closely intertwine emphasizing event\nservices and craft cocktail artistry, revealing a community that values\nboth creative technique and personalized experience: 'A mobile bar\nconcept that curates and creates beverages that reflect your story.'",
+    "overarching_patterns": [
+      "Multi-photo carousels dominate storytelling across hashtags, marrying\ndetailed visual narratives with cocktail culture: ‘Multi-photo carousels\ntell detailed event stories capturing mood and environment.’ This format\ncements emotional connection while driving deep engagement.\nStrong thematic anchors emerge around community and culture—from Mexican\nheritage in #josecuervotequila to vibrant Latinx identity in #margarita,\nand sophisticated craft in #mixology, all reinforcing distinct\nsubcultures within cocktail Instagram.\nPromotional posts underperform relative to authentic user-generated\ncontent, exposing a pattern where genuine personal stories and local\nshout-outs yield more engagement: 'Non-sponsored posts get more\nengagement than brand-heavy content.'"
+    ],
+    "action_opportunities": [
+      "Add hyper-localized campaigns leveraging community pride by\ndeploying geo-targeted hashtags and venue shout-outs to turn\npassive followers into micro-community advocates: ‘Use of\nlocalized hashtags (e.g., #tequilajalisco) connects brand\nwith regional pride.’\nCapitalize on user-generated storytelling by integrating\nemotional, lifestyle-rich UGC into brand feeds; authenticity\nconsistently outperforms traditional brand messaging, fueling\nword-of-mouth and trust.\nBroaden appeal beyond millennial party culture—test content\nformats that fuse wellness, mental health, and social causes\nto engage overlooked Gen-Z segments: 'Develop tailored Gen-Z\ncampaigns... pivot toward social causes and self-expression.'\nElevate cocktail innovation narratives by collaborating with\nmixologists to create exclusive recipes and artisan formats\nthat can become cultural currency: 'Creators engage via\ncalls-to-action for reservations and direct contact,\nfostering offline conversions.'\nActivate event-linked Instagram CTAs that seamlessly convert\ndigital engagement into offline bookings and brand\nexperiences, exploiting the cocktail culture’s social nature:\n‘Book for brunch and enjoy a live Greek cooking\nexperience...’"
     ]
   },
   "how_to_win": {

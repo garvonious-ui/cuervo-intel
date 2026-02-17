@@ -21,6 +21,7 @@ REPORT_TYPES = [
     "tiktok_profiles",
     "instagram_hashtags",
     "tiktok_hashtags",
+    "instagram_keywords",
     "tiktok_keywords",
     "google_news",
 ]
@@ -30,6 +31,7 @@ REPORT_TYPE_LABELS = {
     "tiktok_profiles": "TikTok Profiles",
     "instagram_hashtags": "Instagram Hashtags",
     "tiktok_hashtags": "TikTok Hashtags",
+    "instagram_keywords": "Instagram Keywords",
     "tiktok_keywords": "TikTok Keywords",
     "google_news": "Google News",
 }
@@ -38,7 +40,7 @@ REPORT_TYPE_LABELS = {
 PROFILE_TYPES = ["instagram_profiles", "tiktok_profiles"]
 
 # Conversation/trend report types (per-hashtag/keyword)
-CONVERSATION_TYPES = ["instagram_hashtags", "tiktok_hashtags", "tiktok_keywords"]
+CONVERSATION_TYPES = ["instagram_hashtags", "tiktok_hashtags", "instagram_keywords", "tiktok_keywords"]
 
 
 def load_report(report_type: str, filename: str) -> Optional[dict]:
