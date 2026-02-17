@@ -104,17 +104,15 @@ with tab_inspo:
                     st.metric("Avg ER", f"{er}%")
                 st.markdown("---")
 
-            # ── Creator Summary / What Hits & Misses ───────────────────
+            # ── Creator Summary ────────────────────────────────────────
             cs = report_r.get("creator_summary", {})
             if cs.get("topline"):
                 render_section_label("Brand Summary")
-                st.markdown(f"**{display_name}** — {cs['topline']}")
+                topline_clean = cs["topline"].replace("\n", " ").strip()
+                st.markdown(f"**{display_name}** — {topline_clean}")
                 if cs.get("what_it_means"):
-                    st.markdown(f"*{cs['what_it_means']}*")
-                if cs.get("common_themes"):
-                    st.caption(f"Common themes: {' | '.join(cs['common_themes'])}")
-                if cs.get("what_hits") or cs.get("what_misses"):
-                    render_hits_misses(cs.get("what_hits", ""), cs.get("what_misses", ""))
+                    means_clean = cs["what_it_means"].replace("\n", " ").strip()
+                    st.markdown(f"*{means_clean}*")
                 st.markdown("---")
 
             # ── "What Cuervo Can Steal" ────────────────────────────────
@@ -147,12 +145,23 @@ with tab_inspo:
             ea = report_r.get("engagement_analysis", {})
             if ea.get("summary"):
                 ea_text = ea["summary"].replace("\n", " ").strip()
-                steal_points.append(f"**Engagement tactic:** {ea_text[:200]}")
+                steal_points.append(
+                    f"**Engagement tactic (from {display_name}):** *{ea_text[:150]}"
+                    f"{'...' if len(ea_text) > 150 else ''}* — "
+                    f"**Cuervo adaptation:** Apply these engagement triggers to "
+                    f"cocktail culture, tequila heritage moments, and community activations."
+                )
 
             pa = report_r.get("posting_analysis", {})
             if pa.get("summary"):
                 pa_text = pa["summary"].replace("\n", " ").strip()
-                steal_points.append(f"**Posting rhythm:** {pa_text[:200]}")
+                steal_points.append(
+                    f"**Posting rhythm (from {display_name}):** *{pa_text[:150]}"
+                    f"{'...' if len(pa_text) > 150 else ''}* — "
+                    f"**Cuervo adaptation:** Mirror this cadence rhythm "
+                    f"synced to tequila calendar moments (Margarita Day, Cinco de Mayo, "
+                    f"summer kickoff, holiday entertaining)."
+                )
 
             if snapshot.get("avg_engagement_rate", 0) > 3:
                 steal_points.append(f"**ER benchmark:** {display_name} achieves {snapshot['avg_engagement_rate']}% ER — study their format mix for replicable patterns")
@@ -202,9 +211,15 @@ with tab_inspo:
                             st.caption("No data")
                 st.markdown("---")
             elif has_ref_nopd:
-                render_section_label(f"{display_name} Audience Profile")
+                render_section_label(f"{display_name} Audience Profile (Reference)")
+                st.caption(
+                    f"This is {display_name}'s audience — not tequila drinkers. "
+                    f"Study their engagement patterns and emotional drivers, "
+                    f"then look for parallels in Cuervo's Gen Z audience."
+                )
                 if ap_ref.get("summary"):
-                    st.markdown(ap_ref["summary"])
+                    summary_clean = ap_ref["summary"].replace("\n", " ").strip()
+                    st.markdown(f"*{summary_clean}*")
                 render_nopd_cards(ap_ref)
                 st.markdown("---")
 
