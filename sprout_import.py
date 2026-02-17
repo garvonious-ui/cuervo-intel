@@ -443,11 +443,25 @@ def import_sprout_posts(csv_path: str) -> list[dict]:
             except (ValueError, TypeError):
                 return 0
 
+        def safe_float_er(val):
+            """Parse Sprout's engagement rate string (e.g. '3.57%') to float."""
+            if val is None or str(val).strip() in ("", "nan", "None", "N/A", "-"):
+                return ""
+            try:
+                cleaned = str(val).replace(",", "").replace("%", "").strip()
+                parsed = float(cleaned)
+                return parsed if parsed >= 0 else ""
+            except (ValueError, TypeError):
+                return ""
+
         likes = safe_int(row.get(col_map.get("likes", ""), 0))
         comments = safe_int(row.get(col_map.get("comments", ""), 0))
         shares = safe_int(row.get(col_map.get("shares", ""), 0))
         saves = safe_int(row.get(col_map.get("saves", ""), 0))
         views = safe_int(row.get(col_map.get("views", ""), 0))
+
+        # Capture Sprout's pre-calculated ER (per impression) when available
+        sprout_er = safe_float_er(row.get(col_map.get("engagement_rate", ""), ""))
 
         theme = classify_theme(caption)
         visual_style = classify_visual_style(post_type, theme, brand)
@@ -477,7 +491,7 @@ def import_sprout_posts(csv_path: str) -> list[dict]:
             "shares": shares,
             "saves": saves,
             "views": views,
-            "engagement_rate_manual": "",
+            "engagement_rate_manual": sprout_er,
             "content_theme": theme,
             "visual_style": visual_style,
             "caption_tone": tone,

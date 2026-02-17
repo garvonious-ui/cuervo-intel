@@ -139,9 +139,21 @@ def extract_hashtags(text: str) -> list[str]:
 
 
 def calc_engagement_rate(post: dict, follower_count: int) -> float:
-    """Calculate engagement rate as (total engagements / followers) * 100.
-    Returns float('nan') when follower count is unknown so these posts
-    are excluded from average calculations rather than dragging them to 0."""
+    """Calculate engagement rate, preferring Sprout's pre-calculated ER per
+    impression when available.  Falls back to (total engagements / followers) *
+    100 for competitor posts or demo data where impressions aren't available.
+    Returns float('nan') when neither source is usable so these posts are
+    excluded from average calculations rather than dragging them to 0."""
+    # Prefer Sprout's ER per impression (already a percentage)
+    manual = post.get("engagement_rate_manual", "")
+    if manual != "" and manual is not None:
+        try:
+            val = float(manual)
+            if val >= 0:
+                return val
+        except (ValueError, TypeError):
+            pass
+    # Fallback: ER per follower
     if follower_count == 0:
         return float('nan')
     return (post["total_engagement"] / follower_count) * 100
