@@ -15,13 +15,13 @@ app.py                 # Entry point — data loading, sidebar filters, session 
 pages/
   1_Cuervo_Performance.py      # "The Mirror" — KPI scorecard, content performance, self-audit
   2_Competitive_Landscape.py   # "The Window" — 13-brand comparison, content gaps, competitor intel
-  3_2026_Strategy.py           # "The Playbook" — Social Brief scorecard, GOAT frameworks, action plan
+  3_2026_Strategy.py           # "The Playbook" — Social Brief scorecard, Poplife frameworks, action plan
   4_Inspiration_&_Explorer.py  # "The Toolbox" — Reference brands + full data explorer
   5_Conversation_Intel.py      # "The Landscape" — Brand hashtag comparison, category intel, Google News
 autostrat_parser.py    # PDF/PPTX-to-JSON parser for autostrat.ai report exports
 autostrat_loader.py    # JSON loader + cross-report extraction helpers
 autostrat_components.py # Reusable UI components for narrative content
-config.py              # Brand colors, BRAND_ORDER, GOAT frameworks, CUSTOM_CSS (Poplife palette)
+config.py              # Brand colors, BRAND_ORDER, Poplife frameworks, CUSTOM_CSS (Poplife palette)
 templates.py           # BRANDS list, content themes, visual styles, tone options
 analysis.py            # Core analysis engine — run_full_analysis(data_dir)
 sample_data.py         # Demo data generator with realistic brand profiles
@@ -49,7 +49,7 @@ Uses FILTERED data — sidebar brand/platform/type filters apply.
 ### Page 3: 2026 Strategy & Brief ("The Playbook")
 Uses UNFILTERED data — sidebar filters do NOT apply. Dedicated to the Social Brief.
 - **Tab 1: Social Brief Scorecard** — Expanded KPI table with status indicators, dynamic vs static ER comparison, content source mix (Creator 70% / Brand 15% / Events 15%)
-- **Tab 2: Content Strategy Frameworks** — GOAT content pillars (La Tradición / Cuervo Live / Life with a Lime / Culture Shaken), content mix funnel (Entertain 50% / Educate 30% / Connect 10% / Convince 10%), Gen Z engagement drivers
+- **Tab 2: Content Strategy Frameworks** — Poplife content pillars (La Tradición / Cuervo Live / Life with a Lime / Culture Shaken), content mix funnel (Entertain 50% / Educate 30% / Connect 10% / Convince 10%), Gen Z engagement drivers
 - **Tab 3: Action Plan** — 30-day weekly plan, threats & opportunities, all recommendations, qualitative intelligence (winning territories, content trends, creator archetypes, partnership opportunities)
 
 ### Page 4: Inspiration & Explorer ("The Toolbox")
@@ -75,7 +75,7 @@ Uses autostrat hashtag/keyword/news reports only — sidebar filters do NOT appl
 - TT Posts/Week: 3-4x
 - Follower Growth: 15% (not tracked from static exports)
 
-## GOAT Playbook Frameworks (config.py)
+## Poplife Playbook Frameworks (config.py)
 - **Content Pillars**: La Tradición (25%), Cuervo Live (15%), Life with a Lime (30%), Culture Shaken (30%)
 - **Content Mix**: Entertain (50%), Educate (30%), Connect (10%), Convince (10%)
 - **Content Source**: Creator & Influencer (70%), Brand-Owned (15%), Events & Partnerships (15%)

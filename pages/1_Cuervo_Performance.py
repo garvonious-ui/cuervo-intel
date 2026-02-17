@@ -14,7 +14,7 @@ import streamlit as st
 
 from config import (
     BRAND_COLORS, CHART_TEMPLATE, CHART_FONT, BRAND_ORDER, CUSTOM_CSS,
-    GOAT_CADENCE_TARGETS,
+    POPLIFE_CADENCE_TARGETS,
 )
 from config import CUERVO_HASHTAG_IDS, BRAND_HASHTAGS, CATEGORY_HASHTAGS, POPLIFE_BLUE
 from autostrat_loader import (
@@ -141,7 +141,7 @@ with tab_kpi:
 
     # ── Platform Cadence Scorecard ─────────────────────────────────────
     st.subheader("Platform Cadence Scorecard")
-    st.caption("GOAT targets: Instagram 8-10 assets/month, TikTok 12-16 assets/month")
+    st.caption("Poplife targets: Instagram 8-10 assets/month, TikTok 12-16 assets/month")
 
     cad1, cad2 = st.columns(2)
     for plat, col in [("Instagram", cad1), ("TikTok", cad2)]:
@@ -149,7 +149,7 @@ with tab_kpi:
             freq_p = results["frequency"].get(CUERVO, {}).get(plat, {})
             actual_ppm = freq_p.get("total_posts_30d", 0)
             actual_ppw = freq_p.get("posts_per_week", 0)
-            target = GOAT_CADENCE_TARGETS.get(plat, {})
+            target = POPLIFE_CADENCE_TARGETS.get(plat, {})
             target_low = target.get("low", 0)
             target_high = target.get("high", 0)
 

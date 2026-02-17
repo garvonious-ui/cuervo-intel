@@ -13,8 +13,8 @@ import streamlit as st
 
 from config import (
     BRAND_COLORS, CHART_TEMPLATE, CHART_FONT, BRAND_ORDER, CUSTOM_CSS,
-    PRIORITY_COLORS, GOAT_CADENCE_TARGETS,
-    GOAT_PILLAR_MAP, GOAT_PILLAR_TARGETS, GOAT_PILLAR_COLORS,
+    PRIORITY_COLORS, POPLIFE_CADENCE_TARGETS,
+    POPLIFE_PILLAR_MAP, POPLIFE_PILLAR_TARGETS, POPLIFE_PILLAR_COLORS,
     CONTENT_MIX_MAP, CONTENT_MIX_TARGETS, CONTENT_MIX_COLORS,
 )
 from autostrat_loader import (
@@ -121,7 +121,7 @@ with tab_scorecard:
 
     # ── Dynamic vs Static Performance ──────────────────────────────────
     st.subheader("Dynamic vs Static Performance")
-    st.caption("GOAT benchmark: Dynamic (video) delivers 2.8% ER vs Static (image) 2.2% ER")
+    st.caption("Poplife benchmark: Dynamic (video) delivers 2.8% ER vs Static (image) 2.2% ER")
 
     dynamic_types = ["Reel", "Video"]
     static_types = ["Static Image", "Carousel"]
@@ -180,7 +180,7 @@ with tab_scorecard:
 
     # ── Content Source Mix ─────────────────────────────────────────────
     st.subheader("Content Source Mix — Creator / Brand / Events")
-    st.caption("GOAT target: 70% Creator & Influencer, 15% Brand-Owned, 15% Events & Partnerships")
+    st.caption("Poplife target: 70% Creator & Influencer, 15% Brand-Owned, 15% Events & Partnerships")
 
     event_themes = ["Event / Activation", "Music / Party"]
     creator_posts = cuervo_df[cuervo_df["has_creator_collab"] == "Yes"] if "has_creator_collab" in cuervo_df.columns else pd.DataFrame()
@@ -199,13 +199,13 @@ with tab_scorecard:
 
     col_src1, col_src2 = st.columns(2)
     with col_src1:
-        st.markdown("**Content Source: Actual vs GOAT Target**")
+        st.markdown("**Content Source: Actual vs Poplife Target**")
         fig_src = go.Figure()
         fig_src.add_trace(go.Bar(x=src_data["Source"], y=src_data["Actual %"],
                                  name="Actual", marker_color=[src_colors[s] for s in src_data["Source"]],
                                  text=src_data["Actual %"], textposition="outside", texttemplate="%{text:.0f}%"))
         fig_src.add_trace(go.Scatter(x=src_data["Source"], y=src_data["Target %"],
-                                     name="GOAT Target", mode="markers+lines",
+                                     name="Poplife Target", mode="markers+lines",
                                      marker=dict(size=12, color="#333333", symbol="diamond"),
                                      line=dict(color="#333333", width=2, dash="dash")))
         fig_src.update_layout(template=CHART_TEMPLATE, font=CHART_FONT, height=380,
@@ -224,7 +224,7 @@ with tab_scorecard:
             else:
                 st.warning(f"**{row['Source']}**: {row['Actual %']:.0f}% actual / {row['Target %']}% target ({gap:+.0f}%) — Need LESS")
         st.markdown("")
-        st.info("**GOAT strategy**: Creators & influencers are the primary content engine. "
+        st.info("**Poplife strategy**: Creators & influencers are the primary content engine. "
                 "Brand-owned anchors the brand world. Events provide real-time cultural relevance.")
 
 
@@ -234,22 +234,22 @@ with tab_scorecard:
 
 with tab_frameworks:
 
-    # ── GOAT Content Pillars ───────────────────────────────────────────
-    st.subheader("Content Pillars — GOAT Framework")
-    st.caption("4 pillars from the GOAT Agency Social Playbook Q1 2026")
+    # ── Poplife Content Pillars ──────────────────────────────────────────
+    st.subheader("Content Pillars — Poplife Framework")
+    st.caption("4 pillars from the Poplife Social Playbook Q1 2026")
 
     PILLARS = [
         {"name": "La Tradición", "target": 25,
-         "themes": GOAT_PILLAR_MAP["La Tradición"],
+         "themes": POPLIFE_PILLAR_MAP["La Tradición"],
          "desc": "Heritage, education, cocktail recipes — approachable expert tone"},
         {"name": "Cuervo Live", "target": 15,
-         "themes": GOAT_PILLAR_MAP["Cuervo Live"],
+         "themes": POPLIFE_PILLAR_MAP["Cuervo Live"],
          "desc": "Events, music, sports — energetic FOMO-inducing content"},
         {"name": "Life, with a Lime", "target": 30,
-         "themes": GOAT_PILLAR_MAP["Life, with a Lime"],
+         "themes": POPLIFE_PILLAR_MAP["Life, with a Lime"],
          "desc": "Lifestyle, aspirational moments — feel bigger and brighter"},
         {"name": "Culture, Shaken", "target": 30,
-         "themes": GOAT_PILLAR_MAP["Culture, Shaken"],
+         "themes": POPLIFE_PILLAR_MAP["Culture, Shaken"],
          "desc": "Memes, UGC, trending content — culturally plugged in"},
     ]
 
@@ -275,10 +275,10 @@ with tab_frameworks:
         st.markdown("**Pillar Distribution: Actual vs Target**")
         fig_pd = go.Figure()
         fig_pd.add_trace(go.Bar(x=pillar_df["Pillar"], y=pillar_df["Actual %"],
-                                name="Actual", marker_color=[GOAT_PILLAR_COLORS[p] for p in pillar_df["Pillar"]],
+                                name="Actual", marker_color=[POPLIFE_PILLAR_COLORS[p] for p in pillar_df["Pillar"]],
                                 text=pillar_df["Actual %"], textposition="outside", texttemplate="%{text:.0f}%"))
         fig_pd.add_trace(go.Scatter(x=pillar_df["Pillar"], y=pillar_df["Target %"],
-                                    name="GOAT Target", mode="markers+lines",
+                                    name="Poplife Target", mode="markers+lines",
                                     marker=dict(size=12, color="#333333", symbol="diamond"),
                                     line=dict(color="#333333", width=2, dash="dash")))
         fig_pd.update_layout(template=CHART_TEMPLATE, font=CHART_FONT, height=380,
@@ -288,7 +288,7 @@ with tab_frameworks:
     with col_pd2:
         st.markdown("**Avg ER by Pillar**")
         fig_pe = px.bar(pillar_df, x="Pillar", y="Avg ER",
-                        color="Pillar", color_discrete_map=GOAT_PILLAR_COLORS,
+                        color="Pillar", color_discrete_map=POPLIFE_PILLAR_COLORS,
                         labels={"Avg ER": "Avg ER %", "Pillar": ""},
                         template=CHART_TEMPLATE, text_auto=".2f")
         fig_pe.add_hline(y=ER_TARGET, line_dash="dash", line_color="#333",
@@ -313,7 +313,7 @@ with tab_frameworks:
 
     # ── Content Mix Funnel ─────────────────────────────────────────────
     st.subheader("Content Mix Funnel — Entertain / Educate / Connect / Convince")
-    st.caption("GOAT Playbook: grab attention first (Entertain), then guide to action (Convince)")
+    st.caption("Poplife Playbook: grab attention first (Entertain), then guide to action (Convince)")
 
     cuervo_mix_data = []
     for cat in ["Entertain", "Educate", "Connect", "Convince"]:
@@ -333,13 +333,13 @@ with tab_frameworks:
 
     col_mix1, col_mix2 = st.columns(2)
     with col_mix1:
-        st.markdown("**Cuervo Content Mix: Actual vs GOAT Target**")
+        st.markdown("**Cuervo Content Mix: Actual vs Poplife Target**")
         fig_mix = go.Figure()
         fig_mix.add_trace(go.Bar(x=mix_df["Category"], y=mix_df["Actual %"],
                                  name="Actual", marker_color=[CONTENT_MIX_COLORS[c] for c in mix_df["Category"]],
                                  text=mix_df["Actual %"], textposition="outside", texttemplate="%{text:.0f}%"))
         fig_mix.add_trace(go.Scatter(x=mix_df["Category"], y=mix_df["Target %"],
-                                     name="GOAT Target", mode="markers+lines",
+                                     name="Poplife Target", mode="markers+lines",
                                      marker=dict(size=12, color="#333333", symbol="diamond"),
                                      line=dict(color="#333333", width=2, dash="dash")))
         fig_mix.update_layout(template=CHART_TEMPLATE, font=CHART_FONT, height=380,

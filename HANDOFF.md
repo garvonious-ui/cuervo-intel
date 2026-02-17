@@ -165,11 +165,11 @@ None of these brands have Sprout Social CSV data yet. They need config-only addi
 
 ---
 
-## GOAT Agency Social Media Playbook Q1 2026
+## Poplife Social Media Playbook Q1 2026
 
-Source: `Copy of EXT - Cuervo Playbook V1.pdf` (GOAT Agency)
+Source: `Copy of EXT - Cuervo Playbook V1.pdf` (Poplife)
 
-This is the comprehensive social strategy playbook from GOAT Agency. It defines Cuervo's brand persona, content frameworks, platform strategy, and measurement approach for 2026. **These frameworks should guide dashboard development.**
+This is the comprehensive social strategy playbook from Poplife. It defines Cuervo's brand persona, content frameworks, platform strategy, and measurement approach for 2026. **These frameworks should guide dashboard development.**
 
 ### Brand Persona & Creative Platform
 
@@ -179,7 +179,7 @@ This is the comprehensive social strategy playbook from GOAT Agency. It defines 
 - **What we are**: Rich heritage, party with a purpose, the connector, used in the first margarita
 - **What we are NOT**: Trying too hard, AI-generated, shots-focused, bottom shelf, ad-like, text-heavy
 
-### Content Pillars (GOAT Framework)
+### Content Pillars (Poplife Framework)
 
 These **replace** the earlier Social Brief pillars (Party Starter/Elevated Sips/Mix It Up/Culture & Community).
 
@@ -250,7 +250,7 @@ Strategy: Use **influencer ambassadors** within each archetype's niche rather th
 - Human-first video outperforms static by **77%**
 - Proactive outbound comments (50-99 chars) → **151.6% higher engagement**
 - 68% of TikTok users want brands to engage more via comments
-- VFX creative: **78.32% ER** (+41% above GOAT US benchmark) — untapped potential
+- VFX creative: **78.32% ER** (+41% above Poplife US benchmark) — untapped potential
 
 ### Content Best Practices
 
@@ -272,28 +272,28 @@ Strategy: Use **influencer ambassadors** within each archetype's niche rather th
 
 ## Dashboard Integration Recommendations
 
-These are concrete ways to wire the GOAT Playbook frameworks into the existing dashboard code. All use existing data fields — no new data sources needed.
+These are concrete ways to wire the Poplife Playbook frameworks into the existing dashboard code. All use existing data fields — no new data sources needed.
 
-### Integration 1: GOAT Content Pillar Tracking
+### Integration 1: Poplife Content Pillar Tracking
 
-**What:** Map existing 13 `content_theme` values to GOAT's 4 pillars with target % overlay
+**What:** Map existing 13 `content_theme` values to Poplife's 4 pillars with target % overlay
 **Where:** New mapping dict in `config.py`, chart on Page 5 (`5_Cuervo_Strategy.py`)
 **How:**
 ```python
-GOAT_PILLAR_MAP = {
+POPLIFE_PILLAR_MAP = {
     "La Tradición": ["Brand Heritage / Story", "Education (Tequila 101)", "Behind the Scenes"],
     "Cuervo Live": ["Event / Activation", "Music / Party", "Sports Tie-in"],
     "Life, with a Lime": ["Lifestyle/Aspirational", "Cocktail Recipe", "Product Showcase"],
     "Culture, Shaken": ["Meme / Humor", "Creator Collab / UGC", "Cultural Moment / Holiday", "User Repost", "Giveaway / Promo"],
 }
-GOAT_PILLAR_TARGETS = {"La Tradición": 25, "Cuervo Live": 15, "Life, with a Lime": 30, "Culture, Shaken": 30}
+POPLIFE_PILLAR_TARGETS = {"La Tradición": 25, "Cuervo Live": 15, "Life, with a Lime": 30, "Culture, Shaken": 30}
 ```
-**Also:** Replace current Page 5 content pillars (Party Starter/Elevated Sips/Mix It Up/Culture & Community) with these GOAT pillars at `pages/5_Cuervo_Strategy.py` lines ~315-360.
+**Also:** Replace current Page 5 content pillars (Party Starter/Elevated Sips/Mix It Up/Culture & Community) with these Poplife pillars at `pages/5_Cuervo_Strategy.py` lines ~315-360.
 **Data field:** `content_theme` (exists on every post)
 
 ### Integration 2: Content Mix Funnel (Entertain / Educate / Connect / Convince)
 
-**What:** Classify posts into GOAT's 4 content mix categories; show current vs target
+**What:** Classify posts into Poplife's 4 content mix categories; show current vs target
 **Where:** New mapping dict + chart on Page 5
 **How:**
 ```python
@@ -305,7 +305,7 @@ CONTENT_MIX_MAP = {
 }
 CONTENT_MIX_TARGETS = {"Entertain": 50, "Educate": 30, "Connect": 10, "Convince": 10}
 ```
-**Dashboard:** Current vs Target bar chart with color coding. GOAT flags inverted funnel as critical problem.
+**Dashboard:** Current vs Target bar chart with color coding. Poplife flags inverted funnel as critical problem.
 **Data field:** `content_theme` (same field, different grouping)
 
 ### Integration 3: Dynamic vs Static Performance
@@ -313,7 +313,7 @@ CONTENT_MIX_TARGETS = {"Entertain": 50, "Educate": 30, "Connect": 10, "Convince"
 **What:** Split posts by Dynamic (Reel/Video) vs Static (Static Image/Carousel) and compare ER
 **Where:** Page 2 (`2_Content_&_Engagement.py`) or Page 5
 **How:** Filter on `post_type` — Dynamic = `["Reel", "Video"]`, Static = `["Static Image", "Carousel"]`
-**Dashboard:** Side-by-side ER comparison with GOAT benchmark overlay (2.8% vs 2.2%)
+**Dashboard:** Side-by-side ER comparison with Poplife benchmark overlay (2.8% vs 2.2%)
 **Data field:** `post_type` (exists on every post)
 
 ### Integration 4: Content Source Tracking (Creator vs Brand vs Events)
@@ -329,7 +329,7 @@ CONTENT_MIX_TARGETS = {"Entertain": 50, "Educate": 30, "Connect": 10, "Convince"
 
 ### Integration 5: Platform Cadence Scorecard
 
-**What:** Compare Cuervo's actual posting frequency against GOAT targets
+**What:** Compare Cuervo's actual posting frequency against Poplife targets
 **Where:** Page 5 (Cuervo Strategy)
 **How:**
 - IG target: 8-10 assets/month (2-3x/week)
@@ -339,9 +339,9 @@ CONTENT_MIX_TARGETS = {"Entertain": 50, "Educate": 30, "Connect": 10, "Convince"
 
 ### Integration 6: TOV & Content Quality Signals
 
-**What:** Track tone distribution against GOAT's TOV guidelines
+**What:** Track tone distribution against Poplife's TOV guidelines
 **Where:** Page 2 (Content & Engagement) or Page 5
-**How:** `caption_tone` field already classifies into 8 tone options. GOAT wants:
+**How:** `caption_tone` field already classifies into 8 tone options. Poplife wants:
 - MORE: Playful/Fun, Casual/Conversational, Humorous/Meme
 - LESS: Premium/Luxury (save for product moments), Bold/Edgy
 **Data field:** `caption_tone` (exists on every post)

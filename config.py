@@ -79,17 +79,17 @@ PRIORITY_COLORS = {
     "Low": "#8CBF8C",
 }
 
-# ─── GOAT PLAYBOOK FRAMEWORKS (Q1 2026) ─────────────────────────────
-# Maps existing content_theme values to GOAT Agency strategy frameworks.
+# ─── POPLIFE PLAYBOOK FRAMEWORKS (Q1 2026) ───────────────────────────
+# Maps existing content_theme values to Poplife strategy frameworks.
 
-GOAT_PILLAR_MAP = {
+POPLIFE_PILLAR_MAP = {
     "La Tradición": ["Brand Heritage / Story", "Education (Tequila 101)", "Behind the Scenes"],
     "Cuervo Live": ["Event / Activation", "Music / Party", "Sports Tie-in"],
     "Life, with a Lime": ["Lifestyle/Aspirational", "Cocktail Recipe", "Product Showcase"],
     "Culture, Shaken": ["Meme / Humor", "Creator Collab / UGC", "Cultural Moment / Holiday", "User Repost", "Giveaway / Promo"],
 }
-GOAT_PILLAR_TARGETS = {"La Tradición": 25, "Cuervo Live": 15, "Life, with a Lime": 30, "Culture, Shaken": 30}
-GOAT_PILLAR_COLORS = {
+POPLIFE_PILLAR_TARGETS = {"La Tradición": 25, "Cuervo Live": 15, "Life, with a Lime": 30, "Culture, Shaken": 30}
+POPLIFE_PILLAR_COLORS = {
     "La Tradición": "#C9A87E",     # Sandy tan — heritage
     "Cuervo Live": "#D4956A",      # Burnt peach — live events
     "Life, with a Lime": "#66BB6A", # Green — lifestyle
@@ -110,8 +110,8 @@ CONTENT_MIX_COLORS = {
     "Convince": "#D9534F",   # Red — action/sales
 }
 
-# GOAT platform cadence targets (posts per month)
-GOAT_CADENCE_TARGETS = {
+# Poplife platform cadence targets (posts per month)
+POPLIFE_CADENCE_TARGETS = {
     "Instagram": {"low": 8, "high": 10},   # 2-3x/week
     "TikTok": {"low": 12, "high": 16},     # 4-5x/week
 }
