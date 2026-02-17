@@ -28,7 +28,7 @@ sample_data.py         # Demo data generator with realistic brand profiles
 sprout_import.py       # Sprout Social CSV import adapter + AI content classifiers
 dashboard.py           # Excel report generator (download button)
 data/sprout/           # Drop Sprout Social CSV exports here
-data/autostrat/        # Parsed autostrat JSON reports (6 subdirectories)
+data/autostrat/        # Parsed autostrat JSON reports (7 subdirectories: 6 report types + pdfs/)
 data/autostrat/pdfs/   # Drop autostrat PDF/PPTX exports here for import
 ```
 
@@ -83,7 +83,7 @@ Uses autostrat hashtag/keyword/news reports only — sidebar filters do NOT appl
 
 ## Key Technical Details
 - `st.session_state` shares data across pages: `results`, `df`, `filtered_df`, `sel_brands`, `sel_platforms`, `autostrat`
-- `results` dict from `analysis.py` has keys: `posts`, `engagement`, `frequency`, `content`, `hashtags`, `creators`, `recommendations`
+- `results` dict from `analysis.py` has keys: `posts`, `profiles`, `frequency`, `engagement`, `captions`, `hashtags`, `themes`, `creators`, `recommendations`
 - Pages 1, 3 use unfiltered `st.session_state["df"]` — sidebar filters don't apply
 - Pages 2, 4 use `st.session_state["filtered_df"]` — sidebar filters apply
 - Page 5 uses `st.session_state["autostrat"]` directly — no quantitative data, sidebar filters do NOT apply. Reports are classified via `BRAND_HASHTAGS` and `CATEGORY_HASHTAGS` config whitelists.
@@ -92,16 +92,27 @@ Uses autostrat hashtag/keyword/news reports only — sidebar filters do NOT appl
 - Plotly charts use `width="stretch"` (not deprecated `use_container_width=True`)
 - Favicon is `favicon.png` (Poplife "P" icon)
 
+## Engagement Rate Calculation
+- **ER per Impression** (industry standard / Sprout Social): `engagements / impressions × 100` — used for Cuervo posts where Sprout provides it
+- **Estimated ER per Impression** (competitors): Scaling factor derived from Cuervo's known `ER per impression / ER per follower` ratio (~18.8x), applied to competitor aggregate ER per follower data. Capped at 8% to prevent inflation for small-follower brands.
+- **ER per Follower** (fallback / demo data): `total_engagement / followers × 100` — used when neither Sprout ER nor aggregate data is available
+- **3-tier priority in `calc_engagement_rate()`**: (1) Sprout ER per impression → (2) estimated ER from aggregate × scaling factor → (3) per-follower fallback
+- **Fallback follower counts** in `sprout_import.py` for 6 brands missing from Sprout aggregates: 1800 Tequila (108K), Don Julio (460K), El Jimador (43.4K), Hornitos (36.1K), Lunazul (12.2K), Milagro (23.7K)
+- **Cache busting**: `_sprout_fingerprint()` in `app.py` includes `CODE_VERSION` string — bump this whenever sprout_import.py or analysis.py logic changes
+
 ## Autostrat Intelligence
 - Qualitative reports from autostrat.ai — audience psychographics, competitive positioning, content trends, creator archetypes
 - `st.session_state["autostrat"]` stores `{report_type: {identifier: report_data}}`
-- 6 report types: instagram_profiles, tiktok_profiles, instagram_hashtags, tiktok_hashtags, tiktok_keywords, google_news
-- Current hashtag data: josecuervo.json, cuervo.json, cazadores.json, hornitos.json, lunazul.json, milagrotequila.json, eljimador.json, teremanatequila.json, 1800tequila.json, margaritatime.json
-- Current profile data: duolingo.json, drinkpoppi.json, chipotle.json, dunkin.json
+- 7 report type directories: instagram_profiles, tiktok_profiles, instagram_hashtags, tiktok_hashtags, tiktok_keywords, google_news (+ pdfs/ for imports)
+- Current Instagram hashtag data (12 reports): josecuervo, cuervo, cazadores, hornitos, lunazul, milagrotequila, eljimador, teremanatequila, 1800tequila, casamigos, margaritatime
+- Current Instagram profile data (4 reference brands): duolingo, drinkpoppi, chipotle, dunkin
+- Current TikTok profile data (4 reference brands): duolingo, drinkpoppi, chipotle, dunkin
+- Current TikTok hashtag/keyword data: none yet (directories exist with templates only — TikTok reports to be added)
 - Current Google News data: jose_cuervo_tequila.json (full report with NOPD, SWOT, news trends/topics, campaigns, quotes, statistics)
 - Report classification whitelists in config.py: `BRAND_HASHTAGS` (10 brands → Page 5 Tab 1), `CATEGORY_HASHTAGS` (category conversations → Page 5 Tab 2), `CUERVO_HASHTAG_IDS` (Cuervo-specific subset for Page 1 Tab 3 + cross-brand comparison logic)
 - NOPD framework: Needs (#2ea3f2), Objections (#D9534F), Desires (#5CB85C), Pain Points (#F8C090)
 - PDF/PPTX import: sidebar button triggers parser, outputs JSON to correct subdirectory. Supports both PDF (via pdfplumber) and PPTX (via python-pptx) autostrat exports. PPTX extractor handles shape positioning, row clustering, group shapes, and NOPD table detection.
+- To add new reports: drop JSON into the correct `data/autostrat/{report_type}/` directory, or drop PDF/PPTX into `data/autostrat/pdfs/` and click "Import PDFs" in sidebar. For brand hashtags, add the identifier to `BRAND_HASHTAGS` in config.py. For category hashtags, add to `CATEGORY_HASHTAGS`.
 
 ## Running
 ```bash
@@ -112,8 +123,21 @@ python3 -m streamlit run app.py --server.headless true
 ## Dependencies
 - streamlit, plotly, pandas, openpyxl, pdfplumber, python-pptx
 
+## Sprout Social CSV Files (data/sprout/)
+Currently 7 CSV exports covering Oct 1, 2025 – Jan 31, 2026:
+- `Post Performance` — Cuervo's own posts (77 non-Story), has `Engagement Rate (per Impression)`, impressions, likes, comments, shares, saves
+- `Competitor Posts` — 305 competitor posts, has `Public Engagements`, comments, shares — NO impressions or ER
+- `Competitor Performance` — Daily aggregate rows (1722), has `Public Engagements per Post` and `Audience`
+- `Competitor Performance 2` — Reference brands aggregate (861 rows)
+- `Instagram Competitors` — Daily competitor data (1599 rows), has `Public Engagements per Post` and `Followers`
+- `Instagram Business Profiles` — Cuervo only (123 rows)
+- `Profile Performance` — Cuervo only (123 rows)
+
 ## Pending / Known Issues
 - TikTok data not yet in Sprout exports — TikTok sections show zeros on Sprout import mode
-- Don Julio and 1800 Tequila awaiting data population in Sprout
+- TikTok autostrat reports (hashtags, keywords) not yet imported — directories exist with templates only. TikTok profiles imported for 4 reference brands.
+- Instagram keyword autostrat reports not yet imported
+- Don Julio and 1800 Tequila awaiting data population in Sprout (using fallback follower counts)
 - Content theme classifier is keyword-based (~80-85% accuracy) — can be improved
 - Follower growth % not trackable from single-month static exports
+- Competitor ERs are estimates (scaled from aggregate per-follower ER, not actual per-impression) — accuracy depends on Cuervo's scaling factor being representative
