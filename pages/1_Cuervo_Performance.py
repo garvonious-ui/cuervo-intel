@@ -172,6 +172,60 @@ with tab_kpi:
 
     st.markdown("---")
 
+    # ── Day / Hour Posting Heatmap ─────────────────────────────────────
+    st.subheader("Posting Heatmap — Day & Hour")
+    st.caption("When Cuervo posts across the week — find gaps and peak windows")
+
+    heatmap_plat = st.radio("Platform", ["Instagram", "TikTok"], horizontal=True, key="heatmap_plat")
+    freq_hm = results["frequency"].get(CUERVO, {}).get(heatmap_plat, {})
+    by_day = freq_hm.get("by_day", {})
+    by_hour = freq_hm.get("by_hour", {})
+
+    if by_day and by_hour:
+        days_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        hours = list(range(24))
+
+        # Rebuild heatmap from raw posts — need day+hour combos
+        hm_data = {}
+        for p in cuervo_df[cuervo_df["platform"] == heatmap_plat].itertuples():
+            pdate = getattr(p, "post_date", None)
+            phour = getattr(p, "post_hour", None)
+            if pd.notna(pdate) and pd.notna(phour):
+                try:
+                    day_name = pd.Timestamp(pdate).day_name()
+                except Exception:
+                    continue
+                phour = int(phour)
+                hm_data[(day_name, phour)] = hm_data.get((day_name, phour), 0) + 1
+
+        z = [[hm_data.get((d, h), 0) for h in hours] for d in days_order]
+
+        fig_hm = go.Figure(data=go.Heatmap(
+            z=z,
+            x=[f"{h}:00" for h in hours],
+            y=days_order,
+            colorscale=[[0, "#FFF5EB"], [0.5, "#F8C090"], [1, "#D4956A"]],
+            text=z,
+            texttemplate="%{text}",
+            hovertemplate="Day: %{y}<br>Hour: %{x}<br>Posts: %{z}<extra></extra>",
+        ))
+        fig_hm.update_layout(template=CHART_TEMPLATE, font=CHART_FONT, height=320,
+                             xaxis_title="Hour of Day", yaxis_title="",
+                             yaxis=dict(autorange="reversed"))
+        st.plotly_chart(fig_hm, width="stretch")
+
+        # Best posting time
+        best_days = freq_hm.get("best_days", [])
+        best_hours = freq_hm.get("best_hours", [])
+        best_day_str = best_days[0][0] if best_days else "N/A"
+        best_hour_str = f"{best_hours[0][0]}:00" if best_hours else "N/A"
+        st.info(f"**Peak posting window:** {best_day_str} at {best_hour_str} on {heatmap_plat}. "
+                f"Total posts in period: {freq_hm.get('total_posts_30d', 0)}.")
+    else:
+        st.info(f"No {heatmap_plat} posting data available for Cuervo.")
+
+    st.markdown("---")
+
     # ── Engagement Signals ─────────────────────────────────────────────
     st.subheader("Engagement Signals")
     st.caption("Beyond likes — saves, shares, and comments indicate deeper audience connection")
@@ -308,6 +362,74 @@ with tab_content:
         st.info(f"**Top theme:** {top_theme['content_theme']} at {top_theme['avg_er']:.2f}% ER ({top_theme['count']} posts). "
                 f"{len(themes_above_target)} of {len(theme_er)} themes meet the 3% target. "
                 f"**Lowest:** {bottom_theme['content_theme']} at {bottom_theme['avg_er']:.2f}%.")
+
+    st.markdown("---")
+
+    # ── Caption Tone Distribution ────────────────────────────────────
+    st.subheader("Caption Tone Distribution")
+    st.caption("How Cuervo's captions sound — the voice behind the brand")
+
+    # Combine tones across platforms for Cuervo
+    cuervo_tones = {}
+    for plat in ["Instagram", "TikTok"]:
+        plat_tones = results["captions"].get(CUERVO, {}).get(plat, {}).get("tone_distribution", {})
+        for tone, count in plat_tones.items():
+            cuervo_tones[tone] = cuervo_tones.get(tone, 0) + count
+
+    if cuervo_tones:
+        tone_df = pd.DataFrame(list(cuervo_tones.items()), columns=["Tone", "Count"])
+        tone_df = tone_df.sort_values("Count", ascending=True)
+        tone_df["Pct"] = (tone_df["Count"] / tone_df["Count"].sum() * 100).round(1)
+
+        fig_tone = px.bar(tone_df, x="Count", y="Tone", orientation="h",
+                          color_discrete_sequence=["#2ea3f2"],
+                          labels={"Count": "# Posts", "Tone": ""},
+                          template=CHART_TEMPLATE,
+                          text=tone_df["Pct"].apply(lambda x: f"{x:.0f}%"))
+        fig_tone.update_layout(font=CHART_FONT, height=max(250, len(tone_df) * 40), showlegend=False)
+        st.plotly_chart(fig_tone, width="stretch")
+
+        top_tone = tone_df.iloc[-1]  # Last row is highest after ascending sort
+        st.info(f"**Cuervo's voice leans {top_tone['Tone']}** — {top_tone['Pct']:.0f}% of posts. "
+                f"Consider diversifying to connect with different audience moods.")
+    else:
+        st.info("No caption tone data available for Cuervo.")
+
+    st.markdown("---")
+
+    # ── CTA Distribution ────────────────────────────────────────────
+    st.subheader("CTA Distribution")
+    st.caption("What Cuervo asks its audience to do — are we driving action?")
+
+    cuervo_ctas = {}
+    for plat in ["Instagram", "TikTok"]:
+        plat_ctas = results["captions"].get(CUERVO, {}).get(plat, {}).get("cta_distribution", {})
+        for cta, count in plat_ctas.items():
+            cuervo_ctas[cta] = cuervo_ctas.get(cta, 0) + count
+
+    if cuervo_ctas:
+        cta_df = pd.DataFrame(list(cuervo_ctas.items()), columns=["CTA", "Count"])
+        cta_df = cta_df.sort_values("Count", ascending=True)
+        cta_df["Pct"] = (cta_df["Count"] / cta_df["Count"].sum() * 100).round(1)
+
+        fig_cta = px.bar(cta_df, x="Count", y="CTA", orientation="h",
+                         color_discrete_sequence=["#F8C090"],
+                         labels={"Count": "# Posts", "CTA": ""},
+                         template=CHART_TEMPLATE,
+                         text=cta_df["Pct"].apply(lambda x: f"{x:.0f}%"))
+        fig_cta.update_layout(font=CHART_FONT, height=max(250, len(cta_df) * 40), showlegend=False)
+        st.plotly_chart(fig_cta, width="stretch")
+
+        top_cta = cta_df.iloc[-1]
+        no_cta_pct = cta_df[cta_df["CTA"].str.lower().isin(["none", "no cta"])]["Pct"].sum()
+        if no_cta_pct > 30:
+            st.info(f"**Most used CTA: {top_cta['CTA']}** ({top_cta['Pct']:.0f}%). "
+                    f"**Watch:** {no_cta_pct:.0f}% of posts have no clear CTA — missed conversion opportunities.")
+        else:
+            st.info(f"**Most used CTA: {top_cta['CTA']}** ({top_cta['Pct']:.0f}%). "
+                    f"Good CTA coverage — keep testing engagement-driving CTAs like 'Tag a friend' or 'Share to story'.")
+    else:
+        st.info("No CTA data available for Cuervo.")
 
     st.markdown("---")
 

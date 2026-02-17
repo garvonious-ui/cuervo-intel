@@ -145,6 +145,57 @@ with tab_overview:
                      annotation_position="bottom right")
     st.plotly_chart(fig_er, width="stretch")
 
+    st.markdown("---")
+
+    # ── Top 10 Posts per Brand/Platform ──────────────────────────────
+    st.subheader("Top 10 Posts by Brand")
+    st.caption("Best-performing content per brand — study what's working")
+
+    top10_brand = st.selectbox("Select brand", order, key="top10_brand_sel")
+    top10_plat = st.radio("Platform", ["Instagram", "TikTok"], horizontal=True, key="top10_plat_sel")
+
+    top10_data = results["engagement"].get(top10_brand, {}).get(top10_plat, {}).get("top_10_posts", [])
+
+    if top10_data:
+        top10_rows = []
+        for i, p in enumerate(top10_data, 1):
+            top10_rows.append({
+                "#": i,
+                "Caption": (p.get("caption_preview", "") or "")[:60] + ("..." if len(p.get("caption_preview", "")) > 60 else ""),
+                "ER %": round(p.get("engagement_rate", 0), 2),
+                "Likes": p.get("likes", 0),
+                "Comments": p.get("comments", 0),
+                "Views": p.get("views", 0),
+                "Type": p.get("type", ""),
+                "Theme": p.get("theme", ""),
+                "Date": p.get("date", ""),
+            })
+        top10_df = pd.DataFrame(top10_rows)
+
+        def color_top10_er(val):
+            if isinstance(val, (int, float)):
+                if val >= 4:
+                    return "background-color: #C8E6C9"
+                elif val >= 2.5:
+                    return "background-color: #FDEBD6"
+                elif val > 0:
+                    return "background-color: #FFCDD2"
+            return ""
+
+        styled_top10 = top10_df.style.map(color_top10_er, subset=["ER %"]).format({
+            "Likes": "{:,.0f}", "Comments": "{:,.0f}", "Views": "{:,.0f}", "ER %": "{:.2f}"
+        })
+        st.dataframe(styled_top10, width="stretch", hide_index=True, height=400)
+
+        # So What
+        best_type = pd.DataFrame(top10_rows).groupby("Type")["ER %"].mean()
+        best_type_name = best_type.idxmax() if len(best_type) else "N/A"
+        avg_top10_er = sum(r["ER %"] for r in top10_rows) / len(top10_rows)
+        st.info(f"**{top10_brand}'s top 10** average {avg_top10_er:.2f}% ER on {top10_plat}. "
+                f"Best-performing format: **{best_type_name}**. "
+                f"{'Study their approach for Cuervo adaptation.' if top10_brand != CUERVO else 'Keep doubling down on what works.'}")
+    else:
+        st.info(f"No {top10_plat} post data available for {top10_brand}.")
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -217,6 +268,46 @@ with tab_gaps:
 
     st.markdown("---")
 
+    # ── Engagement Rate by Format (Cross-Brand) ─────────────────────
+    st.subheader("Engagement Rate by Format — Cross-Brand")
+    st.caption("Which content formats drive the highest ER for each brand")
+
+    er_by_fmt_rows = []
+    for brand in order:
+        for plat in ["Instagram", "TikTok"]:
+            eng_by_type = results["engagement"].get(brand, {}).get(plat, {}).get("engagement_by_type", {})
+            for fmt, er_val in eng_by_type.items():
+                er_by_fmt_rows.append({"Brand": brand, "Format": fmt, "ER %": round(er_val, 2)})
+
+    if er_by_fmt_rows:
+        er_fmt_df = pd.DataFrame(er_by_fmt_rows)
+        # Aggregate across platforms
+        er_fmt_agg = er_fmt_df.groupby(["Brand", "Format"])["ER %"].mean().reset_index()
+
+        fig_er_fmt = px.bar(er_fmt_agg, x="Brand", y="ER %", color="Format",
+                            barmode="group",
+                            category_orders={"Brand": order},
+                            labels={"ER %": "Avg ER %", "Brand": ""},
+                            template=CHART_TEMPLATE,
+                            color_discrete_sequence=["#F8C090", "#2ea3f2", "#7B6B63", "#D4956A", "#C9A87E"])
+        fig_er_fmt.add_hline(y=ER_TARGET, line_dash="dash", line_color="#D9534F",
+                             annotation_text="3% target", annotation_position="top right")
+        fig_er_fmt.update_layout(font=CHART_FONT, height=420,
+                                 legend=dict(orientation="h", y=1.12))
+        st.plotly_chart(fig_er_fmt, width="stretch")
+
+        # So What
+        best_fmt_overall = er_fmt_agg.groupby("Format")["ER %"].mean().sort_values(ascending=False)
+        if len(best_fmt_overall):
+            top_fmt = best_fmt_overall.index[0]
+            top_fmt_er = best_fmt_overall.iloc[0]
+            st.info(f"**{top_fmt}** drives the highest average ER across brands at {top_fmt_er:.2f}%. "
+                    f"Ensure Cuervo's content mix prioritizes this format.")
+    else:
+        st.info("No engagement-by-format data available.")
+
+    st.markdown("---")
+
     # ── Posting Frequency Comparison ───────────────────────────────────
     st.subheader("Posting Frequency (posts/week)")
 
@@ -235,6 +326,76 @@ with tab_gaps:
                       template=CHART_TEMPLATE)
     fig_freq.update_layout(font=CHART_FONT, height=380, legend=dict(orientation="h", y=1.12))
     st.plotly_chart(fig_freq, width="stretch")
+
+    st.markdown("---")
+
+    # ── Creator Collab Engagement Lift ───────────────────────────────
+    st.subheader("Creator Collab Engagement Lift")
+    st.caption("Does working with creators boost engagement? Collab vs organic ER comparison.")
+
+    collab_rows = []
+    for brand in order:
+        cr = results["creators"].get(brand, {})
+        collab_er = cr.get("avg_collab_engagement_rate", 0)
+        non_collab_er = cr.get("avg_non_collab_engagement_rate", 0)
+        lift = cr.get("collab_engagement_lift", 0)
+        collab_pct = cr.get("collab_pct", 0)
+        if collab_er > 0 or non_collab_er > 0:
+            collab_rows.append({
+                "Brand": brand,
+                "Collab ER %": round(collab_er, 2),
+                "Organic ER %": round(non_collab_er, 2),
+                "Lift": round(lift, 2),
+                "Collab %": round(collab_pct, 1),
+            })
+
+    if collab_rows:
+        collab_df = pd.DataFrame(collab_rows)
+
+        fig_collab = go.Figure()
+        fig_collab.add_trace(go.Bar(
+            x=collab_df["Brand"], y=collab_df["Collab ER %"],
+            name="Creator Collab ER", marker_color="#2ea3f2",
+            text=collab_df["Collab ER %"], textposition="outside", texttemplate="%{text:.2f}%"
+        ))
+        fig_collab.add_trace(go.Bar(
+            x=collab_df["Brand"], y=collab_df["Organic ER %"],
+            name="Organic ER", marker_color="#C9A87E",
+            text=collab_df["Organic ER %"], textposition="outside", texttemplate="%{text:.2f}%"
+        ))
+        fig_collab.update_layout(barmode="group", template=CHART_TEMPLATE, font=CHART_FONT,
+                                 height=420, legend=dict(orientation="h", y=1.12),
+                                 yaxis_title="Avg ER %")
+        st.plotly_chart(fig_collab, width="stretch")
+
+        # Lift callout cards
+        positive_lift = [r for r in collab_rows if r["Lift"] > 0]
+        if positive_lift:
+            lift_cols = st.columns(min(len(positive_lift), 4))
+            for i, row in enumerate(sorted(positive_lift, key=lambda x: x["Lift"], reverse=True)[:4]):
+                with lift_cols[i % len(lift_cols)]:
+                    color = BRAND_COLORS.get(row["Brand"], "#888")
+                    st.markdown(f"""
+                    <div style="background: white; border-radius: 8px; padding: 12px;
+                                border-top: 3px solid {color}; text-align: center;
+                                border: 1px solid #E0D8D0;">
+                        <strong>{row['Brand']}</strong><br>
+                        <span style="font-size: 1.6rem; color: #2ea3f2;">+{row['Lift']:.2f}%</span><br>
+                        <span style="font-size: 0.8rem; color: #777;">collab lift | {row['Collab %']:.0f}% collab rate</span>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+        # So What
+        cuervo_lift = next((r["Lift"] for r in collab_rows if r["Brand"] == CUERVO), 0)
+        avg_lift = sum(r["Lift"] for r in collab_rows) / len(collab_rows)
+        if cuervo_lift > 0:
+            st.info(f"**Creator collabs boost Cuervo's ER by +{cuervo_lift:.2f}pp.** "
+                    f"Category avg lift: {avg_lift:+.2f}pp. Keep investing in creator partnerships.")
+        else:
+            st.info(f"**Cuervo's collab lift: {cuervo_lift:+.2f}pp.** "
+                    f"Category avg: {avg_lift:+.2f}pp. Opportunity to improve creator selection and content style.")
+    else:
+        st.info("No creator collaboration data available.")
 
     st.markdown("---")
 

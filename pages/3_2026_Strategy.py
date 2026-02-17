@@ -227,6 +227,51 @@ with tab_scorecard:
         st.info("**Poplife strategy**: Creators & influencers are the primary content engine. "
                 "Brand-owned anchors the brand world. Events provide real-time cultural relevance.")
 
+    st.markdown("---")
+
+    # ── Best Performing Theme ──────────────────────────────────────────
+    st.subheader("Best Performing Content Theme")
+    st.caption("Which content theme drives the highest engagement for Cuervo")
+
+    theme_perf = results["themes"].get(CUERVO, {}).get("theme_performance", {})
+    best_theme_name = results["themes"].get(CUERVO, {}).get("best_performing_theme", "N/A")
+
+    if theme_perf and best_theme_name != "N/A":
+        best_theme_data = theme_perf.get(best_theme_name, {})
+        best_er = best_theme_data.get("avg_engagement_rate", 0)
+        best_count = best_theme_data.get("count", 0)
+
+        # Metric card
+        bt_col1, bt_col2, bt_col3 = st.columns(3)
+        with bt_col1:
+            st.metric("Best Theme", best_theme_name)
+        with bt_col2:
+            st.metric("Theme ER", f"{best_er:.2f}%",
+                      delta=f"{best_er - ER_TARGET:+.2f}% vs 3% target")
+        with bt_col3:
+            st.metric("Posts", f"{best_count}")
+
+        # Mini bar chart of all themes by ER
+        theme_rows = [{"Theme": t, "ER %": round(v["avg_engagement_rate"], 2), "Posts": v["count"]}
+                      for t, v in theme_perf.items() if v.get("avg_engagement_rate", 0) > 0]
+        if theme_rows:
+            theme_chart_df = pd.DataFrame(theme_rows).sort_values("ER %", ascending=True)
+            fig_bt = px.bar(theme_chart_df, x="ER %", y="Theme", orientation="h",
+                            color_discrete_sequence=[BRAND_COLORS[CUERVO]],
+                            labels={"ER %": "Avg ER %", "Theme": ""},
+                            template=CHART_TEMPLATE, text_auto=".2f",
+                            hover_data={"Posts": True})
+            fig_bt.add_vline(x=ER_TARGET, line_dash="dash", line_color="#333",
+                             annotation_text="3% target")
+            fig_bt.update_layout(font=CHART_FONT, height=max(280, len(theme_rows) * 35),
+                                 showlegend=False)
+            st.plotly_chart(fig_bt, width="stretch")
+
+        st.info(f"**Best theme: {best_theme_name}** at {best_er:.2f}% ER — lean into this for upcoming content. "
+                f"Themes above the 3% target are proven winners worth scaling.")
+    else:
+        st.info("No content theme performance data available for Cuervo.")
+
 
 # ══════════════════════════════════════════════════════════════════════
 # TAB 2 — Content Strategy Frameworks
@@ -406,6 +451,54 @@ with tab_frameworks:
             f"**Strongest area:** {dims[biggest_lead_idx]} "
             f"(Cuervo {cuervo_scores[biggest_lead_idx]:.0f}% vs leaders {leader_avg_scores[biggest_lead_idx]:.0f}%).")
 
+    st.markdown("---")
+
+    # ── Visual Style Distribution ────────────────────────────────────
+    st.subheader("Visual Style Distribution")
+    st.caption("Cuervo's content aesthetic — Gen Z gravitates toward lo-fi/authentic over polished studio content")
+
+    visual_styles = results["themes"].get(CUERVO, {}).get("visual_style_distribution", {})
+
+    if visual_styles:
+        vs_df = pd.DataFrame(list(visual_styles.items()), columns=["Style", "Count"])
+        vs_df["Pct"] = (vs_df["Count"] / vs_df["Count"].sum() * 100).round(1)
+
+        col_vs1, col_vs2 = st.columns(2)
+        with col_vs1:
+            st.markdown("**Visual Style Mix**")
+            fig_vs = px.pie(vs_df, values="Count", names="Style",
+                            color_discrete_sequence=["#F8C090", "#2ea3f2", "#7B6B63", "#D4956A", "#C9A87E", "#333333"],
+                            template=CHART_TEMPLATE, hole=0.4)
+            fig_vs.update_layout(font=CHART_FONT, height=380,
+                                 legend=dict(orientation="h", y=-0.15))
+            st.plotly_chart(fig_vs, width="stretch")
+
+        with col_vs2:
+            st.markdown("**Style Breakdown**")
+            ugc_styles = ["Raw / UGC-style", "Lo-fi / Authentic"]
+            ugc_pct = vs_df[vs_df["Style"].isin(ugc_styles)]["Pct"].sum()
+            polished_styles = ["Studio / Polished", "High Production"]
+            polished_pct = vs_df[vs_df["Style"].isin(polished_styles)]["Pct"].sum()
+
+            st.metric("Lo-fi / UGC %", f"{ugc_pct:.0f}%",
+                      help="Raw, authentic, UGC-style content — preferred by Gen Z")
+            st.metric("Studio / Polished %", f"{polished_pct:.0f}%",
+                      help="High-production studio content")
+            st.markdown("")
+
+            top_style = vs_df.iloc[0]
+            if ugc_pct < 40:
+                st.warning(f"**Lo-fi content at {ugc_pct:.0f}%** — Gen Z data suggests 40%+ UGC/authentic content. "
+                           f"Consider shifting more content to raw, native-feeling formats.")
+            else:
+                st.success(f"**Lo-fi content at {ugc_pct:.0f}%** — strong alignment with Gen Z's preference for authentic content.")
+
+        st.info(f"**Top visual style: {top_style['Style']}** at {top_style['Pct']:.0f}%. "
+                f"Gen Z audiences engage 2-3x more with lo-fi/UGC content vs polished ads. "
+                f"{'Room to grow in authentic content.' if ugc_pct < 40 else 'Good mix — maintain the balance.'}")
+    else:
+        st.info("No visual style data available for Cuervo.")
+
 
 # ══════════════════════════════════════════════════════════════════════
 # TAB 3 — Action Plan
@@ -546,8 +639,67 @@ with tab_action:
 
     st.markdown("---")
 
-    # ── Qualitative Strategic Intel ────────────────────────────────────
+    # ── Autostrat Strategic Actions ────────────────────────────────────
     autostrat = st.session_state.get("autostrat", {})
+    _has_autostrat_actions = has_autostrat_data(autostrat)
+
+    if _has_autostrat_actions:
+        all_strat_actions = get_all_strategic_actions(autostrat)
+        if all_strat_actions:
+            st.subheader("Autostrat Intelligence: Strategic Actions")
+            st.caption("Aggregated findings, opportunities, and actions from all autostrat hashtag/keyword reports")
+
+            # Aggregate across all reports
+            all_findings = []
+            all_opps = []
+            all_gaps = []
+            all_actions = []
+            for entry in all_strat_actions:
+                source = f"{entry['source_label']} — {entry['source_identifier'].replace('_', ' ').title()}"
+                for f in entry.get("key_findings", []):
+                    all_findings.append({"source": source, "text": f})
+                for o in entry.get("opportunities", []):
+                    all_opps.append({"source": source, "text": o})
+                for g in entry.get("gaps_risks_unmet_needs", []):
+                    all_gaps.append({"source": source, "text": g})
+                for a in entry.get("strategic_actions", []):
+                    all_actions.append({"source": source, "text": a})
+
+            col_sa1, col_sa2 = st.columns(2)
+
+            with col_sa1:
+                if all_findings:
+                    with st.expander(f"Key Findings ({len(all_findings)})", expanded=True):
+                        for item in all_findings[:12]:
+                            st.markdown(f"- {item['text']}")
+                            st.caption(f"_Source: {item['source']}_")
+
+                if all_opps:
+                    with st.expander(f"Opportunities ({len(all_opps)})"):
+                        for item in all_opps[:12]:
+                            st.markdown(f"- {item['text']}")
+                            st.caption(f"_Source: {item['source']}_")
+
+            with col_sa2:
+                if all_gaps:
+                    with st.expander(f"Gaps, Risks & Unmet Needs ({len(all_gaps)})", expanded=True):
+                        for item in all_gaps[:12]:
+                            st.markdown(f"- {item['text']}")
+                            st.caption(f"_Source: {item['source']}_")
+
+                if all_actions:
+                    with st.expander(f"Strategic Actions ({len(all_actions)})"):
+                        for item in all_actions[:12]:
+                            st.markdown(f"- {item['text']}")
+                            st.caption(f"_Source: {item['source']}_")
+
+            st.info(f"**{len(all_findings)} findings, {len(all_opps)} opportunities, "
+                    f"{len(all_gaps)} gaps/risks, {len(all_actions)} strategic actions** "
+                    f"aggregated from {len(all_strat_actions)} autostrat reports.")
+
+    st.markdown("---")
+
+    # ── Qualitative Strategic Intel ────────────────────────────────────
     _has_autostrat = has_autostrat_data(autostrat)
 
     if _has_autostrat:
