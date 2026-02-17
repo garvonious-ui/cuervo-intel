@@ -39,9 +39,12 @@ def load_demo():
 
 
 def _sprout_fingerprint(sprout_dir: str) -> str:
-    """Return a hash of CSV filenames + sizes so cache busts when files change."""
+    """Return a hash of CSV filenames + sizes + code version so cache busts
+    when files change OR analysis logic is updated."""
     import hashlib
-    entries = []
+    # Bump this version whenever sprout_import.py or analysis.py logic changes
+    CODE_VERSION = "v2_er_per_impression"
+    entries = [CODE_VERSION]
     if os.path.isdir(sprout_dir):
         for f in sorted(os.listdir(sprout_dir)):
             if f.lower().endswith(".csv"):
