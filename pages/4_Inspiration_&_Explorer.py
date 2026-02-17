@@ -119,24 +119,43 @@ with tab_inspo:
 
             # ── "What Cuervo Can Steal" ────────────────────────────────
             render_section_label("What Cuervo Can Steal")
-            st.caption(f"Specific tactics from {display_name} that Cuervo could adapt")
+            st.caption(f"Strategic patterns from {display_name} translated to Cuervo's tequila world")
 
             steal_points = []
+
+            # Translate what_hits into a Cuervo-relevant content principle
             if cs.get("what_hits"):
-                steal_points.append(f"**Content approach:** {cs['what_hits'][:200]}")
+                hits_text = cs["what_hits"].replace("\n", " ").strip()
+                steal_points.append(
+                    f"**Content principle (from {display_name}):** Their top content uses "
+                    f"*{hits_text[:150]}{'...' if len(hits_text) > 150 else ''}* — "
+                    f"**Cuervo adaptation:** Apply the same energy to new product drops "
+                    f"(Playamar, seasonal margarita kits), cocktail reveals, and cultural moments."
+                )
+
+            # Translate common themes into actionable Cuervo playbook items
             if cs.get("common_themes"):
-                steal_points.append(f"**Theme playbook:** Adapt their use of {', '.join(cs['common_themes'][:3])} to tequila culture")
+                clean_themes = [t.replace("\n", " ").strip() for t in cs["common_themes"][:2]]
+                for theme in clean_themes:
+                    # Extract the strategic principle, not the literal content
+                    steal_points.append(
+                        f"**Theme to adapt:** *\"{theme[:120]}{'...' if len(theme) > 120 else ''}\"* → "
+                        f"Cuervo can mirror this with tequila heritage storytelling, "
+                        f"cocktail culture moments, and community-driven content."
+                    )
 
             ea = report_r.get("engagement_analysis", {})
             if ea.get("summary"):
-                steal_points.append(f"**Engagement strategy:** {ea['summary'][:200]}")
+                ea_text = ea["summary"].replace("\n", " ").strip()
+                steal_points.append(f"**Engagement tactic:** {ea_text[:200]}")
 
             pa = report_r.get("posting_analysis", {})
             if pa.get("summary"):
-                steal_points.append(f"**Posting rhythm:** {pa['summary'][:200]}")
+                pa_text = pa["summary"].replace("\n", " ").strip()
+                steal_points.append(f"**Posting rhythm:** {pa_text[:200]}")
 
             if snapshot.get("avg_engagement_rate", 0) > 3:
-                steal_points.append(f"**ER benchmark:** {display_name} achieves {snapshot['avg_engagement_rate']}% ER — study their format mix")
+                steal_points.append(f"**ER benchmark:** {display_name} achieves {snapshot['avg_engagement_rate']}% ER — study their format mix for replicable patterns")
 
             if steal_points:
                 for point in steal_points:
