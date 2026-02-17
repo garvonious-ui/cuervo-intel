@@ -165,6 +165,7 @@ def generate_profile_template(output_dir: str) -> str:
         "followers",
         "following",
         "total_posts",
+        "aggregate_er",
         "bio_text",
         "bio_link",
         "is_verified",

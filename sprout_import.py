@@ -100,6 +100,10 @@ COLUMN_ALIASES = {
                      "engagement"],
     "engagement_rate": ["engagement rate (per impression)", "engagement rate",
                          "engagement rate %"],
+    "engagements_per_post": ["public engagements per post", "engagements per post",
+                              "avg engagements per post"],
+    "published_posts": ["published posts", "published posts & reels",
+                         "total published posts"],
     "followers": ["followers", "audience", "follower count", "total followers",
                    "followers at time of post"],
 }
@@ -540,6 +544,14 @@ def import_sprout_profiles(csv_path: str) -> list[dict]:
     if "tiktok" in brand_col_name.lower():
         default_platform = "TikTok"
 
+    def safe_float(val):
+        if val is None or str(val).strip() in ("", "nan", "None"):
+            return 0.0
+        try:
+            return float(str(val).replace(",", "").replace("%", ""))
+        except (ValueError, TypeError):
+            return 0.0
+
     # Collect all rows, then pick the latest date per brand+platform
     all_rows = []
     for _, row in df.iterrows():
@@ -554,8 +566,8 @@ def import_sprout_profiles(csv_path: str) -> list[dict]:
             continue
 
         followers = safe_int(row.get(col_map.get("followers", ""), 0))
-        if followers == 0:
-            continue
+        engagements = safe_float(row.get(col_map.get("engagements", ""), 0))
+        published = safe_float(row.get(col_map.get("published_posts", ""), 0))
 
         raw_date = str(row.get(col_map.get("post_date", ""), ""))
         try:
@@ -566,14 +578,36 @@ def import_sprout_profiles(csv_path: str) -> list[dict]:
         all_rows.append({
             "brand": brand, "platform": platform, "handle": raw_brand,
             "followers": followers, "date": dt,
+            "engagements": engagements, "published_posts": published,
         })
 
     if not all_rows:
         return []
 
-    # Pick the latest date per (brand, platform) to get most recent follower count
     tmp_df = pd.DataFrame(all_rows)
-    latest = tmp_df.sort_values("date").drop_duplicates(
+
+    # Compute aggregate ER: sum engagements / sum posts / avg followers × 100
+    # This gives a more accurate per-post ER than individual post-level calculation
+    agg = tmp_df.groupby(["brand", "platform"]).agg({
+        "engagements": "sum",
+        "published_posts": "sum",
+        "followers": "max",  # Most recent non-zero follower count
+    }).reset_index()
+    agg["aggregate_er"] = 0.0
+    mask = (agg["published_posts"] > 0) & (agg["followers"] > 0)
+    agg.loc[mask, "aggregate_er"] = (
+        (agg.loc[mask, "engagements"] / agg.loc[mask, "published_posts"])
+        / agg.loc[mask, "followers"] * 100
+    ).round(4)
+    agg_er_map = {(r["brand"], r["platform"]): r["aggregate_er"]
+                  for _, r in agg.iterrows()}
+
+    # Pick the latest date per (brand, platform) to get most recent follower count
+    # Only keep rows where followers > 0
+    with_followers = tmp_df[tmp_df["followers"] > 0]
+    if with_followers.empty:
+        return []
+    latest = with_followers.sort_values("date").drop_duplicates(
         subset=["brand", "platform"], keep="last")
 
     rows = []
@@ -585,6 +619,7 @@ def import_sprout_profiles(csv_path: str) -> list[dict]:
             "followers": r["followers"],
             "following": 0,
             "total_posts": 0,
+            "aggregate_er": agg_er_map.get((r["brand"], r["platform"]), 0.0),
             "bio_text": "",
             "bio_link": "",
             "is_verified": "Yes",
@@ -653,6 +688,43 @@ def import_sprout_directory(sprout_dir: str, output_dir: str) -> tuple[list[str]
         posts_path = os.path.join(output_dir, "posts_data.csv")
         pd.DataFrame(all_posts).to_csv(posts_path, index=False)
         files.append(posts_path)
+
+    # Fallback follower counts for brands missing from Sprout aggregate data.
+    # These are manually sourced Instagram follower counts (Feb 2026).
+    _FALLBACK_FOLLOWERS = {
+        "1800 Tequila": 108_000,
+        "Don Julio": 460_000,
+        "El Jimador": 43_400,
+        "Hornitos": 36_100,
+        "Lunazul": 12_200,
+        "Milagro": 23_700,
+    }
+
+    # Fill in missing brand+platform combos with fallback followers
+    existing_keys = {(p["brand"], p["platform"]) for p in all_profiles}
+    # Also add from post data — any brand with posts but no profile
+    post_brands = {(p["brand"], p["platform"]) for p in all_posts}
+    for brand, platform in post_brands:
+        if (brand, platform) not in existing_keys and brand in _FALLBACK_FOLLOWERS:
+            # Compute aggregate ER from post data for this brand
+            brand_posts = [p for p in all_posts
+                           if p["brand"] == brand and p["platform"] == platform]
+            total_eng = sum(p["likes"] + p["comments"] + p["shares"] + p["saves"]
+                            for p in brand_posts)
+            num_posts = len(brand_posts)
+            fb_followers = _FALLBACK_FOLLOWERS[brand]
+            agg_er = ((total_eng / num_posts) / fb_followers * 100
+                      if num_posts > 0 and fb_followers > 0 else 0.0)
+            all_profiles.append({
+                "brand": brand, "platform": platform,
+                "handle": "", "followers": fb_followers,
+                "following": 0, "total_posts": num_posts,
+                "aggregate_er": round(agg_er, 4),
+                "bio_text": "", "bio_link": "", "is_verified": "Yes",
+                "profile_category": "Alcohol Brand",
+                "date_collected": datetime.now().strftime("%Y-%m-%d"),
+                "notes": "Fallback followers — not in Sprout aggregate data",
+            })
 
     # Write brand_profiles.csv (deduplicate — keep highest follower count per brand+platform)
     if all_profiles:

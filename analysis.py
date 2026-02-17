@@ -84,6 +84,12 @@ def load_profiles(filepath: str) -> list[dict]:
         for row in reader:
             for field in ["followers", "following", "total_posts"]:
                 row[field] = _parse_int(row.get(field, ""))
+            # Parse aggregate ER (float, computed from competitor performance CSVs)
+            agg_er = row.get("aggregate_er", "")
+            try:
+                row["aggregate_er"] = float(agg_er) if agg_er else 0.0
+            except (ValueError, TypeError):
+                row["aggregate_er"] = 0.0
             profiles.append(row)
     return profiles
 
@@ -138,13 +144,15 @@ def extract_hashtags(text: str) -> list[str]:
 # ─── ANALYSIS FUNCTIONS ───────────────────────────────────────────────
 
 
-def calc_engagement_rate(post: dict, follower_count: int) -> float:
+def calc_engagement_rate(post: dict, follower_count: int,
+                         estimated_er: float = 0) -> float:
     """Calculate engagement rate, preferring Sprout's pre-calculated ER per
-    impression when available.  Falls back to (total engagements / followers) *
-    100 for competitor posts or demo data where impressions aren't available.
-    Returns float('nan') when neither source is usable so these posts are
+    impression when available.  Falls back to an estimated ER per impression
+    (derived from aggregate data × scaling factor) for competitor posts.
+    Last resort: (total engagements / followers) * 100 for demo data.
+    Returns float('nan') when no source is usable so these posts are
     excluded from average calculations rather than dragging them to 0."""
-    # Prefer Sprout's ER per impression (already a percentage)
+    # 1. Prefer Sprout's ER per impression (already a percentage)
     manual = post.get("engagement_rate_manual", "")
     if manual != "" and manual is not None:
         try:
@@ -153,7 +161,10 @@ def calc_engagement_rate(post: dict, follower_count: int) -> float:
                 return val
         except (ValueError, TypeError):
             pass
-    # Fallback: ER per follower
+    # 2. Use estimated ER from aggregate data (competitor posts)
+    if estimated_er > 0:
+        return estimated_er
+    # 3. Fallback: ER per follower (demo data)
     if follower_count == 0:
         return float('nan')
     return (post["total_engagement"] / follower_count) * 100
@@ -210,11 +221,35 @@ def analyze_posting_frequency(posts: list[dict]) -> dict[str, Any]:
 
 def analyze_engagement(posts: list[dict], profiles: list[dict]) -> dict[str, Any]:
     """Analyze engagement rates by brand, platform, and content type."""
-    # Build follower lookup
+    # Build follower lookup and aggregate ER lookup
     follower_map = {}
+    aggregate_er_map = {}
     for p in profiles:
         key = (p["brand"], p["platform"])
         follower_map[key] = p["followers"]
+        agg_er = p.get("aggregate_er", 0)
+        if agg_er and float(agg_er) > 0:
+            aggregate_er_map[key] = float(agg_er)
+
+    # Compute a scaling factor from Cuervo's data: ER per impression / ER per follower.
+    # This lets us estimate ER per impression for competitors using their aggregate ER.
+    cuervo_sprout_ers = [p.get("engagement_rate_manual", "")
+                         for p in posts if p.get("brand") == "Jose Cuervo"]
+    cuervo_valid_ers = []
+    for v in cuervo_sprout_ers:
+        if v != "" and v is not None:
+            try:
+                fv = float(v)
+                if fv > 0:
+                    cuervo_valid_ers.append(fv)
+            except (ValueError, TypeError):
+                pass
+    cuervo_er_per_impression = (sum(cuervo_valid_ers) / len(cuervo_valid_ers)
+                                 if cuervo_valid_ers else 0)
+    cuervo_agg_er = aggregate_er_map.get(("Jose Cuervo", "Instagram"), 0)
+    # scaling_factor converts ER per follower → estimated ER per impression
+    scaling_factor = (cuervo_er_per_impression / cuervo_agg_er
+                      if cuervo_agg_er > 0 else 0)
 
     results = {}
 
@@ -226,9 +261,15 @@ def analyze_engagement(posts: list[dict], profiles: list[dict]) -> dict[str, Any
             plat_posts = [p for p in brand_posts if p["platform"] == platform]
             followers = follower_map.get((brand, platform), 0)
 
+            # For competitor posts without Sprout ER, estimate from aggregate data
+            agg_er = aggregate_er_map.get((brand, platform), 0)
+            estimated_er = (agg_er * scaling_factor) if (agg_er > 0 and scaling_factor > 0) else 0
+            # Cap estimated ER at 8% to prevent inflated values for small-follower brands
+            estimated_er = min(estimated_er, 8.0)
+
             # Calculate engagement rate for each post
             for p in plat_posts:
-                p["engagement_rate"] = calc_engagement_rate(p, followers)
+                p["engagement_rate"] = calc_engagement_rate(p, followers, estimated_er)
 
             # Overall averages (exclude NaN ER from brands with no follower data)
             if plat_posts:
