@@ -178,12 +178,13 @@ with tab_brands:
 
         st.markdown("---")
 
-        # ── How to Win Territories ──────────────────────────
+        # ── How to Win Territories (Cuervo only) ─────────────
         render_section_label("How to Win Territories")
         for label, rt, ident, report in active_brand_reports:
+            if ident not in CUERVO_HASHTAG_IDS:
+                continue
             plat = platform_label(rt)
-            is_cuervo = ident == "josecuervo"
-            with st.expander(f"{label} ({plat}) -- How to Win", expanded=is_cuervo):
+            with st.expander(f"{label} ({plat}) — How to Win", expanded=True):
                 htw = report.get("how_to_win", {})
                 if htw.get("summary"):
                     st.caption(htw["summary"])
