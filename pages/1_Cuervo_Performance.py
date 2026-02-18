@@ -14,7 +14,7 @@ import streamlit as st
 
 from config import (
     BRAND_COLORS, CHART_TEMPLATE, CHART_FONT, BRAND_ORDER, CUSTOM_CSS,
-    POPLIFE_CADENCE_TARGETS,
+    POPLIFE_CADENCE_TARGETS, SOCIAL_BRIEF_TARGETS,
 )
 from config import CUERVO_HASHTAG_IDS, BRAND_HASHTAGS, CATEGORY_HASHTAGS, POPLIFE_BLUE
 from autostrat_loader import (
@@ -68,10 +68,10 @@ with tab_kpi:
     ig_followers = eng.get("Instagram", {}).get("followers", 0)
     tt_followers = eng.get("TikTok", {}).get("followers", 0)
 
-    # Avg Reel Views
+    # Avg Engagements per Reel
     cuervo_reels = cuervo_df[cuervo_df["post_type"] == "Reel"]
-    avg_reel_views = cuervo_reels["views"].mean() if len(cuervo_reels) else 0
-    avg_reel_views = 0 if pd.isna(avg_reel_views) else avg_reel_views
+    avg_eng_per_reel = cuervo_reels["total_engagement"].mean() if len(cuervo_reels) else 0
+    avg_eng_per_reel = 0 if pd.isna(avg_eng_per_reel) else avg_eng_per_reel
 
     # Reel ratio (IG only)
     reel_ratio = len(cuervo_ig[cuervo_ig["post_type"] == "Reel"]) / max(len(cuervo_ig), 1) * 100
@@ -81,25 +81,26 @@ with tab_kpi:
     ig_ppw = freq.get("Instagram", {}).get("posts_per_week", 0)
     tt_ppw = freq.get("TikTok", {}).get("posts_per_week", 0)
 
-    # Brief targets
-    ER_TARGET = 3.0
-    REEL_VIEW_TARGET = 10000
-    REEL_RATIO_TARGET = 50
-    IG_PPW_TARGET = (4, 5)
-    TT_PPW_TARGET = (3, 4)
+    # Brief targets (centralized in config.py)
+    _t = SOCIAL_BRIEF_TARGETS
+    ER_TARGET = _t["er"]
+    REEL_RATIO_TARGET = _t["reel_ratio"]
+    ENG_PER_REEL_TARGET = _t["engagements_per_reel"]
+    IG_PPW_TARGET = _t["ig_posts_per_week"]
+    TT_PPW_TARGET = _t["tt_posts_per_week"]
 
     k1, k2, k3, k4, k5 = st.columns(5)
     with k1:
         st.metric("Avg ER", f"{cuervo_er:.2f}%",
-                  delta=f"{cuervo_er - ER_TARGET:+.2f}% vs 3% target")
+                  delta=f"{cuervo_er - ER_TARGET:+.2f}% vs {ER_TARGET}% target")
     with k2:
         st.metric("IG Followers", f"{ig_followers:,}")
     with k3:
-        st.metric("Avg Reel Views", f"{avg_reel_views:,.0f}",
-                  delta=f"{avg_reel_views - REEL_VIEW_TARGET:+,.0f} vs 10K target")
+        st.metric("Avg Eng/Reel", f"{avg_eng_per_reel:,.0f}",
+                  delta=f"{avg_eng_per_reel - ENG_PER_REEL_TARGET:+,.0f} vs {ENG_PER_REEL_TARGET} target")
     with k4:
         st.metric("Reel Ratio (IG)", f"{reel_ratio:.0f}%",
-                  delta=f"{reel_ratio - REEL_RATIO_TARGET:+.0f}% vs 50% target")
+                  delta=f"{reel_ratio - REEL_RATIO_TARGET:+.0f}% vs {REEL_RATIO_TARGET}% target")
     with k5:
         st.metric("IG Posts/Wk", f"{ig_ppw:.1f}",
                   delta=f"Target: {IG_PPW_TARGET[0]}-{IG_PPW_TARGET[1]}/wk",
@@ -119,19 +120,19 @@ with tab_kpi:
     hits = []
     misses = []
     if cuervo_er >= ER_TARGET:
-        hits.append(f"ER at {cuervo_er:.2f}% meets the 3% brief target")
+        hits.append(f"ER at {cuervo_er:.2f}% meets the {ER_TARGET}% brief target")
     else:
-        misses.append(f"ER at {cuervo_er:.2f}% is {ER_TARGET - cuervo_er:.2f}pp below the 3% target")
+        misses.append(f"ER at {cuervo_er:.2f}% is {ER_TARGET - cuervo_er:.2f}pp below the {ER_TARGET}% target")
 
     if reel_ratio >= REEL_RATIO_TARGET:
-        hits.append(f"Reel ratio at {reel_ratio:.0f}% meets the 50% target")
+        hits.append(f"Reel ratio at {reel_ratio:.0f}% meets the {REEL_RATIO_TARGET}% target")
     else:
-        misses.append(f"Reel ratio at {reel_ratio:.0f}% — need {REEL_RATIO_TARGET - reel_ratio:.0f}pp more to hit 50%")
+        misses.append(f"Reel ratio at {reel_ratio:.0f}% — need {REEL_RATIO_TARGET - reel_ratio:.0f}pp more to hit {REEL_RATIO_TARGET}%")
 
-    if avg_reel_views >= REEL_VIEW_TARGET:
-        hits.append(f"Avg Reel views ({avg_reel_views:,.0f}) above 10K benchmark")
+    if avg_eng_per_reel >= ENG_PER_REEL_TARGET:
+        hits.append(f"Avg engagements/Reel ({avg_eng_per_reel:,.0f}) above {ENG_PER_REEL_TARGET} benchmark")
     else:
-        misses.append(f"Avg Reel views ({avg_reel_views:,.0f}) below 10K benchmark")
+        misses.append(f"Avg engagements/Reel ({avg_eng_per_reel:,.0f}) below {ENG_PER_REEL_TARGET} benchmark")
 
     if IG_PPW_TARGET[0] <= ig_ppw <= IG_PPW_TARGET[1]:
         hits.append(f"IG posting cadence ({ig_ppw:.1f}/wk) on target")
@@ -307,9 +308,9 @@ with tab_content:
                              color_discrete_sequence=[BRAND_COLORS[CUERVO]],
                              labels={"avg_er": "Avg ER %", "post_type": ""},
                              template=CHART_TEMPLATE, text_auto=".2f")
-            # Add 3% target line
+            # Add ER target line
             fig_fer.add_hline(y=ER_TARGET, line_dash="dash", line_color="#333",
-                              annotation_text="3% Brief target", annotation_position="top right")
+                              annotation_text=f"{ER_TARGET}% Brief target", annotation_position="top right")
             fig_fer.update_layout(font=CHART_FONT, height=350, showlegend=False)
             st.plotly_chart(fig_fer, width="stretch")
 
@@ -324,7 +325,7 @@ with tab_content:
         fk1, fk2, fk3 = st.columns(3)
         with fk1:
             st.metric("Reel %", f"{reel_pct:.0f}%",
-                      delta=f"{reel_pct - 50:+.0f}% vs 50% target")
+                      delta=f"{reel_pct - REEL_RATIO_TARGET:+.0f}% vs {REEL_RATIO_TARGET}% target")
         with fk2:
             st.metric("Carousel %", f"{carousel_pct:.0f}%",
                       help="Carousels drive saves — aim for 20-25%")
@@ -333,10 +334,10 @@ with tab_content:
 
         # So What
         if reel_pct < 50:
-            st.info(f"**Format gap:** Reels at {reel_pct:.0f}% — the Brief targets 50%+. "
+            st.info(f"**Format gap:** Reels at {reel_pct:.0f}% — the Brief targets {REEL_RATIO_TARGET}%+. "
                     f"{best_fmt} is the highest-performing format at {best_val:.2f}% ER.")
         else:
-            st.info(f"**On track:** Reel ratio at {reel_pct:.0f}% exceeds the 50% target. "
+            st.info(f"**On track:** Reel ratio at {reel_pct:.0f}% exceeds the {REEL_RATIO_TARGET}% target. "
                     f"{best_fmt} drives the best ER at {best_val:.2f}%.")
     else:
         st.info("No Cuervo Instagram posts in the dataset.")
@@ -360,7 +361,7 @@ with tab_content:
                            template=CHART_TEMPLATE, text_auto=".2f",
                            hover_data={"count": True})
         fig_theme.add_hline(y=ER_TARGET, line_dash="dash", line_color="#333",
-                            annotation_text="3% target", annotation_position="top right")
+                            annotation_text=f"{ER_TARGET}% target", annotation_position="top right")
         fig_theme.update_layout(font=CHART_FONT, height=400, showlegend=False,
                                 xaxis_tickangle=-35)
         st.plotly_chart(fig_theme, width="stretch")
@@ -370,7 +371,7 @@ with tab_content:
         bottom_theme = theme_er.iloc[-1] if len(theme_er) > 1 else top_theme
         themes_above_target = theme_er[theme_er["avg_er"] >= ER_TARGET]
         st.info(f"**Top theme:** {top_theme['content_theme']} at {top_theme['avg_er']:.2f}% ER ({top_theme['count']} posts). "
-                f"{len(themes_above_target)} of {len(theme_er)} themes meet the 3% target. "
+                f"{len(themes_above_target)} of {len(theme_er)} themes meet the {ER_TARGET}% target. "
                 f"**Lowest:** {bottom_theme['content_theme']} at {bottom_theme['avg_er']:.2f}%.")
 
     st.markdown("---")

@@ -118,6 +118,22 @@ POPLIFE_CADENCE_TARGETS = {
     "TikTok": {"low": 12, "high": 16},     # 4-5x/week
 }
 
+# ─── SOCIAL BRIEF KPI TARGETS (2026) ─────────────────────────────────
+# Centralized KPI targets for all scorecard comparisons across the dashboard.
+# Updated from original brief based on actual performance data (Feb 2026).
+# Note: POPLIFE_CADENCE_TARGETS above are monthly asset targets from the Playbook;
+# the weekly posting targets below are Social Brief KPIs (may differ).
+
+SOCIAL_BRIEF_TARGETS = {
+    "er": 1.8,                          # Engagement Rate % target
+    "reel_ratio": 50,                   # Reel Ratio % on Instagram
+    "engagements_per_reel": 100,        # Avg engagements per Reel (replaced Avg Reel Views 10K)
+    "ig_posts_per_week": (4, 5),        # IG posts/week range
+    "tt_posts_per_week": (2, 3),        # TT posts/week range (was 3-4)
+    "save_rate": 3.0,                   # Save Rate % of total engagement (future KPI)
+    "share_rate": 7.0,                  # Share Rate % of total engagement (future KPI)
+}
+
 CHART_TEMPLATE = "plotly_white"
 CHART_FONT = dict(family="Barlow Condensed, Helvetica, Arial, sans-serif")
 
