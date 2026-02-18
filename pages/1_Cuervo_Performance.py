@@ -105,6 +105,16 @@ with tab_kpi:
                   delta=f"Target: {IG_PPW_TARGET[0]}-{IG_PPW_TARGET[1]}/wk",
                   delta_color="off")
 
+    # ── Benchmark Context ─────────────────────────────────────────────
+    benchmark = results.get("benchmark", {})
+    cuervo_bench = benchmark.get("Jose Cuervo", {})
+    if cuervo_bench:
+        st.caption(
+            f"Benchmark ER by Views: **{cuervo_bench.get('er_by_views', 0):.2f}%** | "
+            f"ER by Reach: **{cuervo_bench.get('er_by_reach', 0):.2f}%** | "
+            f"Period: {cuervo_bench.get('date_range', 'N/A')}"
+        )
+
     # ── "So What" Narrative ────────────────────────────────────────────
     hits = []
     misses = []

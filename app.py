@@ -43,7 +43,7 @@ def _sprout_fingerprint(sprout_dir: str) -> str:
     when files change OR analysis logic is updated."""
     import hashlib
     # Bump this version whenever sprout_import.py or analysis.py logic changes
-    CODE_VERSION = "v3_competitor_er_estimated"
+    CODE_VERSION = "v4_benchmark_er_by_views"
     entries = [CODE_VERSION]
     if os.path.isdir(sprout_dir):
         for f in sorted(os.listdir(sprout_dir)):
@@ -55,11 +55,20 @@ def _sprout_fingerprint(sprout_dir: str) -> str:
 
 @st.cache_data(show_spinner="Importing Sprout Social data...")
 def load_sprout(sprout_dir: str, fingerprint: str = ""):
-    from sprout_import import import_sprout_directory
+    from sprout_import import import_sprout_directory, import_benchmark_csv
     from analysis import run_full_analysis
     os.makedirs(SPROUT_OUTPUT_DIR, exist_ok=True)
+
+    # Load benchmark CSV if present (e.g. Benchmark_CSV_ig_*.csv)
+    benchmark_data = {}
+    if os.path.isdir(sprout_dir):
+        for f in sorted(os.listdir(sprout_dir)):
+            if f.lower().startswith("benchmark_csv") and f.lower().endswith(".csv"):
+                benchmark_data = import_benchmark_csv(os.path.join(sprout_dir, f))
+                break  # Only one benchmark file expected
+
     files, stats = import_sprout_directory(sprout_dir, SPROUT_OUTPUT_DIR)
-    results = run_full_analysis(SPROUT_OUTPUT_DIR)
+    results = run_full_analysis(SPROUT_OUTPUT_DIR, benchmark=benchmark_data)
     return results, SPROUT_OUTPUT_DIR, stats
 
 
@@ -117,6 +126,10 @@ elif data_mode == "Sprout Social Import":
     )
     if sprout_stats["brands_found"]:
         st.sidebar.caption(f"Brands: {', '.join(sprout_stats['brands_found'])}")
+    # Show benchmark status
+    benchmark = results.get("benchmark", {})
+    if benchmark:
+        st.sidebar.caption(f"Benchmark: {len(benchmark)} brands (ER by Views)")
 else:
     data_dir = st.sidebar.text_input("Path to CSV folder")
     if not data_dir or not os.path.isdir(data_dir):

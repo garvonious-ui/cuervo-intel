@@ -94,10 +94,11 @@ Uses autostrat hashtag/keyword/news reports only — sidebar filters do NOT appl
 
 ## Engagement Rate Calculation
 - **ER per Impression** (industry standard / Sprout Social): `engagements / impressions × 100` — used for Cuervo posts where Sprout provides it
-- **Estimated ER per Impression** (competitors): Scaling factor derived from Cuervo's known `ER per impression / ER per follower` ratio (~18.8x), applied to competitor aggregate ER per follower data. Capped at 8% to prevent inflation for small-follower brands.
-- **ER per Follower** (fallback / demo data): `total_engagement / followers × 100` — used when neither Sprout ER nor aggregate data is available
-- **3-tier priority in `calc_engagement_rate()`**: (1) Sprout ER per impression → (2) estimated ER from aggregate × scaling factor → (3) per-follower fallback
-- **Fallback follower counts** in `sprout_import.py` for 6 brands missing from Sprout aggregates: 1800 Tequila (108K), Don Julio (460K), El Jimador (43.4K), Hornitos (36.1K), Lunazul (12.2K), Milagro (23.7K)
+- **Benchmark ER by Views** (competitors): Actual measured ER from external benchmark CSV (`Benchmark_CSV_ig_*.csv` in `data/sprout/`). Covers all 13 brands. This replaced the previous ~18.8x scaling factor estimation.
+- **ER per Follower** (fallback / demo data): `total_engagement / followers × 100` — used when neither Sprout ER nor benchmark data is available
+- **3-tier priority in `calc_engagement_rate()`**: (1) Sprout ER per impression → (2) Benchmark ER by Views → (3) per-follower fallback
+- **Benchmark CSV** (`import_benchmark_csv()` in `sprout_import.py`): Parses brand-level aggregate metrics including ER by Views/Followers/Reach, follower counts, Reels count/engagement, avg hashtags per post. Auto-detected when filename starts with `benchmark_csv`. Benchmark follower counts override Sprout/fallback followers.
+- **Fallback follower counts** in `sprout_import.py` for brands missing from Sprout aggregates: 1800 Tequila (108K), Don Julio (460K), El Jimador (43.4K), Hornitos (36.1K), Lunazul (12.2K), Milagro (23.7K). Overridden by benchmark when present.
 - **Cache busting**: `_sprout_fingerprint()` in `app.py` includes `CODE_VERSION` string — bump this whenever sprout_import.py or analysis.py logic changes
 
 ## Autostrat Intelligence

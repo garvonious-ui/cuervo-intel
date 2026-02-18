@@ -631,6 +631,87 @@ def import_sprout_profiles(csv_path: str) -> list[dict]:
     return rows
 
 
+def import_benchmark_csv(csv_path: str) -> dict:
+    """
+    Import a benchmark CSV (e.g. from Metricool / Rival IQ) with brand-level
+    aggregate metrics including ER by Views, ER by Followers, follower counts,
+    Reels metrics, and hashtag usage.
+
+    Returns dict keyed by canonical brand name:
+    {
+        "Jose Cuervo": {
+            "handle": "josecuervotequila",
+            "followers": 111871,
+            "total_engagement": 909,
+            "posts": 7,
+            "er_by_followers": 0.116,
+            "er_by_views": 1.287,       # PRIMARY METRIC (percentage)
+            "er_by_reach": 1.102,
+            "avg_engagement": 129.86,
+            "avg_hashtags_per_post": 0.0,
+            "reels_count": 1,
+            "reels_engagement": 52,
+            "date_range": "Jan 20 – Feb 17",
+        },
+        ...
+    }
+    """
+    import pandas as pd
+
+    df = pd.read_csv(csv_path, encoding="utf-8-sig")
+
+    # Parse date range from filename: Benchmark_CSV_ig_..._20-Jan_to_17-Feb.csv
+    date_range = ""
+    fname = os.path.basename(csv_path)
+    m = re.search(r"(\d{1,2})-(\w+)_to_(\d{1,2})-(\w+)", fname)
+    if m:
+        date_range = f"{m.group(2)} {m.group(1)} – {m.group(4)} {m.group(3)}"
+
+    result = {}
+    for _, row in df.iterrows():
+        handle = str(row.get("Page", "")).strip()
+        if not handle or handle in ("nan", "None"):
+            continue
+
+        brand = _resolve_brand(handle)
+        if brand == handle:
+            # Could not resolve — skip unknown handles
+            continue
+
+        def safe_float(val):
+            try:
+                return float(val) if val is not None and str(val).strip() not in ("", "nan", "None") else 0.0
+            except (ValueError, TypeError):
+                return 0.0
+
+        def safe_int(val):
+            try:
+                return int(float(val)) if val is not None and str(val).strip() not in ("", "nan", "None") else 0
+            except (ValueError, TypeError):
+                return 0
+
+        # Handle duplicate "Reels Count" column — pandas suffixes as "Reels Count.1"
+        reels_col = "Reels Count"
+        reels_count = safe_int(row.get(reels_col, 0))
+
+        result[brand] = {
+            "handle": handle,
+            "followers": safe_int(row.get("Followers", 0)),
+            "total_engagement": safe_int(row.get("Engagement", 0)),
+            "posts": safe_int(row.get("Posts", 0)),
+            "er_by_followers": safe_float(row.get("Avg. Eng. Rate by Followers", 0)),
+            "er_by_views": safe_float(row.get("Avg. Eng. Rate by Views", 0)),
+            "er_by_reach": safe_float(row.get("Avg. Eng. Rate by Reach", 0)),
+            "avg_engagement": safe_float(row.get("Avg. Engagement", 0)),
+            "avg_hashtags_per_post": safe_float(row.get("Average Hashtags Per Post", 0)),
+            "reels_count": reels_count,
+            "reels_engagement": safe_int(row.get("Reels Engagement", 0)),
+            "date_range": date_range,
+        }
+
+    return result
+
+
 def import_sprout_directory(sprout_dir: str, output_dir: str) -> tuple[list[str], dict]:
     """
     Scan a directory for Sprout Social CSV exports, import them,
@@ -649,6 +730,8 @@ def import_sprout_directory(sprout_dir: str, output_dir: str) -> tuple[list[str]
     for fname in sorted(os.listdir(sprout_dir)):
         if not fname.lower().endswith(".csv"):
             continue
+        if fname.lower().startswith("benchmark_csv"):
+            continue  # Handled separately by import_benchmark_csv()
         fpath = os.path.join(sprout_dir, fname)
         try:
             sample = pd.read_csv(fpath, encoding="utf-8-sig", nrows=2)
