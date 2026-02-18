@@ -7,7 +7,29 @@ Used by all autostrat dashboard pages.
 
 from __future__ import annotations
 
+import html as _html
+
 import streamlit as st
+
+
+# ── Helpers ─────────────────────────────────────────────────────────
+
+def _safe(text) -> str:
+    """Escape HTML, collapse newlines, and guard against None."""
+    if not text:
+        return ""
+    return _html.escape(str(text)).replace("\n", " ").strip()
+
+
+def _safe_list(items) -> list[str]:
+    """Ensure a list of strings is safe for HTML injection."""
+    if not items:
+        return []
+    return [_safe(item) for item in items if item]
+
+
+# Common CSS fragment for text containers that may have long content
+_WORD_BREAK = "word-break: break-word; overflow-wrap: break-word;"
 
 
 # ── Platform Badges ──────────────────────────────────────────────────
@@ -15,6 +37,7 @@ import streamlit as st
 PLATFORM_BADGE_STYLES = {
     "instagram_hashtags": {"bg": "#D4956A", "label": "IG"},
     "instagram_profiles": {"bg": "#D4956A", "label": "IG"},
+    "instagram_keywords": {"bg": "#D4956A", "label": "IG"},
     "tiktok_hashtags": {"bg": "#2ea3f2", "label": "TT"},
     "tiktok_profiles": {"bg": "#2ea3f2", "label": "TT"},
     "tiktok_keywords": {"bg": "#2ea3f2", "label": "TT"},
@@ -51,21 +74,24 @@ NOPD_STYLES = {
 
 def render_nopd_cards(audience_profile: dict):
     """Render a 2x2 grid of Needs/Objections/Desires/Pain Points cards."""
+    if not audience_profile:
+        return
     col1, col2 = st.columns(2)
 
     with col1:
-        _render_single_nopd("needs", audience_profile.get("needs", []))
-        _render_single_nopd("desires", audience_profile.get("desires", []))
+        _render_single_nopd("needs", audience_profile.get("needs") or [])
+        _render_single_nopd("desires", audience_profile.get("desires") or [])
 
     with col2:
-        _render_single_nopd("objections", audience_profile.get("objections", []))
-        _render_single_nopd("pain_points", audience_profile.get("pain_points", []))
+        _render_single_nopd("objections", audience_profile.get("objections") or [])
+        _render_single_nopd("pain_points", audience_profile.get("pain_points") or [])
 
 
 def _render_single_nopd(key: str, items: list[str]):
     """Render a single NOPD card."""
     style = NOPD_STYLES[key]
-    items_html = "".join(f"<li>{item}</li>" for item in items) if items else "<li>No data</li>"
+    safe_items = _safe_list(items)
+    items_html = "".join(f"<li>{item}</li>" for item in safe_items) if safe_items else "<li>No data</li>"
 
     st.markdown(f"""
     <div style="background: {style['bg']}; border-left: 4px solid {style['color']};
@@ -74,7 +100,7 @@ def _render_single_nopd(key: str, items: list[str]):
                    font-weight: 700; margin: 0 0 10px 0; font-size: 1rem;
                    letter-spacing: 1px;">{style['label']}</h4>
         <ul style="margin: 0; padding-left: 20px; color: #444; font-size: 0.92rem;
-                   line-height: 1.5;">
+                   line-height: 1.5; {_WORD_BREAK}">
             {items_html}
         </ul>
     </div>
@@ -85,13 +111,19 @@ def _render_single_nopd(key: str, items: list[str]):
 
 def render_verbatim_quotes(quotes: list[str], max_quotes: int = 8):
     """Render audience verbatim quotes in blockquote style."""
+    if not quotes:
+        return
     for quote in quotes[:max_quotes]:
+        safe_quote = _safe(quote)
+        if not safe_quote:
+            continue
         st.markdown(f"""
         <blockquote style="border-left: 4px solid #F8C090; padding: 10px 16px;
                            margin: 8px 0; background: #F3EDE6;
                            border-radius: 0 8px 8px 0; font-style: italic;
-                           color: #555; font-size: 0.92rem; line-height: 1.5;">
-            "{quote}"
+                           color: #555; font-size: 0.92rem; line-height: 1.5;
+                           {_WORD_BREAK}">
+            "{safe_quote}"
         </blockquote>
         """, unsafe_allow_html=True)
 
@@ -100,6 +132,9 @@ def render_verbatim_quotes(quotes: list[str], max_quotes: int = 8):
 
 def render_territory_card(number: int, text: str):
     """Render a numbered strategic territory card."""
+    safe_text = _safe(text)
+    if not safe_text:
+        return
     st.markdown(f"""
     <div style="background: linear-gradient(135deg, #FDEBD6 0%, #FFF8F0 100%);
                 border-radius: 10px; padding: 18px 20px; margin-bottom: 12px;
@@ -110,7 +145,8 @@ def render_territory_card(number: int, text: str):
                         align-items: center; justify-content: center;
                         font-weight: 700; font-size: 0.95rem; flex-shrink: 0;">{number}</div>
             <div style="font-family: 'Barlow Condensed', sans-serif; font-size: 1.05rem;
-                        font-weight: 600; color: #333333; line-height: 1.4;">{text}</div>
+                        font-weight: 600; color: #333333; line-height: 1.4;
+                        {_WORD_BREAK}">{safe_text}</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -118,6 +154,8 @@ def render_territory_card(number: int, text: str):
 
 def render_territory_cards(territories: list[str]):
     """Render a list of numbered territory cards."""
+    if not territories:
+        return
     for i, territory in enumerate(territories, 1):
         render_territory_card(i, territory)
 
@@ -155,13 +193,19 @@ def sentiment_badge_html(sentiment: str) -> str:
 
 def render_narrative_card(title: str, body: str, accent_color: str = "#2ea3f2"):
     """Render a card with a title and narrative body text."""
+    safe_title = _safe(title)
+    safe_body = _safe(body)
+    if not safe_title and not safe_body:
+        return
     st.markdown(f"""
     <div style="background: white; border-radius: 10px; padding: 18px 20px;
                 margin-bottom: 12px; border: 1px solid #E0D8D0;
                 box-shadow: 0 2px 4px rgba(0,0,0,0.04);">
         <h4 style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
-                   color: {accent_color}; margin: 0 0 10px 0; font-size: 1rem;">{title}</h4>
-        <p style="color: #444; font-size: 0.92rem; line-height: 1.55; margin: 0;">{body}</p>
+                   color: {accent_color}; margin: 0 0 10px 0; font-size: 1rem;
+                   {_WORD_BREAK}">{safe_title}</h4>
+        <p style="color: #444; font-size: 0.92rem; line-height: 1.55; margin: 0;
+                  {_WORD_BREAK}">{safe_body}</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -170,10 +214,10 @@ def render_narrative_card(title: str, body: str, accent_color: str = "#2ea3f2"):
 
 def render_creator_archetype(archetype: dict):
     """Render a creator archetype card."""
-    name = archetype.get("archetype", "Unknown")
-    desc = archetype.get("description", "")
-    appeal = archetype.get("appeal", "")
-    examples = archetype.get("examples", [])
+    name = _safe(archetype.get("archetype") or "Unknown")
+    desc = _safe(archetype.get("description") or "")
+    appeal = _safe(archetype.get("appeal") or "")
+    examples = _safe_list(archetype.get("examples") or [])
 
     examples_html = ""
     if examples:
@@ -183,7 +227,8 @@ def render_creator_archetype(archetype: dict):
 
     appeal_html = ""
     if appeal:
-        appeal_html = (f"<div style='margin-top: 8px; font-size: 0.88rem; color: #555;'>"
+        appeal_html = (f"<div style='margin-top: 8px; font-size: 0.88rem; color: #555; "
+                       f"{_WORD_BREAK}'>"
                        f"<strong>Appeal:</strong> {appeal}</div>")
 
     st.markdown(f"""
@@ -192,7 +237,8 @@ def render_creator_archetype(archetype: dict):
                 border-top: 3px solid #F8C090;">
         <h4 style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
                    color: #333; margin: 0 0 8px 0; font-size: 1.05rem;">{name}</h4>
-        <p style="color: #444; font-size: 0.92rem; line-height: 1.5; margin: 0;">{desc}</p>
+        <p style="color: #444; font-size: 0.92rem; line-height: 1.5; margin: 0;
+                  {_WORD_BREAK}">{desc}</p>
         {appeal_html}
         {examples_html}
     </div>
@@ -224,7 +270,9 @@ def render_data_availability(autostrat: dict):
 
 def render_statistics_section(statistics: dict):
     """Render performance statistics as a compact metric grid."""
-    all_posts = statistics.get("all_posts", {})
+    if not statistics:
+        return
+    all_posts = statistics.get("all_posts") or {}
     if not any(all_posts.values()):
         return
 
@@ -246,7 +294,7 @@ def render_statistics_section(statistics: dict):
         st.markdown(f"""
         <div style="font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
                     color: #555; font-size: 0.85rem; letter-spacing: 0.5px;
-                    margin: 8px 0 4px 0;">{label}</div>
+                    margin: 8px 0 4px 0;">{_safe(label)}</div>
         """, unsafe_allow_html=True)
         c1, c2, c3, c4 = st.columns(4)
         with c1:
@@ -263,18 +311,19 @@ def render_statistics_section(statistics: dict):
 
 def render_top_post_card(post: dict, label: str, accent: str = "#2ea3f2"):
     """Render a single top/bottom post card."""
-    caption = post.get("caption", "")
+    caption = _safe(post.get("caption") or "")
     er = post.get("engagement_rate", 0)
     likes = post.get("likes", 0)
     comments = post.get("comments", 0)
-    link = post.get("link", "")
+    link = post.get("link") or ""
 
     if not caption and not likes and not link:
         return
 
     link_html = ""
     if link:
-        link_html = (f'<a href="{link}" target="_blank" style="color: #2ea3f2; '
+        safe_link = _html.escape(link)
+        link_html = (f'<a href="{safe_link}" target="_blank" style="color: #2ea3f2; '
                      f'font-size: 0.82rem; text-decoration: none;">View Post</a>')
 
     st.markdown(f"""
@@ -283,10 +332,10 @@ def render_top_post_card(post: dict, label: str, accent: str = "#2ea3f2"):
                 border-top: 3px solid {accent};">
         <div style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
                     color: {accent}; font-size: 0.82rem; letter-spacing: 1px;
-                    margin-bottom: 8px;">{label}</div>
+                    margin-bottom: 8px;">{_safe(label)}</div>
         <p style="color: #444; font-size: 0.9rem; line-height: 1.45; margin: 0 0 10px 0;
                   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
-                  overflow: hidden;">{caption}</p>
+                  overflow: hidden; {_WORD_BREAK}">{caption}</p>
         <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center;
                     font-size: 0.85rem; color: #666;">
             <span><strong>ER:</strong> {er}%</span>
@@ -300,6 +349,8 @@ def render_top_post_card(post: dict, label: str, accent: str = "#2ea3f2"):
 
 def render_top_posts_section(top_posts: dict):
     """Render all top post pairs (Most/Least) for Liked, Comments, Engaged."""
+    if not top_posts:
+        return
     pairs = [
         ("Liked", "most_liked", "least_liked"),
         ("Comments", "most_comments", "least_comments"),
@@ -307,8 +358,8 @@ def render_top_posts_section(top_posts: dict):
     ]
 
     for pair_label, most_key, least_key in pairs:
-        most = top_posts.get(most_key, {})
-        least = top_posts.get(least_key, {})
+        most = top_posts.get(most_key) or {}
+        least = top_posts.get(least_key) or {}
 
         has_most = most.get("caption") or most.get("likes") or most.get("link")
         has_least = least.get("caption") or least.get("likes") or least.get("link")
@@ -325,9 +376,9 @@ def render_top_posts_section(top_posts: dict):
 
 def render_sponsorship_card(suggestion: dict):
     """Render a future sponsorship suggestion card."""
-    cat = suggestion.get("category", "")
-    why = suggestion.get("why_it_works", "")
-    how = suggestion.get("how_to_activate", [])
+    cat = _safe(suggestion.get("category") or "")
+    why = _safe(suggestion.get("why_it_works") or "")
+    how = _safe_list(suggestion.get("how_to_activate") or [])
 
     how_html = ""
     if how:
@@ -335,7 +386,7 @@ def render_sponsorship_card(suggestion: dict):
         how_html = (f"<div style='margin-top: 8px;'>"
                     f"<strong style='font-size: 0.85rem; color: #2ea3f2;'>How to Activate:</strong>"
                     f"<ul style='margin: 4px 0 0 0; padding-left: 18px; font-size: 0.88rem; "
-                    f"color: #555;'>{items}</ul></div>")
+                    f"color: #555; {_WORD_BREAK}'>{items}</ul></div>")
 
     st.markdown(f"""
     <div style="background: white; border-radius: 10px; padding: 18px 20px;
@@ -343,7 +394,8 @@ def render_sponsorship_card(suggestion: dict):
                 border-left: 4px solid #F8C090;">
         <h4 style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
                    color: #333; margin: 0 0 8px 0; font-size: 1rem;">{cat}</h4>
-        <p style="color: #444; font-size: 0.92rem; line-height: 1.5; margin: 0;">{why}</p>
+        <p style="color: #444; font-size: 0.92rem; line-height: 1.5; margin: 0;
+                  {_WORD_BREAK}">{why}</p>
         {how_html}
     </div>
     """, unsafe_allow_html=True)
@@ -356,7 +408,7 @@ def render_section_label(text: str):
     st.markdown(f"""
     <div style="font-family: 'Barlow Condensed', sans-serif; font-size: 0.82rem;
                 font-weight: 600; color: #2ea3f2; text-transform: uppercase;
-                letter-spacing: 1.5px; margin: 20px 0 8px 0;">{text}</div>
+                letter-spacing: 1.5px; margin: 20px 0 8px 0;">{_safe(text)}</div>
     """, unsafe_allow_html=True)
 
 
@@ -364,6 +416,8 @@ def render_section_label(text: str):
 
 def render_hits_misses(what_hits: str, what_misses: str):
     """Render What Hits / What Misses in green/red containers."""
+    safe_hits = _safe(what_hits)
+    safe_misses = _safe(what_misses)
     col1, col2 = st.columns(2)
     with col1:
         st.markdown(f"""
@@ -371,7 +425,8 @@ def render_hits_misses(what_hits: str, what_misses: str):
                     border-radius: 0 8px 8px 0; padding: 14px 16px; margin-bottom: 12px;">
             <h4 style="color: #2E7D32; font-family: 'Barlow Condensed', sans-serif;
                        font-weight: 700; margin: 0 0 8px 0; font-size: 0.95rem;">WHAT HITS</h4>
-            <p style="color: #444; font-size: 0.9rem; line-height: 1.5; margin: 0;">{what_hits}</p>
+            <p style="color: #444; font-size: 0.9rem; line-height: 1.5; margin: 0;
+                      {_WORD_BREAK}">{safe_hits}</p>
         </div>
         """, unsafe_allow_html=True)
     with col2:
@@ -380,7 +435,8 @@ def render_hits_misses(what_hits: str, what_misses: str):
                     border-radius: 0 8px 8px 0; padding: 14px 16px; margin-bottom: 12px;">
             <h4 style="color: #C62828; font-family: 'Barlow Condensed', sans-serif;
                        font-weight: 700; margin: 0 0 8px 0; font-size: 0.95rem;">WHAT MISSES</h4>
-            <p style="color: #444; font-size: 0.9rem; line-height: 1.5; margin: 0;">{what_misses}</p>
+            <p style="color: #444; font-size: 0.9rem; line-height: 1.5; margin: 0;
+                      {_WORD_BREAK}">{safe_misses}</p>
         </div>
         """, unsafe_allow_html=True)
 
@@ -389,12 +445,12 @@ def render_hits_misses(what_hits: str, what_misses: str):
 
 def render_brand_mention(mention: dict):
     """Render a brand mention with sentiment badge."""
-    brand = mention.get("brand", "Unknown")
-    context = mention.get("context", "")
-    sentiment = mention.get("sentiment", "")
+    brand = _safe(mention.get("brand") or "Unknown")
+    context = _safe(mention.get("context") or "")
+    sentiment = mention.get("sentiment") or ""
     badge = sentiment_badge_html(sentiment)
-    source = mention.get("source_label", "")
-    source_id = mention.get("source_identifier", "")
+    source = _safe(mention.get("source_label") or "")
+    source_id = _safe(mention.get("source_identifier") or "")
 
     st.markdown(f"""
     <div style="background: white; border-radius: 8px; padding: 14px 18px;
@@ -405,7 +461,8 @@ def render_brand_mention(mention: dict):
                           color: #333;">{brand}</strong>
             {badge}
         </div>
-        <p style="color: #555; font-size: 0.9rem; line-height: 1.45; margin: 0;">{context}</p>
+        <p style="color: #555; font-size: 0.9rem; line-height: 1.45; margin: 0;
+                  {_WORD_BREAK}">{context}</p>
         <div style="margin-top: 6px; font-size: 0.8rem; color: #999;">
             Source: {source} — {source_id}
         </div>
