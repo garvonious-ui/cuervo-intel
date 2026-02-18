@@ -16,6 +16,7 @@ from config import (
     PRIORITY_COLORS, POPLIFE_CADENCE_TARGETS, SOCIAL_BRIEF_TARGETS,
     POPLIFE_PILLAR_MAP, POPLIFE_PILLAR_TARGETS, POPLIFE_PILLAR_COLORS,
     CONTENT_MIX_MAP, CONTENT_MIX_TARGETS, CONTENT_MIX_COLORS,
+    CUERVO_HASHTAG_IDS,
 )
 from autostrat_loader import (
     has_autostrat_data, get_all_how_to_win, get_all_audience_profiles,
@@ -652,58 +653,83 @@ with tab_action:
     _has_autostrat_actions = has_autostrat_data(autostrat)
 
     if _has_autostrat_actions:
-        all_strat_actions = get_all_strategic_actions(autostrat)
-        if all_strat_actions:
-            st.subheader("Autostrat Intelligence: Strategic Actions")
-            st.caption("Aggregated findings, opportunities, and actions from all autostrat hashtag/keyword reports")
+        # Split: Cuervo-specific reports vs competitor reports
+        cuervo_strat = get_all_strategic_actions(autostrat, identifier_filter=CUERVO_HASHTAG_IDS)
+        all_strat = get_all_strategic_actions(autostrat)
+        competitor_strat = [a for a in all_strat if a["source_identifier"] not in CUERVO_HASHTAG_IDS]
 
-            # Aggregate across all reports
-            all_findings = []
-            all_opps = []
-            all_gaps = []
-            all_actions = []
-            for entry in all_strat_actions:
-                source = f"{entry['source_label']} — {entry['source_identifier'].replace('_', ' ').title()}"
+        # Helper: aggregate entries into categorized lists
+        def _aggregate(entries):
+            findings, opps, gaps, actions = [], [], [], []
+            for entry in entries:
+                src = entry["source_identifier"].replace("_", " ").title()
                 for f in entry.get("key_findings", []):
-                    all_findings.append({"source": source, "text": f})
+                    findings.append({"source": src, "text": f})
                 for o in entry.get("opportunities", []):
-                    all_opps.append({"source": source, "text": o})
+                    opps.append({"source": src, "text": o})
                 for g in entry.get("gaps_risks_unmet_needs", []):
-                    all_gaps.append({"source": source, "text": g})
+                    gaps.append({"source": src, "text": g})
                 for a in entry.get("strategic_actions", []):
-                    all_actions.append({"source": source, "text": a})
+                    actions.append({"source": src, "text": a})
+            return findings, opps, gaps, actions
+
+        # ── Section A: Cuervo Strategic Intelligence ──────────────────────
+        if cuervo_strat:
+            st.subheader("Cuervo Strategic Intelligence")
+            st.caption("From #JoseCuervo, #Cuervo, and Cuervo keyword reports")
+
+            c_findings, c_opps, c_gaps, c_actions = _aggregate(cuervo_strat)
 
             col_sa1, col_sa2 = st.columns(2)
-
             with col_sa1:
-                if all_findings:
-                    with st.expander(f"Key Findings ({len(all_findings)})", expanded=True):
-                        for item in all_findings[:12]:
+                if c_findings:
+                    with st.expander(f"Key Findings ({len(c_findings)})", expanded=True):
+                        for item in c_findings:
                             st.markdown(f"- {item['text']}")
-                            st.caption(f"_Source: {item['source']}_")
-
-                if all_opps:
-                    with st.expander(f"Opportunities ({len(all_opps)})"):
-                        for item in all_opps[:12]:
+                if c_opps:
+                    with st.expander(f"Opportunities ({len(c_opps)})"):
+                        for item in c_opps:
                             st.markdown(f"- {item['text']}")
-                            st.caption(f"_Source: {item['source']}_")
-
             with col_sa2:
-                if all_gaps:
-                    with st.expander(f"Gaps, Risks & Unmet Needs ({len(all_gaps)})", expanded=True):
-                        for item in all_gaps[:12]:
+                if c_gaps:
+                    with st.expander(f"Gaps, Risks & Unmet Needs ({len(c_gaps)})", expanded=True):
+                        for item in c_gaps:
                             st.markdown(f"- {item['text']}")
-                            st.caption(f"_Source: {item['source']}_")
-
-                if all_actions:
-                    with st.expander(f"Strategic Actions ({len(all_actions)})"):
-                        for item in all_actions[:12]:
+                if c_actions:
+                    with st.expander(f"Strategic Actions ({len(c_actions)})"):
+                        for item in c_actions:
                             st.markdown(f"- {item['text']}")
-                            st.caption(f"_Source: {item['source']}_")
 
-            st.info(f"**{len(all_findings)} findings, {len(all_opps)} opportunities, "
-                    f"{len(all_gaps)} gaps/risks, {len(all_actions)} strategic actions** "
-                    f"aggregated from {len(all_strat_actions)} autostrat reports.")
+            total_cuervo = len(c_findings) + len(c_opps) + len(c_gaps) + len(c_actions)
+            st.info(f"**{total_cuervo} Cuervo-specific insights** from {len(cuervo_strat)} reports.")
+
+        # ── Section B: Competitive Context ────────────────────────────────
+        if competitor_strat:
+            comp_findings, comp_opps, comp_gaps, comp_actions = _aggregate(competitor_strat)
+            total_comp = len(comp_findings) + len(comp_opps) + len(comp_gaps) + len(comp_actions)
+
+            with st.expander(f"Competitive Context — {total_comp} insights from {len(competitor_strat)} competitor reports"):
+                st.caption("What competitors are doing — use this to identify gaps Cuervo can exploit")
+
+                col_cc1, col_cc2 = st.columns(2)
+                with col_cc1:
+                    if comp_findings:
+                        st.markdown("**Key Findings**")
+                        for item in comp_findings[:8]:
+                            st.markdown(f"- **{item['source']}** — {item['text']}")
+                    if comp_opps:
+                        st.markdown("**Opportunities**")
+                        for item in comp_opps[:8]:
+                            st.markdown(f"- **{item['source']}** — {item['text']}")
+                with col_cc2:
+                    if comp_gaps:
+                        st.markdown("**Gaps & Risks**")
+                        for item in comp_gaps[:8]:
+                            st.markdown(f"- **{item['source']}** — {item['text']}")
+                    if comp_actions:
+                        st.markdown("**Strategic Actions**")
+                        for item in comp_actions[:8]:
+                            st.markdown(f"- **{item['source']}** — {item['text']}")
 
     st.markdown("---")
 

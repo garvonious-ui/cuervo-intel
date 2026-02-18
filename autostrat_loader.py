@@ -252,14 +252,21 @@ def get_all_creator_archetypes(autostrat: dict) -> list[dict]:
     return archetypes
 
 
-def get_all_strategic_actions(autostrat: dict) -> list[dict]:
+def get_all_strategic_actions(autostrat: dict, identifier_filter: set = None) -> list[dict]:
     """Get strategic actions and opportunities from hashtag analysis reports.
+
+    Args:
+        autostrat: Full autostrat data dict.
+        identifier_filter: If provided, only include reports whose identifier
+            is in this set. Pass None to include all reports.
 
     Returns list of {source_identifier, key_findings, opportunities, gaps, actions}.
     """
     results = []
     for rt in CONVERSATION_TYPES:
         for identifier, report in autostrat.get(rt, {}).items():
+            if identifier_filter is not None and identifier not in identifier_filter:
+                continue
             ha = report.get("hashtag_analysis", {})
             if any(ha.get(k) for k in ["key_findings", "opportunities",
                                         "gaps_risks_unmet_needs", "strategic_actions"]):
