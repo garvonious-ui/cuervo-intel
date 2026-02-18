@@ -9,7 +9,7 @@ from collections import Counter, defaultdict
 from datetime import datetime
 from typing import Any
 
-from templates import BRANDS, CONTENT_THEMES, VISUAL_STYLES, TONE_OPTIONS
+from templates import BRANDS, CONTENT_THEMES, TONE_OPTIONS
 
 
 def _parse_int(val: str) -> int:
@@ -483,13 +483,9 @@ def analyze_content_themes(posts: list[dict]) -> dict[str, Any]:
                 "pct_of_content": round(len(rates) / len(brand_posts) * 100, 1) if brand_posts else 0,
             }
 
-        # Visual style distribution
-        styles = Counter(p.get("visual_style", "Unknown") for p in brand_posts if p.get("visual_style"))
-
         results[brand] = {
             "theme_distribution": dict(themes.most_common()),
             "theme_performance": theme_performance,
-            "visual_style_distribution": dict(styles.most_common()),
             "top_theme": themes.most_common(1)[0] if themes else ("N/A", 0),
             "best_performing_theme": max(theme_performance.items(),
                                          key=lambda x: x[1]["avg_engagement_rate"])[0] if theme_performance else "N/A",

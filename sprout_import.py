@@ -3,7 +3,7 @@ Sprout Social CSV Import Adapter
 =================================
 Maps Sprout Social report exports to the dashboard's internal CSV schema.
 Includes keyword-based content classifiers for qualitative columns that
-Sprout Social does not export (content_theme, visual_style, caption_tone, etc.).
+Sprout Social does not export (content_theme, caption_tone, etc.).
 
 Usage:
     from sprout_import import import_sprout_directory
@@ -316,34 +316,6 @@ def classify_cta(caption: str) -> str:
     return max(scores, key=scores.get) if scores else "None"
 
 
-def classify_visual_style(post_type: str, theme: str, brand: str = "") -> str:
-    """Estimate visual style (best-effort without image analysis)."""
-    if theme in ("Meme / Humor", "Creator Collab / UGC"):
-        return "Raw / UGC-style"
-    if theme == "Behind the Scenes":
-        return "Lo-fi / Authentic"
-    if theme in ("Brand Heritage / Story", "Education (Tequila 101)"):
-        return "Animation / Motion Graphics"
-    if theme == "Product Showcase":
-        return "Polished / Studio"
-    brand_defaults = {
-        "Jose Cuervo": "Mixed / Hybrid",
-        "Patron": "Polished / Studio",
-        "Don Julio": "Polished / Studio",
-        "Casamigos": "Raw / UGC-style",
-        "Espolon": "Animation / Motion Graphics",
-        "Teremana": "Raw / UGC-style",
-        "1800 Tequila": "Mixed / Hybrid",
-        "818 Tequila": "Raw / UGC-style",
-        "Lunazul": "Mixed / Hybrid",
-        "Hornitos": "Raw / UGC-style",
-        "Cazadores": "Polished / Studio",
-        "Milagro": "Polished / Studio",
-        "El Jimador": "Mixed / Hybrid",
-    }
-    return brand_defaults.get(brand, "Mixed / Hybrid")
-
-
 def detect_creator_collab(caption: str, brand_handle: str = "") -> tuple[bool, str]:
     """Detect creator collaboration and extract handle from caption."""
     if not caption:
@@ -468,7 +440,6 @@ def import_sprout_posts(csv_path: str) -> list[dict]:
         sprout_er = safe_float_er(row.get(col_map.get("engagement_rate", ""), ""))
 
         theme = classify_theme(caption)
-        visual_style = classify_visual_style(post_type, theme, brand)
         tone = classify_tone(caption)
         cta = classify_cta(caption)
 
@@ -497,7 +468,7 @@ def import_sprout_posts(csv_path: str) -> list[dict]:
             "views": views,
             "engagement_rate_manual": sprout_er,
             "content_theme": theme,
-            "visual_style": visual_style,
+            "visual_style": "",
             "caption_tone": tone,
             "cta_type": cta,
             "has_creator_collab": "Yes" if is_collab else "No",

@@ -278,7 +278,7 @@ def create_content_strategy(wb: Workbook, results: dict):
 
     ws["A1"] = "CONTENT STRATEGY INSIGHTS"
     ws["A1"].font = TITLE_FONT
-    ws.merge_cells("A1:H1")
+    ws.merge_cells("A1:G1")
 
     row = 3
 
@@ -287,7 +287,7 @@ def create_content_strategy(wb: Workbook, results: dict):
     row += 1
 
     headers = ["Brand", "Top Theme (Volume)", "Best Theme (ER)", "Best ER%",
-               "Top Visual Style", "Avg Caption Words", "Top CTA"]
+               "Avg Caption Words", "Top CTA"]
     for c, h in enumerate(headers, 1):
         ws.cell(row=row, column=c, value=h)
     style_header_row(ws, row, len(headers))
@@ -306,9 +306,6 @@ def create_content_strategy(wb: Workbook, results: dict):
             perf = theme.get("theme_performance", {}).get(best_theme, {})
             best_er = perf.get("avg_engagement_rate", 0)
 
-        styles = theme.get("visual_style_distribution", {})
-        top_style = max(styles, key=styles.get) if styles else "N/A"
-
         avg_words = round((cap_ig.get("avg_word_count", 0) + cap_tt.get("avg_word_count", 0)) / 2, 1)
 
         # Combine CTAs across platforms
@@ -323,7 +320,6 @@ def create_content_strategy(wb: Workbook, results: dict):
             f"{top_theme[0]} ({top_theme[1]} posts)" if isinstance(top_theme, tuple) else str(top_theme),
             best_theme,
             best_er,
-            top_style,
             avg_words,
             top_cta,
         ]
