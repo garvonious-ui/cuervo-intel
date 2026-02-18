@@ -44,7 +44,7 @@ brand_ht_map = get_brand_hashtag_reports(autostrat)
 category_reports = get_category_reports(autostrat)
 news_reports = autostrat.get("google_news", {})
 _all_mentions_raw = get_all_brand_mentions(autostrat)
-_allowed_ids = set(BRAND_HASHTAGS) | set(CATEGORY_HASHTAGS)
+_allowed_ids = set(BRAND_HASHTAGS) | set(CATEGORY_HASHTAGS) | set(autostrat.get("google_news", {}).keys())
 all_mentions = [m for m in _all_mentions_raw if m.get("source_identifier") in _allowed_ids]
 
 has_brand_data = len(brand_ht_map) > 0
@@ -71,23 +71,17 @@ def _get_insights(report):
 
 def _get_opps_actions(report):
     """Extract paired opportunities and strategic actions from hashtag_analysis.
-    Arrays are interleaved: [insight, action, insight, action, ...]."""
+    Arrays are parallel: opportunities[i] pairs with strategic_actions[i]."""
     if not report:
         return []
     ha = report.get("hashtag_analysis", {})
     opps = ha.get("opportunities", [])
     actions = ha.get("strategic_actions", [])
     pairs = []
-    for i in range(0, max(len(opps), len(actions)), 2):
-        insight = opps[i] if i < len(opps) else ""
-        action = opps[i + 1] if i + 1 < len(opps) else ""
-        gap = actions[i] if i < len(actions) else ""
-        response = actions[i + 1] if i + 1 < len(actions) else ""
+    for i in range(max(len(opps), len(actions))):
         pairs.append({
-            "opportunity": insight,
-            "how": action,
-            "gap": gap,
-            "response": response,
+            "opportunity": opps[i] if i < len(opps) else "",
+            "action": actions[i] if i < len(actions) else "",
         })
     return pairs
 
@@ -95,20 +89,16 @@ def _get_opps_actions(report):
 def _render_opp_action_card(pair, accent="#2ea3f2"):
     """Render a paired opportunity / strategic action card."""
     opp = pair.get("opportunity", "")
-    how = pair.get("how", "")
-    gap = pair.get("gap", "")
-    response = pair.get("response", "")
+    action = pair.get("action", "")
 
-    opp_html = f"<p style='color:#444; font-size:0.92rem; line-height:1.5; margin:0 0 8px 0;'>{opp}</p>" if opp else ""
-    how_html = f"<p style='color:{accent}; font-size:0.88rem; font-weight:600; margin:0 0 8px 0;'>&#8594; {how}</p>" if how else ""
-    gap_html = f"<p style='color:#D9534F; font-size:0.88rem; margin:0 0 4px 0;'><strong>Gap:</strong> {gap}</p>" if gap else ""
-    resp_html = f"<p style='color:#5CB85C; font-size:0.88rem; margin:0;'><strong>Action:</strong> {response}</p>" if response else ""
+    opp_html = f"<p style='color:#444; font-size:0.92rem; line-height:1.5; margin:0 0 8px 0;'><strong>Opportunity:</strong> {opp}</p>" if opp else ""
+    action_html = f"<p style='color:{accent}; font-size:0.88rem; font-weight:600; margin:0;'>&#8594; {action}</p>" if action else ""
 
     st.markdown(f"""
     <div style="background: white; border-radius: 10px; padding: 16px 18px;
                 margin-bottom: 10px; border: 1px solid #E0D8D0;
                 border-left: 4px solid {accent};">
-        {opp_html}{how_html}{gap_html}{resp_html}
+        {opp_html}{action_html}
     </div>
     """, unsafe_allow_html=True)
 
@@ -143,7 +133,7 @@ with tab_brands:
         render_section_label("Key Insights")
         for label, rt, ident, report in active_brand_reports:
             plat = platform_label(rt)
-            is_cuervo = ident == "josecuervo"
+            is_cuervo = ident in CUERVO_HASHTAG_IDS
             with st.expander(f"{label} ({plat}) -- Key Insights", expanded=is_cuervo):
                 for insight in _get_insights(report):
                     st.markdown(f"- {insight}")
@@ -156,7 +146,7 @@ with tab_brands:
         for label, rt, ident, report in active_brand_reports:
             if report.get("audience_profile"):
                 plat = platform_label(rt)
-                is_cuervo = ident == "josecuervo"
+                is_cuervo = ident in CUERVO_HASHTAG_IDS
                 with st.expander(f"{label} ({plat}) -- Audience Profile", expanded=is_cuervo):
                     ap = report["audience_profile"]
                     if ap.get("summary"):
@@ -171,7 +161,7 @@ with tab_brands:
             pairs = _get_opps_actions(report)
             if pairs:
                 plat = platform_label(rt)
-                is_cuervo = ident == "josecuervo"
+                is_cuervo = ident in CUERVO_HASHTAG_IDS
                 with st.expander(f"{label} ({plat}) -- Opportunities", expanded=is_cuervo):
                     for pair in pairs:
                         _render_opp_action_card(pair)
