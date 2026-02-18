@@ -11,7 +11,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-from config import BRAND_COLORS, CHART_TEMPLATE, CHART_FONT, BRAND_ORDER, CUSTOM_CSS
+from config import BRAND_COLORS, CHART_TEMPLATE, CHART_FONT, BRAND_ORDER, CUSTOM_CSS, SOCIAL_BRIEF_TARGETS
 
 st.logo("logo.png")
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
@@ -29,7 +29,7 @@ sel_brands = st.session_state["sel_brands"]
 order = [b for b in BRAND_ORDER if b in sel_brands]
 
 CUERVO = "Jose Cuervo"
-ER_TARGET = 3.0
+ER_TARGET = SOCIAL_BRIEF_TARGETS["er"]
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 tab_overview, tab_gaps = st.tabs([
@@ -88,9 +88,9 @@ with tab_overview:
 
     def color_er(val):
         if isinstance(val, (int, float)):
-            if val >= 4:
+            if val >= ER_TARGET * 1.5:
                 return "background-color: #C8E6C9"
-            elif val >= 2.5:
+            elif val >= ER_TARGET * 0.85:
                 return "background-color: #FDEBD6"
             elif val > 0:
                 return "background-color: #FFCDD2"
@@ -161,7 +161,7 @@ with tab_overview:
                     template=CHART_TEMPLATE)
     fig_er.update_layout(font=CHART_FONT, height=420, showlegend=False)
     fig_er.add_hline(y=ER_TARGET, line_dash="dash", line_color="#D9534F",
-                     annotation_text="3% Social Brief target",
+                     annotation_text=f"{ER_TARGET}% Social Brief target",
                      annotation_position="top right")
     cat_avg = er_data[er_data["engagement_rate"] > 0]["engagement_rate"].mean()
     fig_er.add_hline(y=cat_avg, line_dash="dot", line_color="gray",
@@ -315,7 +315,7 @@ with tab_gaps:
                             template=CHART_TEMPLATE,
                             color_discrete_sequence=["#F8C090", "#2ea3f2", "#7B6B63", "#D4956A", "#C9A87E"])
         fig_er_fmt.add_hline(y=ER_TARGET, line_dash="dash", line_color="#D9534F",
-                             annotation_text="3% target", annotation_position="top right")
+                             annotation_text=f"{ER_TARGET}% target", annotation_position="top right")
         fig_er_fmt.update_layout(font=CHART_FONT, height=420,
                                  legend=dict(orientation="h", y=1.12))
         st.plotly_chart(fig_er_fmt, width="stretch")

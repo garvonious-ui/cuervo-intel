@@ -13,7 +13,7 @@ import streamlit as st
 
 from config import (
     BRAND_COLORS, CHART_TEMPLATE, CHART_FONT, BRAND_ORDER, CUSTOM_CSS,
-    PRIORITY_COLORS, POPLIFE_CADENCE_TARGETS,
+    PRIORITY_COLORS, POPLIFE_CADENCE_TARGETS, SOCIAL_BRIEF_TARGETS,
     POPLIFE_PILLAR_MAP, POPLIFE_PILLAR_TARGETS, POPLIFE_PILLAR_COLORS,
     CONTENT_MIX_MAP, CONTENT_MIX_TARGETS, CONTENT_MIX_COLORS,
 )
@@ -42,7 +42,8 @@ df = st.session_state["df"]  # Unfiltered
 
 CUERVO = "Jose Cuervo"
 GEN_Z_LEADERS = ["Casamigos", "Teremana"]
-ER_TARGET = 3.0
+_t = SOCIAL_BRIEF_TARGETS
+ER_TARGET = _t["er"]
 
 cuervo_df = df[df["brand"] == CUERVO]
 leader_df = df[df["brand"].isin(GEN_Z_LEADERS)]
@@ -69,31 +70,38 @@ with tab_scorecard:
 
     cuervo_ig = cuervo_df[cuervo_df["platform"] == "Instagram"]
     cuervo_reels = cuervo_df[cuervo_df["post_type"] == "Reel"]
-    avg_reel_views = cuervo_reels["views"].mean() if len(cuervo_reels) else 0
-    avg_reel_views = 0 if pd.isna(avg_reel_views) else avg_reel_views
+    avg_eng_per_reel = cuervo_reels["total_engagement"].mean() if len(cuervo_reels) else 0
+    avg_eng_per_reel = 0 if pd.isna(avg_eng_per_reel) else avg_eng_per_reel
     reel_ratio = len(cuervo_ig[cuervo_ig["post_type"] == "Reel"]) / max(len(cuervo_ig), 1) * 100
 
     freq = results["frequency"].get(CUERVO, {})
     ig_ppw = freq.get("Instagram", {}).get("posts_per_week", 0)
     tt_ppw = freq.get("TikTok", {}).get("posts_per_week", 0)
 
-    # Scorecard table
+    # Scorecard table (targets from SOCIAL_BRIEF_TARGETS in config.py)
+    _ig_ppw = _t["ig_posts_per_week"]
+    _tt_ppw = _t["tt_posts_per_week"]
     scorecard_data = [
-        {"KPI": "Avg Engagement Rate", "Actual": f"{cuervo_er:.2f}%", "Target": "3.0%",
-         "Status": "ON TRACK" if cuervo_er >= 3.0 else "BELOW",
-         "Gap": f"{cuervo_er - 3.0:+.2f}pp"},
-        {"KPI": "Avg Reel Views", "Actual": f"{avg_reel_views:,.0f}", "Target": "10,000",
-         "Status": "ON TRACK" if avg_reel_views >= 10000 else "BELOW",
-         "Gap": f"{avg_reel_views - 10000:+,.0f}"},
-        {"KPI": "Reel Ratio (IG)", "Actual": f"{reel_ratio:.0f}%", "Target": "50%",
-         "Status": "ON TRACK" if reel_ratio >= 50 else "BELOW",
-         "Gap": f"{reel_ratio - 50:+.0f}pp"},
-        {"KPI": "IG Posts/Week", "Actual": f"{ig_ppw:.1f}", "Target": "4-5/wk",
-         "Status": "ON TRACK" if 4 <= ig_ppw <= 5 else ("BELOW" if ig_ppw < 4 else "ABOVE"),
-         "Gap": f"{ig_ppw - 4.5:+.1f} vs mid"},
-        {"KPI": "TT Posts/Week", "Actual": f"{tt_ppw:.1f}", "Target": "3-4/wk",
-         "Status": "ON TRACK" if 3 <= tt_ppw <= 4 else ("BELOW" if tt_ppw < 3 else "ABOVE"),
-         "Gap": f"{tt_ppw - 3.5:+.1f} vs mid"},
+        {"KPI": "Avg Engagement Rate", "Actual": f"{cuervo_er:.2f}%",
+         "Target": f"{_t['er']}%",
+         "Status": "ON TRACK" if cuervo_er >= _t["er"] else "BELOW",
+         "Gap": f"{cuervo_er - _t['er']:+.2f}pp"},
+        {"KPI": "Avg Engagements/Reel", "Actual": f"{avg_eng_per_reel:,.0f}",
+         "Target": f"{_t['engagements_per_reel']:,}",
+         "Status": "ON TRACK" if avg_eng_per_reel >= _t["engagements_per_reel"] else "BELOW",
+         "Gap": f"{avg_eng_per_reel - _t['engagements_per_reel']:+,.0f}"},
+        {"KPI": "Reel Ratio (IG)", "Actual": f"{reel_ratio:.0f}%",
+         "Target": f"{_t['reel_ratio']}%",
+         "Status": "ON TRACK" if reel_ratio >= _t["reel_ratio"] else "BELOW",
+         "Gap": f"{reel_ratio - _t['reel_ratio']:+.0f}pp"},
+        {"KPI": "IG Posts/Week", "Actual": f"{ig_ppw:.1f}",
+         "Target": f"{_ig_ppw[0]}-{_ig_ppw[1]}/wk",
+         "Status": "ON TRACK" if _ig_ppw[0] <= ig_ppw <= _ig_ppw[1] else ("BELOW" if ig_ppw < _ig_ppw[0] else "ABOVE"),
+         "Gap": f"{ig_ppw - sum(_ig_ppw)/2:+.1f} vs mid"},
+        {"KPI": "TT Posts/Week", "Actual": f"{tt_ppw:.1f}",
+         "Target": f"{_tt_ppw[0]}-{_tt_ppw[1]}/wk",
+         "Status": "ON TRACK" if _tt_ppw[0] <= tt_ppw <= _tt_ppw[1] else ("BELOW" if tt_ppw < _tt_ppw[0] else "ABOVE"),
+         "Gap": f"{tt_ppw - sum(_tt_ppw)/2:+.1f} vs mid"},
     ]
 
     sc_df = pd.DataFrame(scorecard_data)
@@ -247,7 +255,7 @@ with tab_scorecard:
             st.metric("Best Theme", best_theme_name)
         with bt_col2:
             st.metric("Theme ER", f"{best_er:.2f}%",
-                      delta=f"{best_er - ER_TARGET:+.2f}% vs 3% target")
+                      delta=f"{best_er - ER_TARGET:+.2f}% vs {ER_TARGET}% target")
         with bt_col3:
             st.metric("Posts", f"{best_count}")
 
@@ -262,13 +270,13 @@ with tab_scorecard:
                             template=CHART_TEMPLATE, text_auto=".2f",
                             hover_data={"Posts": True})
             fig_bt.add_vline(x=ER_TARGET, line_dash="dash", line_color="#333",
-                             annotation_text="3% target")
+                             annotation_text=f"{ER_TARGET}% target")
             fig_bt.update_layout(font=CHART_FONT, height=max(280, len(theme_rows) * 35),
                                  showlegend=False)
             st.plotly_chart(fig_bt, width="stretch")
 
         st.info(f"**Best theme: {best_theme_name}** at {best_er:.2f}% ER — lean into this for upcoming content. "
-                f"Themes above the 3% target are proven winners worth scaling.")
+                f"Themes above the {ER_TARGET}% target are proven winners worth scaling.")
     else:
         st.info("No content theme performance data available for Cuervo.")
 
@@ -337,7 +345,7 @@ with tab_frameworks:
                         labels={"Avg ER": "Avg ER %", "Pillar": ""},
                         template=CHART_TEMPLATE, text_auto=".2f")
         fig_pe.add_hline(y=ER_TARGET, line_dash="dash", line_color="#333",
-                         annotation_text="3% target", annotation_position="top right")
+                         annotation_text=f"{ER_TARGET}% target", annotation_position="top right")
         fig_pe.update_layout(showlegend=False, font=CHART_FONT, height=380)
         st.plotly_chart(fig_pe, width="stretch")
 

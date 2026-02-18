@@ -68,11 +68,14 @@ Uses autostrat hashtag/keyword/news reports only — sidebar filters do NOT appl
 3. **Custom CSV Folder** — manually created CSVs matching the schema in `templates.py`
 
 ## Social Brief KPI Targets
-- Engagement Rate: 3%
-- Avg Reel Views: 10,000
+All targets centralized in `SOCIAL_BRIEF_TARGETS` dict in `config.py`.
+- Engagement Rate: 1.8% (updated from 3.0% based on actual data — Cuervo actual: 1.29-1.66%)
+- Avg Engagements/Reel: 100+ (replaced Avg Reel Views 10K — views unmeasurable from Sprout)
 - Reel Ratio (IG): 50%
 - IG Posts/Week: 4-5x
-- TT Posts/Week: 3-4x
+- TT Posts/Week: 2-3x (reduced from 3-4x — no TikTok data yet)
+- Save Rate: 3%+ of total engagement (new KPI, current: 2.7%)
+- Share Rate: 7%+ of total engagement (new KPI, current: 6.7%)
 - Follower Growth: 15% (not tracked from static exports)
 
 ## Poplife Playbook Frameworks (config.py)

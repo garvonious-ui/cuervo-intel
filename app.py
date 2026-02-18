@@ -15,7 +15,7 @@ import streamlit as st
 # Ensure project root is importable
 sys.path.insert(0, os.path.dirname(__file__))
 
-from config import PAGE_CONFIG, CUSTOM_CSS, BRAND_ORDER
+from config import PAGE_CONFIG, CUSTOM_CSS, BRAND_ORDER, SOCIAL_BRIEF_TARGETS
 from templates import BRANDS, CONTENT_THEMES, VISUAL_STYLES, TONE_OPTIONS
 
 st.set_page_config(**PAGE_CONFIG)
@@ -43,7 +43,7 @@ def _sprout_fingerprint(sprout_dir: str) -> str:
     when files change OR analysis logic is updated."""
     import hashlib
     # Bump this version whenever sprout_import.py or analysis.py logic changes
-    CODE_VERSION = "v4_benchmark_er_by_views"
+    CODE_VERSION = "v5_updated_kpi_targets"
     entries = [CODE_VERSION]
     if os.path.isdir(sprout_dir):
         for f in sorted(os.listdir(sprout_dir)):
@@ -238,22 +238,23 @@ cuervo_er = all_ers.get("Jose Cuervo", 0)
 cuervo_er = 0 if pd.isna(cuervo_er) else cuervo_er
 reel_ratio = len(cuervo_ig[cuervo_ig["post_type"] == "Reel"]) / max(len(cuervo_ig), 1) * 100
 cuervo_reels = cuervo_posts[cuervo_posts["post_type"] == "Reel"]
-avg_reel_views = cuervo_reels["views"].mean() if len(cuervo_reels) else 0
-avg_reel_views = 0 if pd.isna(avg_reel_views) else avg_reel_views
+avg_eng_per_reel = cuervo_reels["total_engagement"].mean() if len(cuervo_reels) else 0
+avg_eng_per_reel = 0 if pd.isna(avg_eng_per_reel) else avg_eng_per_reel
 best_brand = nonzero_ers.idxmax() if len(nonzero_ers) else "N/A"
 best_er = nonzero_ers.max() if len(nonzero_ers) else 0
 
+_t = SOCIAL_BRIEF_TARGETS
 with c1:
     st.metric("Posts Analyzed", f"{len(df):,}")
 with c2:
     st.metric("Cuervo ER", f"{cuervo_er:.2f}%",
-              delta=f"{cuervo_er - 3.0:+.2f}% vs 3% target")
+              delta=f"{cuervo_er - _t['er']:+.2f}% vs {_t['er']}% target")
 with c3:
     st.metric("Reel Ratio", f"{reel_ratio:.0f}%",
-              delta=f"{reel_ratio - 50:+.0f}% vs 50% target")
+              delta=f"{reel_ratio - _t['reel_ratio']:+.0f}% vs {_t['reel_ratio']}% target")
 with c4:
-    st.metric("Avg Reel Views", f"{avg_reel_views:,.0f}",
-              delta=f"{'On target' if avg_reel_views >= 10000 else 'Below 10K'}")
+    eng_reel_status = "On target" if avg_eng_per_reel >= _t["engagements_per_reel"] else f"Below {_t['engagements_per_reel']}"
+    st.metric("Avg Eng/Reel", f"{avg_eng_per_reel:,.0f}", delta=eng_reel_status)
 with c5:
     st.metric("Top Brand (ER)", f"{best_brand}", delta=f"{best_er:.2f}%")
 
