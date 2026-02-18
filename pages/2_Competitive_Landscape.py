@@ -53,8 +53,6 @@ with tab_overview:
         plat_df = df[df["brand"] == brand]
         eng = results["engagement"].get(brand, {})
         freq_b = results["frequency"].get(brand, {})
-        cr = results["creators"].get(brand, {})
-
         followers = sum(eng.get(p, {}).get("followers", 0) for p in ["Instagram", "TikTok"])
         avg_er = plat_df["engagement_rate"].mean() if len(plat_df) else 0
         avg_er = 0 if pd.isna(avg_er) else avg_er
@@ -69,7 +67,6 @@ with tab_overview:
             "Posts/Week": round(ppw, 1),
             "Avg ER %": round(avg_er, 2),
             "Avg Likes": int(_likes),
-            "Collab %": cr.get("collab_pct", 0),
         }
 
         # Add benchmark columns when benchmark data is available
@@ -98,8 +95,7 @@ with tab_overview:
 
     er_cols = ["Avg ER %"]
     fmt = {"Followers": "{:,.0f}", "Avg Likes": "{:,.0f}",
-           "Avg ER %": "{:.2f}", "Posts/Week": "{:.1f}",
-           "Collab %": "{:.1f}"}
+           "Avg ER %": "{:.2f}", "Posts/Week": "{:.1f}"}
     if has_bench:
         er_cols.append("ER by Views %")
         fmt["ER by Views %"] = "{:.2f}"
@@ -351,76 +347,6 @@ with tab_gaps:
 
     st.markdown("---")
 
-    # ── Creator Collab Engagement Lift ───────────────────────────────
-    st.subheader("Creator Collab Engagement Lift")
-    st.caption("Does working with creators boost engagement? Collab vs organic ER comparison.")
-
-    collab_rows = []
-    for brand in order:
-        cr = results["creators"].get(brand, {})
-        collab_er = cr.get("avg_collab_engagement_rate", 0)
-        non_collab_er = cr.get("avg_non_collab_engagement_rate", 0)
-        lift = cr.get("collab_engagement_lift", 0)
-        collab_pct = cr.get("collab_pct", 0)
-        if collab_er > 0 or non_collab_er > 0:
-            collab_rows.append({
-                "Brand": brand,
-                "Collab ER %": round(collab_er, 2),
-                "Organic ER %": round(non_collab_er, 2),
-                "Lift": round(lift, 2),
-                "Collab %": round(collab_pct, 1),
-            })
-
-    if collab_rows:
-        collab_df = pd.DataFrame(collab_rows)
-
-        fig_collab = go.Figure()
-        fig_collab.add_trace(go.Bar(
-            x=collab_df["Brand"], y=collab_df["Collab ER %"],
-            name="Creator Collab ER", marker_color="#2ea3f2",
-            text=collab_df["Collab ER %"], textposition="outside", texttemplate="%{text:.2f}%"
-        ))
-        fig_collab.add_trace(go.Bar(
-            x=collab_df["Brand"], y=collab_df["Organic ER %"],
-            name="Organic ER", marker_color="#C9A87E",
-            text=collab_df["Organic ER %"], textposition="outside", texttemplate="%{text:.2f}%"
-        ))
-        fig_collab.update_layout(barmode="group", template=CHART_TEMPLATE, font=CHART_FONT,
-                                 height=420, legend=dict(orientation="h", y=1.12),
-                                 yaxis_title="Avg ER %")
-        st.plotly_chart(fig_collab, width="stretch")
-
-        # Lift callout cards
-        positive_lift = [r for r in collab_rows if r["Lift"] > 0]
-        if positive_lift:
-            lift_cols = st.columns(min(len(positive_lift), 4))
-            for i, row in enumerate(sorted(positive_lift, key=lambda x: x["Lift"], reverse=True)[:4]):
-                with lift_cols[i % len(lift_cols)]:
-                    color = BRAND_COLORS.get(row["Brand"], "#888")
-                    st.markdown(f"""
-                    <div style="background: white; border-radius: 8px; padding: 12px;
-                                border-top: 3px solid {color}; text-align: center;
-                                border: 1px solid #E0D8D0;">
-                        <strong>{row['Brand']}</strong><br>
-                        <span style="font-size: 1.6rem; color: #2ea3f2;">+{row['Lift']:.2f}%</span><br>
-                        <span style="font-size: 0.8rem; color: #777;">collab lift | {row['Collab %']:.0f}% collab rate</span>
-                    </div>
-                    """, unsafe_allow_html=True)
-
-        # So What
-        cuervo_lift = next((r["Lift"] for r in collab_rows if r["Brand"] == CUERVO), 0)
-        avg_lift = sum(r["Lift"] for r in collab_rows) / len(collab_rows)
-        if cuervo_lift > 0:
-            st.info(f"**Creator collabs boost Cuervo's ER by +{cuervo_lift:.2f}pp.** "
-                    f"Category avg lift: {avg_lift:+.2f}pp. Keep investing in creator partnerships.")
-        else:
-            st.info(f"**Cuervo's collab lift: {cuervo_lift:+.2f}pp.** "
-                    f"Category avg: {avg_lift:+.2f}pp. Opportunity to improve creator selection and content style.")
-    else:
-        st.info("No creator collaboration data available.")
-
-    st.markdown("---")
-
     # ── "What to Steal" Cards ──────────────────────────────────────────
     st.subheader("What to Steal")
     st.caption("Specific tactics from brands outperforming Cuervo")
@@ -438,13 +364,10 @@ with tab_gaps:
         for i, brand in enumerate(beating_brands[:6]):
             bdf = full_df[full_df["brand"] == brand]
             brand_er = bdf["engagement_rate"].mean()
-            cr = results["creators"].get(brand, {})
             top_theme_s = bdf.groupby("content_theme")["engagement_rate"].mean()
             best_theme_s = top_theme_s.idxmax() if len(top_theme_s) else "N/A"
             best_theme_er = top_theme_s.max() if len(top_theme_s) else 0
             reel_pct = len(bdf[bdf["post_type"] == "Reel"]) / max(len(bdf), 1) * 100
-            collab_pct = cr.get("collab_pct", 0)
-
             with steal_cols[i % len(steal_cols)]:
                 st.markdown(f"""
                 <div style="background: white; border-radius: 10px; padding: 16px;
@@ -455,8 +378,7 @@ with tab_gaps:
                     <p style="font-size: 0.9rem; color: #555; margin: 0;">
                         <strong>{brand_er:.2f}% ER</strong> (+{brand_er - cuervo_er_val:.2f}pp vs Cuervo)<br>
                         Top theme: <strong>{best_theme_s}</strong> ({best_theme_er:.2f}% ER)<br>
-                        Reel mix: <strong>{reel_pct:.0f}%</strong><br>
-                        Creator collab: <strong>{collab_pct:.0f}%</strong>
+                        Reel mix: <strong>{reel_pct:.0f}%</strong>
                     </p>
                 </div>
                 """, unsafe_allow_html=True)
