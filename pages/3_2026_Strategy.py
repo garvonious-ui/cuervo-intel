@@ -424,7 +424,7 @@ with tab_frameworks:
     def compute_genz_scores(brand):
         bdf = df[df["brand"] == brand]
         total = len(bdf) or 1
-        ugc_pct = len(bdf[bdf["visual_style"].isin(["Raw / UGC-style", "Lo-fi / Authentic"])]) / total * 100
+        ugc_pct = len(bdf[bdf["has_creator_collab"].astype(str).str.lower() == "yes"]) / total * 100 if "has_creator_collab" in bdf.columns else 0
         collab_pct = results["creators"].get(brand, {}).get("collab_pct", 0)
         humor_pct = len(bdf[bdf["content_theme"].isin(["Meme / Humor"])]) / total * 100
         video_pct = len(bdf[bdf["post_type"].isin(["Reel", "Video"])]) / total * 100
@@ -432,7 +432,7 @@ with tab_frameworks:
         comment_rate = (bdf["comments"].sum() / max(bdf["likes"].sum(), 1)) * 100
         return [ugc_pct, collab_pct, humor_pct, video_pct, music_pct, comment_rate]
 
-    dims = ["Authenticity (UGC %)", "Creator Partners %", "Humor/Meme %",
+    dims = ["Creator/UGC Content %", "Creator Partners %", "Humor/Meme %",
             "Short-form Video %", "Music Integration %", "Community Engagement"]
 
     genz_rows = []
@@ -460,53 +460,6 @@ with tab_frameworks:
             f"**Strongest area:** {dims[biggest_lead_idx]} "
             f"(Cuervo {cuervo_scores[biggest_lead_idx]:.0f}% vs leaders {leader_avg_scores[biggest_lead_idx]:.0f}%).")
 
-    st.markdown("---")
-
-    # ── Visual Style Distribution ────────────────────────────────────
-    st.subheader("Visual Style Distribution")
-    st.caption("Cuervo's content aesthetic — Gen Z gravitates toward lo-fi/authentic over polished studio content")
-
-    visual_styles = results["themes"].get(CUERVO, {}).get("visual_style_distribution", {})
-
-    if visual_styles:
-        vs_df = pd.DataFrame(list(visual_styles.items()), columns=["Style", "Count"])
-        vs_df["Pct"] = (vs_df["Count"] / vs_df["Count"].sum() * 100).round(1)
-
-        col_vs1, col_vs2 = st.columns(2)
-        with col_vs1:
-            st.markdown("**Visual Style Mix**")
-            fig_vs = px.pie(vs_df, values="Count", names="Style",
-                            color_discrete_sequence=["#F8C090", "#2ea3f2", "#7B6B63", "#D4956A", "#C9A87E", "#333333"],
-                            template=CHART_TEMPLATE, hole=0.4)
-            fig_vs.update_layout(font=CHART_FONT, height=380,
-                                 legend=dict(orientation="h", y=-0.15))
-            st.plotly_chart(fig_vs, width="stretch")
-
-        with col_vs2:
-            st.markdown("**Style Breakdown**")
-            ugc_styles = ["Raw / UGC-style", "Lo-fi / Authentic"]
-            ugc_pct = vs_df[vs_df["Style"].isin(ugc_styles)]["Pct"].sum()
-            polished_styles = ["Studio / Polished", "High Production"]
-            polished_pct = vs_df[vs_df["Style"].isin(polished_styles)]["Pct"].sum()
-
-            st.metric("Lo-fi / UGC %", f"{ugc_pct:.0f}%",
-                      help="Raw, authentic, UGC-style content — preferred by Gen Z")
-            st.metric("Studio / Polished %", f"{polished_pct:.0f}%",
-                      help="High-production studio content")
-            st.markdown("")
-
-            top_style = vs_df.iloc[0]
-            if ugc_pct < 40:
-                st.warning(f"**Lo-fi content at {ugc_pct:.0f}%** — Gen Z data suggests 40%+ UGC/authentic content. "
-                           f"Consider shifting more content to raw, native-feeling formats.")
-            else:
-                st.success(f"**Lo-fi content at {ugc_pct:.0f}%** — strong alignment with Gen Z's preference for authentic content.")
-
-        st.info(f"**Top visual style: {top_style['Style']}** at {top_style['Pct']:.0f}%. "
-                f"Gen Z audiences engage 2-3x more with lo-fi/UGC content vs polished ads. "
-                f"{'Room to grow in authentic content.' if ugc_pct < 40 else 'Good mix — maintain the balance.'}")
-    else:
-        st.info("No visual style data available for Cuervo.")
 
 
 # ══════════════════════════════════════════════════════════════════════

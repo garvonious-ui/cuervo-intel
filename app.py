@@ -16,7 +16,7 @@ import streamlit as st
 sys.path.insert(0, os.path.dirname(__file__))
 
 from config import PAGE_CONFIG, CUSTOM_CSS, BRAND_ORDER, SOCIAL_BRIEF_TARGETS
-from templates import BRANDS, CONTENT_THEMES, VISUAL_STYLES, TONE_OPTIONS
+from templates import BRANDS, CONTENT_THEMES, TONE_OPTIONS
 
 st.set_page_config(**PAGE_CONFIG)
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
@@ -43,7 +43,7 @@ def _sprout_fingerprint(sprout_dir: str) -> str:
     when files change OR analysis logic is updated."""
     import hashlib
     # Bump this version whenever sprout_import.py or analysis.py logic changes
-    CODE_VERSION = "v5_updated_kpi_targets"
+    CODE_VERSION = "v6_remove_visual_style"
     entries = [CODE_VERSION]
     if os.path.isdir(sprout_dir):
         for f in sorted(os.listdir(sprout_dir)):

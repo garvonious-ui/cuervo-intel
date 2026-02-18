@@ -11,7 +11,7 @@ import re
 from datetime import datetime, timedelta
 
 from templates import (
-    BRANDS, CONTENT_THEMES, VISUAL_STYLES, TONE_OPTIONS,
+    BRANDS, CONTENT_THEMES, TONE_OPTIONS,
     CTA_TYPES, INSTAGRAM_POST_TYPES, TIKTOK_POST_TYPES,
 )
 
@@ -38,7 +38,6 @@ BRAND_PROFILES = {
                     "Lifestyle/Aspirational", "Meme / Humor", "Brand Heritage / Story",
                     "Creator Collab / UGC", "Music / Party", "Giveaway / Promo"],
         "theme_weights": [0.22, 0.15, 0.18, 0.13, 0.10, 0.08, 0.06, 0.05, 0.03],
-        "visual_bias": ["Mixed / Hybrid", "Polished / Studio", "Raw / UGC-style"],
         "tone_bias": ["Playful / Fun", "Casual / Conversational", "Nostalgic / Heritage"],
         "collab_rate": 0.08,
         "avg_hashtags": 6,
@@ -59,7 +58,6 @@ BRAND_PROFILES = {
         "themes": ["Cocktail Recipe", "Product Showcase", "Education (Tequila 101)",
                     "Behind the Scenes", "Lifestyle/Aspirational", "Creator Collab / UGC"],
         "theme_weights": [0.25, 0.20, 0.15, 0.15, 0.15, 0.10],
-        "visual_bias": ["Polished / Studio", "Polished / Studio", "Mixed / Hybrid"],
         "tone_bias": ["Premium / Luxury", "Educational / Informative", "Aspirational / Lifestyle"],
         "collab_rate": 0.18,
         "avg_hashtags": 8,
@@ -81,7 +79,6 @@ BRAND_PROFILES = {
         "themes": ["Product Showcase", "Lifestyle/Aspirational", "Brand Heritage / Story",
                     "Creator Collab / UGC", "Event / Activation", "Cocktail Recipe"],
         "theme_weights": [0.22, 0.20, 0.18, 0.18, 0.12, 0.10],
-        "visual_bias": ["Polished / Studio", "Polished / Studio", "Mixed / Hybrid"],
         "tone_bias": ["Premium / Luxury", "Aspirational / Lifestyle", "Nostalgic / Heritage"],
         "collab_rate": 0.28,
         "avg_hashtags": 5,
@@ -104,7 +101,6 @@ BRAND_PROFILES = {
         "themes": ["Lifestyle/Aspirational", "Meme / Humor", "Creator Collab / UGC",
                     "Music / Party", "Cocktail Recipe", "Cultural Moment / Holiday"],
         "theme_weights": [0.20, 0.20, 0.20, 0.15, 0.15, 0.10],
-        "visual_bias": ["Raw / UGC-style", "Lo-fi / Authentic", "Mixed / Hybrid"],
         "tone_bias": ["Casual / Conversational", "Playful / Fun", "Humorous / Meme"],
         "collab_rate": 0.22,
         "avg_hashtags": 4,
@@ -126,7 +122,6 @@ BRAND_PROFILES = {
         "themes": ["Brand Heritage / Story", "Product Showcase", "Cocktail Recipe",
                     "Education (Tequila 101)", "Cultural Moment / Holiday"],
         "theme_weights": [0.25, 0.20, 0.25, 0.15, 0.15],
-        "visual_bias": ["Animation / Motion Graphics", "Polished / Studio", "Mixed / Hybrid"],
         "tone_bias": ["Bold / Edgy", "Educational / Informative", "Casual / Conversational"],
         "collab_rate": 0.08,
         "avg_hashtags": 7,
@@ -149,7 +144,6 @@ BRAND_PROFILES = {
         "themes": ["Creator Collab / UGC", "Cocktail Recipe", "Meme / Humor",
                     "Lifestyle/Aspirational", "Music / Party", "Giveaway / Promo"],
         "theme_weights": [0.25, 0.20, 0.20, 0.15, 0.10, 0.10],
-        "visual_bias": ["Raw / UGC-style", "Lo-fi / Authentic"],
         "tone_bias": ["Casual / Conversational", "Playful / Fun", "Humorous / Meme"],
         "collab_rate": 0.35,
         "avg_hashtags": 4,
@@ -169,7 +163,6 @@ BRAND_PROFILES = {
         "themes": ["Product Showcase", "Cocktail Recipe", "Lifestyle/Aspirational",
                     "Cultural Moment / Holiday", "Music / Party", "Meme / Humor"],
         "theme_weights": [0.25, 0.22, 0.18, 0.15, 0.10, 0.10],
-        "visual_bias": ["Polished / Studio", "Mixed / Hybrid", "Raw / UGC-style"],
         "tone_bias": ["Bold / Edgy", "Casual / Conversational", "Playful / Fun"],
         "collab_rate": 0.10,
         "avg_hashtags": 5,
@@ -189,7 +182,6 @@ BRAND_PROFILES = {
         "themes": ["Cocktail Recipe", "Lifestyle/Aspirational", "Creator Collab / UGC",
                     "Product Showcase", "Meme / Humor", "Cultural Moment / Holiday"],
         "theme_weights": [0.25, 0.22, 0.18, 0.15, 0.10, 0.10],
-        "visual_bias": ["Raw / UGC-style", "Lo-fi / Authentic", "Mixed / Hybrid"],
         "tone_bias": ["Casual / Conversational", "Playful / Fun", "Aspirational / Lifestyle"],
         "collab_rate": 0.25,
         "avg_hashtags": 4,
@@ -208,7 +200,6 @@ BRAND_PROFILES = {
         "themes": ["Product Showcase", "Giveaway / Promo", "Lifestyle/Aspirational",
                     "Cocktail Recipe", "Cultural Moment / Holiday"],
         "theme_weights": [0.30, 0.25, 0.20, 0.15, 0.10],
-        "visual_bias": ["Mixed / Hybrid", "Polished / Studio"],
         "tone_bias": ["Casual / Conversational", "Playful / Fun"],
         "collab_rate": 0.03,
         "avg_hashtags": 4,
@@ -227,7 +218,6 @@ BRAND_PROFILES = {
         "themes": ["Meme / Humor", "Music / Party", "Lifestyle/Aspirational",
                     "Creator Collab / UGC", "Cocktail Recipe", "Cultural Moment / Holiday"],
         "theme_weights": [0.25, 0.20, 0.18, 0.15, 0.12, 0.10],
-        "visual_bias": ["Raw / UGC-style", "Lo-fi / Authentic", "Mixed / Hybrid"],
         "tone_bias": ["Playful / Fun", "Humorous / Meme", "Casual / Conversational"],
         "collab_rate": 0.10,
         "avg_hashtags": 5,
@@ -246,7 +236,6 @@ BRAND_PROFILES = {
         "themes": ["Cocktail Recipe", "Product Showcase", "Lifestyle/Aspirational",
                     "Cultural Moment / Holiday", "Meme / Humor"],
         "theme_weights": [0.30, 0.25, 0.20, 0.15, 0.10],
-        "visual_bias": ["Polished / Studio", "Mixed / Hybrid"],
         "tone_bias": ["Casual / Conversational", "Aspirational / Lifestyle", "Playful / Fun"],
         "collab_rate": 0.05,
         "avg_hashtags": 5,
@@ -265,7 +254,6 @@ BRAND_PROFILES = {
         "themes": ["Product Showcase", "Cocktail Recipe", "Event / Activation",
                     "Lifestyle/Aspirational", "Education (Tequila 101)"],
         "theme_weights": [0.25, 0.25, 0.20, 0.18, 0.12],
-        "visual_bias": ["Polished / Studio", "Mixed / Hybrid"],
         "tone_bias": ["Premium / Luxury", "Educational / Informative", "Aspirational / Lifestyle"],
         "collab_rate": 0.06,
         "avg_hashtags": 3,
@@ -284,7 +272,6 @@ BRAND_PROFILES = {
         "themes": ["Product Showcase", "Cocktail Recipe", "Brand Heritage / Story",
                     "Cultural Moment / Holiday", "Lifestyle/Aspirational", "Meme / Humor"],
         "theme_weights": [0.25, 0.20, 0.18, 0.15, 0.12, 0.10],
-        "visual_bias": ["Mixed / Hybrid", "Polished / Studio", "Raw / UGC-style"],
         "tone_bias": ["Casual / Conversational", "Nostalgic / Heritage", "Playful / Fun"],
         "collab_rate": 0.06,
         "avg_hashtags": 4,
@@ -539,9 +526,6 @@ def generate_sample_posts(output_dir: str) -> str:
                     "\U0001f926-\U0001f937\U0001F1F2-\U0001F1F4\U0001F620-\U0001F640"
                     "\U0001F910-\U0001F9FF]", caption))
 
-                # Visual style
-                visual_style = random.choice(profile["visual_bias"])
-
                 # Tone
                 tone = random.choice(profile["tone_bias"])
 
@@ -593,7 +577,7 @@ def generate_sample_posts(output_dir: str) -> str:
                     f"{post_hour}:{post_minute:02d}",
                     post_type, video_length, caption, hashtags,
                     likes, comments, shares, saves, views,
-                    "", theme, visual_style, tone, cta,
+                    "", theme, "", tone, cta,
                     "Yes" if is_collab else "No", creator_handle,
                     has_music, audio_desc, emoji_count, word_count,
                     1 if is_collab else 0, is_paid, "",

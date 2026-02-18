@@ -290,20 +290,16 @@ with tab_explorer:
         tones_avail = sorted(df["caption_tone"].dropna().unique().tolist())
         sel_tones = st.multiselect("Tone", tones_avail, default=tones_avail, key="exp_tones")
 
-    fc5, fc6, fc7, fc8 = st.columns(4)
+    fc5, fc6, fc7 = st.columns(3)
 
     with fc5:
-        styles_avail = sorted(df["visual_style"].dropna().unique().tolist())
-        sel_styles = st.multiselect("Visual style", styles_avail, default=styles_avail, key="exp_styles")
-
-    with fc6:
         ctas_avail = sorted(df["cta_type"].dropna().unique().tolist())
         sel_ctas = st.multiselect("CTA type", ctas_avail, default=ctas_avail, key="exp_ctas")
 
-    with fc7:
+    with fc6:
         collab_opt = st.selectbox("Creator collab", ["All", "Yes", "No"], key="exp_collab")
 
-    with fc8:
+    with fc7:
         paid_opt = st.selectbox("Paid partnership", ["All", "Yes", "No"], key="exp_paid")
 
     # Apply advanced filters
@@ -312,7 +308,6 @@ with tab_explorer:
         df["likes"].between(likes_range[0], likes_range[1]) &
         (df["content_theme"].isin(sel_themes) | df["content_theme"].isna()) &
         (df["caption_tone"].isin(sel_tones) | df["caption_tone"].isna()) &
-        (df["visual_style"].isin(sel_styles) | df["visual_style"].isna()) &
         (df["cta_type"].isin(sel_ctas) | df["cta_type"].isna())
     )
 
@@ -359,7 +354,7 @@ with tab_explorer:
     display_cols = [
         "brand", "platform", "post_date", "post_type", "engagement_rate",
         "likes", "comments", "shares", "views", "content_theme",
-        "visual_style", "caption_tone", "cta_type", "has_creator_collab",
+        "caption_tone", "cta_type", "has_creator_collab",
         "caption_word_count", "emoji_count_in_caption", "post_url",
     ]
     show_df = filt[[c for c in display_cols if c in filt.columns]].copy()
