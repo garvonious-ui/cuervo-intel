@@ -129,15 +129,13 @@ with tab_overview:
 
     for rank, (brand, er) in enumerate(top3.items(), 1):
         brand_df = df[df["brand"] == brand]
-        cr = results["creators"].get(brand, {})
-        collab_pct = cr.get("collab_pct", 0)
         top_theme = brand_df.groupby("content_theme")["engagement_rate"].mean()
         best_theme = top_theme.idxmax() if len(top_theme) else "N/A"
         reel_pct = len(brand_df[brand_df["post_type"] == "Reel"]) / max(len(brand_df), 1) * 100
 
         st.markdown(
             f"**#{rank} {brand}** — {er:.2f}% ER | "
-            f"Top theme: {best_theme} | Reel mix: {reel_pct:.0f}% | Creator collab: {collab_pct:.0f}%"
+            f"Top theme: {best_theme} | Reel mix: {reel_pct:.0f}%"
         )
 
     cuervo_er = brand_ers.get(CUERVO, 0)
