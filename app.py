@@ -229,44 +229,6 @@ with title_col:
 
 st.markdown("---")
 
-# KPI row — Brief-target-aware
-c1, c2, c3, c4, c5 = st.columns(5)
-
-cuervo_posts = df[df["brand"] == "Jose Cuervo"]
-cuervo_ig = cuervo_posts[cuervo_posts["platform"] == "Instagram"]
-all_ers = df.groupby("brand")["engagement_rate"].mean().dropna()
-nonzero_ers = all_ers[all_ers > 0]
-cuervo_er = all_ers.get("Jose Cuervo", 0)
-cuervo_er = 0 if pd.isna(cuervo_er) else cuervo_er
-reel_ratio = len(cuervo_ig[cuervo_ig["post_type"] == "Reel"]) / max(len(cuervo_ig), 1) * 100
-cuervo_reels = cuervo_posts[cuervo_posts["post_type"] == "Reel"]
-avg_eng_per_reel = cuervo_reels["total_engagement"].mean() if len(cuervo_reels) else 0
-avg_eng_per_reel = 0 if pd.isna(avg_eng_per_reel) else avg_eng_per_reel
-best_brand = nonzero_ers.idxmax() if len(nonzero_ers) else "N/A"
-best_er = nonzero_ers.max() if len(nonzero_ers) else 0
-
-_t = SOCIAL_BRIEF_TARGETS
-with c1:
-    st.metric("Posts Analyzed", f"{len(df):,}")
-er_by_followers = results.get("cuervo_er_by_followers", 0)
-with c2:
-    st.metric("ER by Followers", f"{er_by_followers:.2f}%",
-              delta=f"{er_by_followers - _t['er_by_followers']:+.2f}% vs {_t['er_by_followers']}% target")
-with c3:
-    st.metric("Reel Ratio", f"{reel_ratio:.0f}%",
-              delta=f"{reel_ratio - _t['reel_ratio']:+.0f}% vs {_t['reel_ratio']}% target")
-with c4:
-    eng_reel_status = "On target" if avg_eng_per_reel >= _t["engagements_per_post"] else f"Below {_t['engagements_per_post']}"
-    st.metric("Avg Eng/Reel", f"{avg_eng_per_reel:,.0f}", delta=eng_reel_status)
-with c5:
-    st.metric("Top Brand (ER)", f"{best_brand}", delta=f"{best_er:.2f}%")
-
-# Show info if selected brands have no post data
-brands_no_data = [b for b in sel_brands if b not in df["brand"].values]
-if brands_no_data:
-    st.info(f"No post data yet for: {', '.join(brands_no_data)}. "
-            f"These brands will appear once Sprout Social data is imported.")
-
 st.markdown("---")
 st.subheader("Navigate")
 st.markdown("""
