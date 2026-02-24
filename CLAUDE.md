@@ -67,22 +67,29 @@ Uses autostrat hashtag/keyword/news reports only — sidebar filters do NOT appl
 2. **Sprout Social Import** — real data from CSV exports dropped into `data/sprout/`. Auto-detected when CSVs are present.
 3. **Custom CSV Folder** — manually created CSVs matching the schema in `templates.py`
 
-## Social Brief KPI Targets
+## Social Brief KPI Targets (2026 Social Strategy Deck)
 All targets centralized in `SOCIAL_BRIEF_TARGETS` dict in `config.py`.
-- Engagement Rate: 1.8% (updated from 3.0% based on actual data — Cuervo actual: 1.29-1.66%)
-- Avg Engagements/Reel: 100+ (replaced Avg Reel Views 10K — views unmeasurable from Sprout)
-- Reel Ratio (IG): 50%
-- IG Posts/Week: 4-5x
-- TT Posts/Week: 2-3x (reduced from 3-4x — no TikTok data yet)
-- Save Rate: 3%+ of total engagement (new KPI, current: 2.7%)
-- Share Rate: 7%+ of total engagement (new KPI, current: 6.7%)
-- Follower Growth: 15% (not tracked from static exports)
+- ER by Followers: 0.50%+ (updated from 1.8% — based on 2026 deck KPI Framework)
+- Avg Eng/Post: 300+ (updated from 100+)
+- Reel Ratio (IG): 50% of feed
+- Carousel Ratio (IG): 30% of feed
+- IG Posts/Month: 12-16 (updated from 8-10)
+- TT Posts/Week: 3-5x (updated from 2-3x)
+- Save Rate: 8.0%+ (updated from 3%)
+- Share Rate: 5.0%+ (updated from 7%)
+- Creator ER: Maintain 7%+ (new)
+- Creator % of Total: Ramp from 50% (March) to 70% (June)
 
-## Poplife Playbook Frameworks (config.py)
-- **Content Pillars**: La Tradición (25%), Cuervo Live (15%), Life with a Lime (30%), Culture Shaken (30%)
+## Poplife Playbook Frameworks (config.py) — Updated Feb 2026
+- **Content Pillars** (2): Cuervo in Culture (60% — Especial + RTDs), Tradicional Made Social (40% — Cuervo Tradicional)
 - **Content Mix**: Entertain (50%), Educate (30%), Connect (10%), Convince (10%)
 - **Content Source**: Creator & Influencer (70%), Brand-Owned (15%), Events & Partnerships (15%)
-- **Cadence**: IG 8-10/month, TT 12-16/month
+- **Cadence**: IG 12-16/month, TT 3-5x/week
+- **Execution Engines** (4): Memes + Reactive Culture, Creator-Led + UGC, Event + Festival Trend Factory, Lifestyle Shoot Bank
+- **Creator Archetypes** (5): The Party Starter, The Home Bartender, The Lifestyle Bestie, The Culture Commentator, The Festival Friend
+- **SKU Strategy**: Especial (high energy/fun), Tradicional (elevated), RTD (mid-high/daytime)
+- **North Star**: "Spark the Moment — Everyday to Unforgettable"
+- **Brand Persona**: "The Life of the Party"
 
 ## Key Technical Details
 - `st.session_state` shares data across pages: `results`, `df`, `filtered_df`, `sel_brands`, `sel_platforms`, `autostrat`

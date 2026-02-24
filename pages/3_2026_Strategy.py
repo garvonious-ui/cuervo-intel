@@ -15,8 +15,12 @@ from config import (
     BRAND_COLORS, CHART_TEMPLATE, CHART_FONT, BRAND_ORDER, CUSTOM_CSS,
     PRIORITY_COLORS, POPLIFE_CADENCE_TARGETS, SOCIAL_BRIEF_TARGETS,
     POPLIFE_PILLAR_MAP, POPLIFE_PILLAR_TARGETS, POPLIFE_PILLAR_COLORS,
+    POPLIFE_PILLAR_DESCRIPTIONS,
     CONTENT_MIX_MAP, CONTENT_MIX_TARGETS, CONTENT_MIX_COLORS,
     CUERVO_HASHTAG_IDS,
+    EXECUTION_ENGINES, CREATOR_ARCHETYPES, VOICE_PRINCIPLES,
+    SKU_STRATEGY, PLATFORM_ROLES, IG_FORMAT_MIX,
+    CULTURAL_CALENDAR, MONTHLY_RAMP, TESTING_ROADMAP,
 )
 from autostrat_loader import (
     has_autostrat_data, get_all_how_to_win, get_all_audience_profiles,
@@ -70,35 +74,58 @@ with tab_scorecard:
     cat_er = 0 if pd.isna(cat_er) else cat_er
 
     cuervo_ig = cuervo_df[cuervo_df["platform"] == "Instagram"]
-    cuervo_reels = cuervo_df[cuervo_df["post_type"] == "Reel"]
-    avg_eng_per_reel = cuervo_reels["total_engagement"].mean() if len(cuervo_reels) else 0
-    avg_eng_per_reel = 0 if pd.isna(avg_eng_per_reel) else avg_eng_per_reel
+    avg_eng_per_post = cuervo_df["total_engagement"].mean() if len(cuervo_df) else 0
+    avg_eng_per_post = 0 if pd.isna(avg_eng_per_post) else avg_eng_per_post
     reel_ratio = len(cuervo_ig[cuervo_ig["post_type"] == "Reel"]) / max(len(cuervo_ig), 1) * 100
+    carousel_ratio = len(cuervo_ig[cuervo_ig["post_type"] == "Carousel"]) / max(len(cuervo_ig), 1) * 100
+
+    # Save & share rates
+    total_eng = cuervo_df["total_engagement"].sum() or 1
+    save_rate = (cuervo_df["saves"].sum() / total_eng * 100) if "saves" in cuervo_df.columns else 0
+    share_rate = (cuervo_df["shares"].sum() / total_eng * 100) if "shares" in cuervo_df.columns else 0
+
+    # Creator content %
+    creator_posts = cuervo_df[cuervo_df["has_creator_collab"].astype(str).str.lower() == "yes"] if "has_creator_collab" in cuervo_df.columns else pd.DataFrame()
+    creator_pct = len(creator_posts) / max(len(cuervo_df), 1) * 100
+    creator_er = creator_posts["engagement_rate"].mean() if len(creator_posts) else 0
+    creator_er = 0 if pd.isna(creator_er) else creator_er
 
     freq = results["frequency"].get(CUERVO, {})
-    ig_ppw = freq.get("Instagram", {}).get("posts_per_week", 0)
+    ig_ppm = freq.get("Instagram", {}).get("posts_per_week", 0) * 4.33  # Convert to monthly
     tt_ppw = freq.get("TikTok", {}).get("posts_per_week", 0)
 
     # Scorecard table (targets from SOCIAL_BRIEF_TARGETS in config.py)
-    _ig_ppw = _t["ig_posts_per_week"]
+    _ig_ppm = _t["ig_posts_per_month"]
     _tt_ppw = _t["tt_posts_per_week"]
     scorecard_data = [
-        {"KPI": "Avg Engagement Rate", "Actual": f"{cuervo_er:.2f}%",
-         "Target": f"{_t['er']}%",
+        {"KPI": "ER by Followers", "Actual": f"{cuervo_er:.2f}%",
+         "Target": f"{_t['er']}%+",
          "Status": "ON TRACK" if cuervo_er >= _t["er"] else "BELOW",
          "Gap": f"{cuervo_er - _t['er']:+.2f}pp"},
-        {"KPI": "Avg Engagements/Reel", "Actual": f"{avg_eng_per_reel:,.0f}",
-         "Target": f"{_t['engagements_per_reel']:,}",
-         "Status": "ON TRACK" if avg_eng_per_reel >= _t["engagements_per_reel"] else "BELOW",
-         "Gap": f"{avg_eng_per_reel - _t['engagements_per_reel']:+,.0f}"},
+        {"KPI": "Avg Eng/Post", "Actual": f"{avg_eng_per_post:,.0f}",
+         "Target": f"{_t['engagements_per_post']:,}+",
+         "Status": "ON TRACK" if avg_eng_per_post >= _t["engagements_per_post"] else "BELOW",
+         "Gap": f"{avg_eng_per_post - _t['engagements_per_post']:+,.0f}"},
+        {"KPI": "Save Rate", "Actual": f"{save_rate:.1f}%",
+         "Target": f"{_t['save_rate']}%+",
+         "Status": "ON TRACK" if save_rate >= _t["save_rate"] else "BELOW",
+         "Gap": f"{save_rate - _t['save_rate']:+.1f}pp"},
+        {"KPI": "Share Rate", "Actual": f"{share_rate:.1f}%",
+         "Target": f"{_t['share_rate']}%+",
+         "Status": "ON TRACK" if share_rate >= _t["share_rate"] else "BELOW",
+         "Gap": f"{share_rate - _t['share_rate']:+.1f}pp"},
+        {"KPI": "Creator ER", "Actual": f"{creator_er:.2f}%",
+         "Target": f"{_t['creator_er']}%+",
+         "Status": "ON TRACK" if creator_er >= _t["creator_er"] else "BELOW",
+         "Gap": f"{creator_er - _t['creator_er']:+.2f}pp"},
         {"KPI": "Reel Ratio (IG)", "Actual": f"{reel_ratio:.0f}%",
          "Target": f"{_t['reel_ratio']}%",
          "Status": "ON TRACK" if reel_ratio >= _t["reel_ratio"] else "BELOW",
          "Gap": f"{reel_ratio - _t['reel_ratio']:+.0f}pp"},
-        {"KPI": "IG Posts/Week", "Actual": f"{ig_ppw:.1f}",
-         "Target": f"{_ig_ppw[0]}-{_ig_ppw[1]}/wk",
-         "Status": "ON TRACK" if _ig_ppw[0] <= ig_ppw <= _ig_ppw[1] else ("BELOW" if ig_ppw < _ig_ppw[0] else "ABOVE"),
-         "Gap": f"{ig_ppw - sum(_ig_ppw)/2:+.1f} vs mid"},
+        {"KPI": "IG Posts/Month", "Actual": f"{ig_ppm:.0f}",
+         "Target": f"{_ig_ppm[0]}-{_ig_ppm[1]}/mo",
+         "Status": "ON TRACK" if _ig_ppm[0] <= ig_ppm <= _ig_ppm[1] else ("BELOW" if ig_ppm < _ig_ppm[0] else "ABOVE"),
+         "Gap": f"{ig_ppm - sum(_ig_ppm)/2:+.0f} vs mid"},
         {"KPI": "TT Posts/Week", "Actual": f"{tt_ppw:.1f}",
          "Target": f"{_tt_ppw[0]}-{_tt_ppw[1]}/wk",
          "Status": "ON TRACK" if _tt_ppw[0] <= tt_ppw <= _tt_ppw[1] else ("BELOW" if tt_ppw < _tt_ppw[0] else "ABOVE"),
@@ -118,7 +145,7 @@ with tab_scorecard:
 
     st.dataframe(
         sc_df.style.map(color_status, subset=["Status"]),
-        use_container_width=True, hide_index=True, height=230,
+        use_container_width=True, hide_index=True, height=340,
     )
 
     on_track = sum(1 for s in scorecard_data if s["Status"] == "ON TRACK")
@@ -288,41 +315,47 @@ with tab_scorecard:
 
 with tab_frameworks:
 
-    # ── Poplife Content Pillars ──────────────────────────────────────────
-    st.subheader("Content Pillars — Poplife Framework")
-    st.caption("4 pillars from the Poplife Social Playbook Q1 2026")
-
-    PILLARS = [
-        {"name": "La Tradición", "target": 25,
-         "themes": POPLIFE_PILLAR_MAP["La Tradición"],
-         "desc": "Heritage, education, cocktail recipes — approachable expert tone"},
-        {"name": "Cuervo Live", "target": 15,
-         "themes": POPLIFE_PILLAR_MAP["Cuervo Live"],
-         "desc": "Events, music, sports — energetic FOMO-inducing content"},
-        {"name": "Life, with a Lime", "target": 30,
-         "themes": POPLIFE_PILLAR_MAP["Life, with a Lime"],
-         "desc": "Lifestyle, aspirational moments — feel bigger and brighter"},
-        {"name": "Culture, Shaken", "target": 30,
-         "themes": POPLIFE_PILLAR_MAP["Culture, Shaken"],
-         "desc": "Memes, UGC, trending content — culturally plugged in"},
-    ]
+    # ── Content Pillars (2 pillars from 2026 deck) ──────────────────────
+    st.subheader("Content Pillars")
+    st.caption("2 pillars from the 2026 Social Strategy — SKU-aligned content territories")
 
     pillar_data = []
-    for p in PILLARS:
-        matching = cuervo_df[cuervo_df["content_theme"].isin(p["themes"])]
+    for pillar_name, themes in POPLIFE_PILLAR_MAP.items():
+        matching = cuervo_df[cuervo_df["content_theme"].isin(themes)]
         pct = len(matching) / max(len(cuervo_df), 1) * 100
         er = matching["engagement_rate"].mean() if len(matching) else 0
         er = 0 if pd.isna(er) else er
         pillar_data.append({
-            "Pillar": p["name"],
+            "Pillar": pillar_name,
             "Actual %": round(pct, 1),
-            "Target %": p["target"],
+            "Target %": POPLIFE_PILLAR_TARGETS[pillar_name],
             "Avg ER": round(er, 2),
             "Posts": len(matching),
-            "desc": p["desc"],
+            "desc": POPLIFE_PILLAR_DESCRIPTIONS.get(pillar_name, ""),
         })
 
     pillar_df = pd.DataFrame(pillar_data)
+
+    # Pillar detail cards
+    for _, row in pillar_df.iterrows():
+        gap = row["Actual %"] - row["Target %"]
+        color = POPLIFE_PILLAR_COLORS[row["Pillar"]]
+        desc = row["desc"]
+        st.markdown(f"""
+        <div style="background:white; border-radius:10px; padding:18px 22px; margin-bottom:14px;
+                    border-left:5px solid {color}; border:1px solid #E0D8D0;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <h4 style="margin:0; color:#333;">{row['Pillar']}</h4>
+                <span style="background:{color}; color:white; padding:4px 12px; border-radius:20px;
+                             font-weight:600; font-size:0.85rem;">{row['Actual %']:.0f}% actual / {row['Target %']}% target</span>
+            </div>
+            <p style="color:#666; margin:4px 0 8px 0; font-size:0.9rem;">{desc}</p>
+            <div style="display:flex; gap:24px; font-size:0.88rem;">
+                <span><strong>{row['Posts']}</strong> posts</span>
+                <span><strong>{row['Avg ER']:.2f}%</strong> avg ER</span>
+                <span style="color:{'#2E7D32' if abs(gap) < 10 else '#C62828'};">{gap:+.0f}pp gap</span>
+            </div>
+        </div>""", unsafe_allow_html=True)
 
     col_pd1, col_pd2 = st.columns(2)
     with col_pd1:
@@ -332,7 +365,7 @@ with tab_frameworks:
                                 name="Actual", marker_color=[POPLIFE_PILLAR_COLORS[p] for p in pillar_df["Pillar"]],
                                 text=pillar_df["Actual %"], textposition="outside", texttemplate="%{text:.0f}%"))
         fig_pd.add_trace(go.Scatter(x=pillar_df["Pillar"], y=pillar_df["Target %"],
-                                    name="Poplife Target", mode="markers+lines",
+                                    name="Target", mode="markers+lines",
                                     marker=dict(size=12, color="#333333", symbol="diamond"),
                                     line=dict(color="#333333", width=2, dash="dash")))
         fig_pd.update_layout(template=CHART_TEMPLATE, font=CHART_FONT, height=380,
@@ -350,24 +383,64 @@ with tab_frameworks:
         fig_pe.update_layout(showlegend=False, font=CHART_FONT, height=380)
         st.plotly_chart(fig_pe, use_container_width=True)
 
-    # Pillar scorecard
-    pillar_desc_map = {p["Pillar"]: p["desc"] for p in pillar_data}
-    for _, row in pillar_df.iterrows():
-        gap = row["Actual %"] - row["Target %"]
-        direction = "ON TRACK" if abs(gap) < 5 else ("MORE" if gap < 0 else "LESS")
-        desc = pillar_desc_map.get(row["Pillar"], "")
-        if direction == "ON TRACK":
-            st.success(f"**{row['Pillar']}** ({desc}): {row['Actual %']:.0f}% actual / {row['Target %']}% target — ON TRACK")
-        elif direction == "MORE":
-            st.error(f"**{row['Pillar']}** ({desc}): {row['Actual %']:.0f}% actual / {row['Target %']}% target — Need MORE (+{abs(gap):.0f}pp)")
-        else:
-            st.warning(f"**{row['Pillar']}** ({desc}): {row['Actual %']:.0f}% actual / {row['Target %']}% target — Need LESS ({gap:+.0f}pp)")
+    st.markdown("---")
+
+    # ── SKU Strategy ────────────────────────────────────────────────────
+    st.subheader("SKU Strategy")
+    st.caption("Each SKU has a distinct energy and occasion — content should match")
+
+    sku_cols = st.columns(len(SKU_STRATEGY))
+    sku_colors = {"Especial": "#F8C090", "Tradicional": "#C9A87E", "RTD": "#2ea3f2"}
+    for col, (sku, info) in zip(sku_cols, SKU_STRATEGY.items()):
+        with col:
+            c = sku_colors.get(sku, "#999")
+            st.markdown(f"""
+            <div style="background:white; border-radius:10px; padding:16px; text-align:center;
+                        border-top:4px solid {c}; border:1px solid #E0D8D0;">
+                <h4 style="margin:0 0 6px 0; color:{c};">{sku}</h4>
+                <p style="font-weight:600; margin:4px 0; color:#333;">{info['energy']}</p>
+                <p style="color:#666; font-size:0.85rem; margin:0;">{info['occasions']}</p>
+            </div>""", unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # ── 4 Execution Engines ─────────────────────────────────────────────
+    st.subheader("The 4 Execution Engines")
+    st.caption("How content gets made across both pillars")
+
+    engine_colors = ["#2ea3f2", "#F8C090", "#C9A87E", "#66BB6A"]
+    eng_cols = st.columns(2)
+    for i, (engine, desc) in enumerate(EXECUTION_ENGINES.items()):
+        with eng_cols[i % 2]:
+            c = engine_colors[i]
+            st.markdown(f"""
+            <div style="background:white; border-radius:10px; padding:16px 18px; margin-bottom:12px;
+                        border-top:4px solid {c}; border:1px solid #E0D8D0; min-height:120px;">
+                <h4 style="margin:0 0 8px 0; color:{c}; font-size:0.95rem;">{engine.upper()}</h4>
+                <p style="color:#555; font-size:0.88rem; line-height:1.5; margin:0;">{desc}</p>
+            </div>""", unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # ── The Cuervo Crew (Creator Archetypes) ────────────────────────────
+    st.subheader("The Cuervo Crew — Creator Archetypes")
+    st.caption("Creators embedded in the brand — not hired talent. iPhone-first. Social-native.")
+
+    arch_cols = st.columns(min(len(CREATOR_ARCHETYPES), 5))
+    for i, (archetype, fit) in enumerate(CREATOR_ARCHETYPES.items()):
+        with arch_cols[i % len(arch_cols)]:
+            st.markdown(f"""
+            <div style="background:white; border-radius:10px; padding:14px; text-align:center;
+                        border:1px solid #E0D8D0; min-height:100px;">
+                <p style="font-weight:700; color:#333; margin:0 0 6px 0; font-size:0.9rem;">{archetype}</p>
+                <p style="color:#666; font-size:0.82rem; margin:0;">{fit}</p>
+            </div>""", unsafe_allow_html=True)
 
     st.markdown("---")
 
     # ── Content Mix Funnel ─────────────────────────────────────────────
     st.subheader("Content Mix Funnel — Entertain / Educate / Connect / Convince")
-    st.caption("Poplife Playbook: grab attention first (Entertain), then guide to action (Convince)")
+    st.caption("Grab attention first (Entertain 50%), then guide to action (Convince 10%)")
 
     cuervo_mix_data = []
     for cat in ["Entertain", "Educate", "Connect", "Convince"]:
@@ -460,6 +533,55 @@ with tab_frameworks:
             f"**Strongest area:** {dims[biggest_lead_idx]} "
             f"(Cuervo {cuervo_scores[biggest_lead_idx]:.0f}% vs leaders {leader_avg_scores[biggest_lead_idx]:.0f}%).")
 
+    st.markdown("---")
+
+    # ── Voice Principles ────────────────────────────────────────────────
+    st.subheader("Tone of Voice — The Life of the Party")
+    st.caption("Cuervo's social voice: lively, approachable, human-forward, extroverted")
+
+    for principle, detail in VOICE_PRINCIPLES:
+        st.markdown(f"""
+        <div style="background:white; border-radius:8px; padding:12px 18px; margin-bottom:8px;
+                    border-left:4px solid #F8C090; border:1px solid #E0D8D0;">
+            <strong style="color:#333;">{principle}</strong>
+            <span style="color:#888; margin-left:12px;">{detail}</span>
+        </div>""", unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # ── Platform Playbook ───────────────────────────────────────────────
+    st.subheader("Platform Playbook")
+    st.caption("Platform roles, priority levels, and cadence targets")
+
+    plat_rows = []
+    for plat, info in PLATFORM_ROLES.items():
+        plat_rows.append({"Platform": plat, "Role": info["role"], "Priority": info["priority"], "Cadence": info["cadence"]})
+    plat_df = pd.DataFrame(plat_rows)
+
+    def color_priority(val):
+        if val == "Primary":
+            return "background-color: #C8E6C9; color: #2E7D32; font-weight: bold"
+        return "background-color: #E0E0E0; color: #555"
+
+    st.dataframe(
+        plat_df.style.map(color_priority, subset=["Priority"]),
+        use_container_width=True, hide_index=True, height=260,
+    )
+
+    # IG Format Mix
+    st.markdown("**Instagram Format Mix**")
+    fmt_cols = st.columns(len(IG_FORMAT_MIX))
+    fmt_colors = ["#2ea3f2", "#F8C090", "#C9A87E", "#66BB6A"]
+    for i, (fmt, info) in enumerate(IG_FORMAT_MIX.items()):
+        with fmt_cols[i]:
+            c = fmt_colors[i]
+            st.markdown(f"""
+            <div style="text-align:center; background:white; border-radius:8px; padding:12px;
+                        border-top:3px solid {c}; border:1px solid #E0D8D0;">
+                <p style="font-size:1.4rem; font-weight:700; color:{c}; margin:0;">{info['pct']}%</p>
+                <p style="font-weight:600; margin:2px 0; color:#333;">{fmt}</p>
+                <p style="color:#888; font-size:0.8rem; margin:0;">{info['role']}</p>
+            </div>""", unsafe_allow_html=True)
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -499,8 +621,8 @@ with tab_action:
             "week": "Week 2",
             "focus": "Content Pillar Launch",
             "actions": [
-                "Launch 'Life, with a Lime' pillar: 2 Reels featuring Cuervo in social settings",
-                "Launch 'La Tradicion' pillar: 1 Carousel with cocktail recipe using Tradicional",
+                "Launch 'Cuervo in Culture' pillar: 2 Reels featuring meme/reactive cultural content (Especial + RTDs)",
+                "Launch 'Tradicional, Made Social' pillar: 1 Carousel with cocktail recipe using Tradicional",
                 "Test first meme-format Reel (POV/trending audio) — keep it native, not ad-like",
                 f"Test top-performing themes from leaders: {', '.join(top_themes_for_leaders.index[:2])}" if len(top_themes_for_leaders) >= 2 else "Identify and test high-performing themes from competitors",
             ],
@@ -531,6 +653,54 @@ with tab_action:
         with st.expander(f"**{item['week']}** — {item['focus']}"):
             for action in item["actions"]:
                 st.markdown(f"- {action}")
+
+    st.markdown("---")
+
+    # ── 2026 Cultural Calendar ──────────────────────────────────────────
+    st.subheader("2026 Cultural Calendar")
+    st.caption("Quarterly cultural moments and content angles")
+
+    cal_colors = {"Q1": "#2ea3f2", "Q2": "#F8C090", "Q3": "#66BB6A", "Q4": "#C9A87E"}
+    cal_cols = st.columns(len(CULTURAL_CALENDAR))
+    for col, (quarter, info) in zip(cal_cols, CULTURAL_CALENDAR.items()):
+        with col:
+            c = cal_colors.get(quarter, "#999")
+            st.markdown(f"""
+            <div style="background:white; border-radius:10px; padding:14px; min-height:140px;
+                        border-top:4px solid {c}; border:1px solid #E0D8D0;">
+                <h4 style="margin:0 0 6px 0; color:{c};">{quarter}</h4>
+                <p style="font-weight:600; color:#333; font-size:0.85rem; margin:0 0 6px 0;">{info['moments']}</p>
+                <p style="color:#666; font-size:0.82rem; margin:0;">{info['angle']}</p>
+            </div>""", unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # ── Monthly Ramp (March-June) ───────────────────────────────────────
+    st.subheader("Monthly Ramp Targets (March — June 2026)")
+    st.caption("Progressive scaling toward full strategy execution")
+
+    ramp_rows = []
+    for month, targets in MONTHLY_RAMP.items():
+        ramp_rows.append({
+            "Month": month,
+            "Creator % of Total": targets["creator_pct"],
+            "Avg ER Target": targets["er_target"],
+            "Proactive Comments/Wk": targets["proactive_comments_wk"],
+        })
+    ramp_df = pd.DataFrame(ramp_rows)
+    st.dataframe(ramp_df, use_container_width=True, hide_index=True)
+
+    st.markdown("---")
+
+    # ── Testing Roadmap ─────────────────────────────────────────────────
+    st.subheader("Testing Roadmap")
+    st.caption("Monthly A/B tests to optimize content strategy")
+
+    test_rows = []
+    for month, info in TESTING_ROADMAP.items():
+        test_rows.append({"Month": month, "Test Variable": info["variable"], "What We're Learning": info["learning"]})
+    test_df = pd.DataFrame(test_rows)
+    st.dataframe(test_df, use_container_width=True, hide_index=True)
 
     st.markdown("---")
 
