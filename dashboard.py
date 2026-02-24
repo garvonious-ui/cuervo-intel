@@ -130,10 +130,10 @@ def create_executive_summary(wb: Workbook, results: dict):
             brand,
             ig.get("followers", 0),
             ig.get("avg_engagement_rate", 0),
-            ig_freq.get("total_posts_30d", 0),
+            ig_freq.get("total_posts", 0),
             tt.get("followers", 0),
             tt.get("avg_engagement_rate", 0),
-            tt_freq.get("total_posts_30d", 0),
+            tt_freq.get("total_posts", 0),
         ]
         for c, v in enumerate(values, 1):
             ws.cell(row=row, column=c, value=v)
@@ -212,7 +212,7 @@ def create_brand_comparison(wb: Workbook, results: dict):
         values = [
             brand,
             eng.get("followers", 0),
-            freq.get("total_posts_30d", 0),
+            freq.get("total_posts", 0),
             freq.get("posts_per_week", 0),
             eng.get("avg_engagement_rate", 0),
             eng.get("avg_likes", 0),
@@ -253,7 +253,7 @@ def create_brand_comparison(wb: Workbook, results: dict):
         values = [
             brand,
             eng.get("followers", 0),
-            freq.get("total_posts_30d", 0),
+            freq.get("total_posts", 0),
             freq.get("posts_per_week", 0),
             eng.get("avg_engagement_rate", 0),
             eng.get("avg_likes", 0),

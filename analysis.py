@@ -174,6 +174,14 @@ def analyze_posting_frequency(posts: list[dict]) -> dict[str, Any]:
     """Analyze posting frequency by brand, platform, day, hour, and content type."""
     results = {}
 
+    # Determine actual date span from all posts to calculate accurate frequency
+    all_dates = [p["post_date_parsed"] for p in posts if p.get("post_date_parsed")]
+    if all_dates:
+        date_span_days = (max(all_dates) - min(all_dates)).days + 1
+    else:
+        date_span_days = 30  # fallback
+    weeks_in_span = max(date_span_days / 7, 1)
+
     for brand in BRANDS:
         brand_posts = [p for p in posts if p["brand"] == brand]
         results[brand] = {}
@@ -182,8 +190,8 @@ def analyze_posting_frequency(posts: list[dict]) -> dict[str, Any]:
             plat_posts = [p for p in brand_posts if p["platform"] == platform]
             total = len(plat_posts)
 
-            # Posts per week (30 days ≈ 4.3 weeks)
-            per_week = round(total / 4.3, 1) if total > 0 else 0
+            # Posts per week based on actual date range of data
+            per_week = round(total / weeks_in_span, 1) if total > 0 else 0
 
             # By day of week
             day_counts = Counter()
@@ -207,7 +215,8 @@ def analyze_posting_frequency(posts: list[dict]) -> dict[str, Any]:
             best_hours = hour_counts.most_common(3)
 
             results[brand][platform] = {
-                "total_posts_30d": total,
+                "total_posts": total,
+                "date_span_days": date_span_days,
                 "posts_per_week": per_week,
                 "by_day": dict(day_counts),
                 "by_hour": dict(hour_counts),

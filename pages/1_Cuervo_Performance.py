@@ -157,8 +157,8 @@ with tab_kpi:
     for plat, col in [("Instagram", cad1), ("TikTok", cad2)]:
         with col:
             freq_p = results["frequency"].get(CUERVO, {}).get(plat, {})
-            actual_ppm = freq_p.get("total_posts_30d", 0)
             actual_ppw = freq_p.get("posts_per_week", 0)
+            actual_ppm = round(actual_ppw * 4.33)  # Convert weekly rate to monthly
             target = POPLIFE_CADENCE_TARGETS.get(plat, {})
             target_low = target.get("low", 0)
             target_high = target.get("high", 0)
@@ -230,7 +230,7 @@ with tab_kpi:
         best_day_str = best_days[0][0] if best_days else "N/A"
         best_hour_str = f"{best_hours[0][0]}:00" if best_hours else "N/A"
         st.info(f"**Peak posting window:** {best_day_str} at {best_hour_str} on {heatmap_plat}. "
-                f"Total posts in period: {freq_hm.get('total_posts_30d', 0)}.")
+                f"Total posts in period: {freq_hm.get('total_posts', 0)}.")
     else:
         st.info(f"No {heatmap_plat} posting data available for Cuervo.")
 
