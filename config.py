@@ -81,21 +81,69 @@ PRIORITY_COLORS = {
     "Low": "#8CBF8C",
 }
 
-# ─── POPLIFE PLAYBOOK FRAMEWORKS (Q1 2026) ───────────────────────────
-# Maps existing content_theme values to Poplife strategy frameworks.
+# ─── POPLIFE PLAYBOOK FRAMEWORKS (2026 Social Strategy) ──────────────
+# Maps existing content_theme values to the 2 content pillars from the deck.
 
 POPLIFE_PILLAR_MAP = {
-    "La Tradición": ["Brand Heritage / Story", "Education (Tequila 101)", "Behind the Scenes"],
-    "Cuervo Live": ["Event / Activation", "Music / Party", "Sports Tie-in"],
-    "Life, with a Lime": ["Lifestyle/Aspirational", "Cocktail Recipe", "Product Showcase"],
-    "Culture, Shaken": ["Meme / Humor", "Creator Collab / UGC", "Cultural Moment / Holiday", "User Repost", "Giveaway / Promo"],
+    "Cuervo in Culture": [
+        "Meme / Humor", "Creator Collab / UGC", "Cultural Moment / Holiday",
+        "Music / Party", "Event / Activation", "Giveaway / Promo",
+        "User Repost", "Sports Tie-in", "Lifestyle/Aspirational",
+    ],
+    "Tradicional, Made Social": [
+        "Brand Heritage / Story", "Education (Tequila 101)", "Behind the Scenes",
+        "Cocktail Recipe", "Product Showcase",
+    ],
 }
-POPLIFE_PILLAR_TARGETS = {"La Tradición": 25, "Cuervo Live": 15, "Life, with a Lime": 30, "Culture, Shaken": 30}
+POPLIFE_PILLAR_TARGETS = {"Cuervo in Culture": 60, "Tradicional, Made Social": 40}
 POPLIFE_PILLAR_COLORS = {
-    "La Tradición": "#C9A87E",     # Sandy tan — heritage
-    "Cuervo Live": "#D4956A",      # Burnt peach — live events
-    "Life, with a Lime": "#66BB6A", # Green — lifestyle
-    "Culture, Shaken": "#2ea3f2",   # Blue — culture/trends
+    "Cuervo in Culture": "#2ea3f2",          # Blue — culture/entertainment
+    "Tradicional, Made Social": "#C9A87E",   # Sandy tan — heritage elevated
+}
+POPLIFE_PILLAR_DESCRIPTIONS = {
+    "Cuervo in Culture": "Cultural moments, memes, reactive content, UGC — Especial + RTDs",
+    "Tradicional, Made Social": "Heritage reimagined, bartender POV, distillery stories — Cuervo Tradicional",
+}
+
+# SKU strategy from the 2026 Social Strategy deck
+SKU_STRATEGY = {
+    "Especial": {"energy": "High energy, fun", "occasions": "Everyday mixing, margs"},
+    "Tradicional": {"energy": "Elevated", "occasions": "Night out, gifting, sipping"},
+    "RTD": {"energy": "Mid-high, daytime", "occasions": "BBQ, tailgate, concerts"},
+}
+
+# 4 Execution Engines that drive content creation across pillars
+EXECUTION_ENGINES = {
+    "Memes + Reactive Culture": "Fast, funny, internet-native. Real-time commentary, cultural remixing, POV humor, reaction formats.",
+    "Creator-Led + UGC": "POV storytelling, diaries, lives, fan cams, giveaways. The Cuervo Crew — creators embedded in the brand.",
+    "Event + Festival Trend Factory": "Capture moments for TikTok — not recap videos. Film with trend formats in mind BEFORE the event.",
+    "Lifestyle Shoot Bank": "Evergreen assets: meme templates, product hero, seasonal fillers, cocktail how-tos, story backgrounds.",
+}
+
+# Creator archetypes — "The Cuervo Crew"
+CREATOR_ARCHETYPES = {
+    "The Party Starter": "Nightlife, going-out energy",
+    "The Home Bartender": "Cocktail recipes (saves)",
+    "The Lifestyle Bestie": "Fashion/lifestyle (aspirational)",
+    "The Culture Commentator": "Pop culture, meme (shares)",
+    "The Festival Friend": "Events, RTD occasions",
+}
+
+# Voice principles from the deck
+VOICE_PRINCIPLES = [
+    ("Talk like a friend, not a brand", "Warm, knowing, a little cheeky. Never corporate."),
+    ("Be funny without forcing it", "Gen-Z can smell 'trying too hard' instantly."),
+    ("Celebrate the moment, not the product", "Lead with what's happening. Cuervo enters as part of the scene."),
+    ("Be confident, not cocky", "We invented tequila. That's earned confidence."),
+    ("Move at the speed of culture", "Quick, sharp, human reactions. Not two weeks later."),
+]
+
+# 2026 Cultural Calendar
+CULTURAL_CALENDAR = {
+    "Q1": {"moments": "Super Bowl, Oscars, Grammys, Nat'l Margarita Day", "angle": "Game day serves, awards content, Valentine's cocktails"},
+    "Q2": {"moments": "Cinco de Mayo, Coachella, Met Gala, NBA Finals", "angle": "Marg Season launch, festival content, summer drops"},
+    "Q3": {"moments": "4th of July, Lollapalooza, Love Island, US Open", "angle": "Peak summer, RTD outdoor, reality TV tie-ins"},
+    "Q4": {"moments": "Halloween, Day of the Dead, NFL, holiday hosting, NYE", "angle": "Holiday serves, cultural celebrations, game day"},
 }
 
 CONTENT_MIX_MAP = {
@@ -112,10 +160,44 @@ CONTENT_MIX_COLORS = {
     "Convince": "#D9534F",   # Red — action/sales
 }
 
-# Poplife platform cadence targets (posts per month)
+# Platform cadence targets (posts per month) — 2026 Social Strategy deck
 POPLIFE_CADENCE_TARGETS = {
-    "Instagram": {"low": 8, "high": 10},   # 2-3x/week
-    "TikTok": {"low": 12, "high": 16},     # 4-5x/week
+    "Instagram": {"low": 12, "high": 16},   # 12-16/mo (curated, social-first)
+    "TikTok": {"low": 12, "high": 20},      # 3-5x/week (reactive, entertainment)
+}
+
+# IG Format Mix targets from Platform Playbook slide
+IG_FORMAT_MIX = {
+    "Reels": {"pct": 50, "role": "Reach + discovery"},
+    "Carousels": {"pct": 30, "role": "Engagement driver"},
+    "Stories": {"pct": 15, "role": "Community + utility"},
+    "Collabs/Lives": {"pct": 5, "role": "Creator amplification"},
+}
+
+# Platform roles at a glance
+PLATFORM_ROLES = {
+    "Instagram": {"role": "The Main Stage — curated, social-first", "priority": "Primary", "cadence": "12-16/mo"},
+    "TikTok": {"role": "The Culture Lab — reactive, entertainment", "priority": "Primary", "cadence": "3-5x/week"},
+    "Pinterest": {"role": "Inspiration Engine — recipes, discovery", "priority": "Secondary", "cadence": "10-12 pins/mo"},
+    "Facebook": {"role": "Performance Amplifier — paid distribution", "priority": "Secondary", "cadence": "3 paid/mo"},
+    "X / Threads": {"role": "The Listener — reactive community", "priority": "Secondary", "cadence": "Reactive"},
+    "YouTube": {"role": "Deep Dive — education + Shorts", "priority": "Secondary", "cadence": "4-5/mo"},
+}
+
+# Monthly ramp targets (March-June 2026)
+MONTHLY_RAMP = {
+    "March": {"creator_pct": "50%+", "er_target": "0.25%", "proactive_comments_wk": "15-20"},
+    "April": {"creator_pct": "60%+", "er_target": "0.30%", "proactive_comments_wk": "20-25"},
+    "May": {"creator_pct": "65%+", "er_target": "0.40%", "proactive_comments_wk": "25-30"},
+    "June": {"creator_pct": "70%", "er_target": "0.50%", "proactive_comments_wk": "30+"},
+}
+
+# Testing roadmap (March-June 2026)
+TESTING_ROADMAP = {
+    "March": {"variable": "Creator carousel vs. creator Reel", "learning": "Which format drives higher ER?"},
+    "April": {"variable": "Humor/meme vs. lifestyle content", "learning": "What entertainment style resonates?"},
+    "May": {"variable": "Short caption vs. story-driven", "learning": "How much copy do people engage with?"},
+    "June": {"variable": "Especial-led vs. RTD-led", "learning": "Which SKU drives more summer engagement?"},
 }
 
 # ─── SOCIAL BRIEF KPI TARGETS (2026) ─────────────────────────────────
@@ -125,13 +207,16 @@ POPLIFE_CADENCE_TARGETS = {
 # the weekly posting targets below are Social Brief KPIs (may differ).
 
 SOCIAL_BRIEF_TARGETS = {
-    "er": 1.8,                          # Engagement Rate % target
-    "reel_ratio": 50,                   # Reel Ratio % on Instagram
-    "engagements_per_reel": 100,        # Avg engagements per Reel (replaced Avg Reel Views 10K)
-    "ig_posts_per_week": (4, 5),        # IG posts/week range
-    "tt_posts_per_week": (2, 3),        # TT posts/week range (was 3-4)
-    "save_rate": 3.0,                   # Save Rate % of total engagement (future KPI)
-    "share_rate": 7.0,                  # Share Rate % of total engagement (future KPI)
+    "er": 0.50,                         # ER by Followers target (updated from 1.8%)
+    "engagements_per_post": 300,        # Avg engagements per post target (was 100/reel)
+    "reel_ratio": 50,                   # Reel Ratio % on Instagram (Reels = 50% of feed)
+    "carousel_ratio": 30,              # Carousel Ratio % on Instagram (new)
+    "ig_posts_per_month": (12, 16),    # IG posts/month range (was 4-5/wk)
+    "tt_posts_per_week": (3, 5),       # TT posts/week range (was 2-3)
+    "save_rate": 8.0,                   # Save Rate % target (was 3%)
+    "share_rate": 5.0,                  # Share Rate % target (was 7%)
+    "creator_er": 7.0,                  # Creator content ER target (new — maintain 7%+)
+    "creator_pct_target_june": 70,     # Creator % of total by June 2026
 }
 
 CHART_TEMPLATE = "plotly_white"
