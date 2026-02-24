@@ -737,12 +737,12 @@ def import_sprout_directory(sprout_dir: str, output_dir: str) -> tuple[list[str]
 
     files = []
 
-    # Write posts_data.csv (deduplicate overlapping date ranges by post_id + date)
+    # Write posts_data.csv (deduplicate overlapping date ranges by post_url + post_date)
     if all_posts:
         posts_path = os.path.join(output_dir, "posts_data.csv")
         posts_df = pd.DataFrame(all_posts)
-        if "post_id" in posts_df.columns and "date" in posts_df.columns:
-            posts_df = posts_df.drop_duplicates(subset=["post_id", "date"], keep="last")
+        if "post_url" in posts_df.columns and "post_date" in posts_df.columns:
+            posts_df = posts_df.drop_duplicates(subset=["post_url", "post_date"], keep="last")
         posts_df.to_csv(posts_path, index=False)
         files.append(posts_path)
 

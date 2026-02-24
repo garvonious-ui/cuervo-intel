@@ -740,19 +740,6 @@ def run_full_analysis(data_dir: str, benchmark: dict = None) -> dict[str, Any]:
     else:
         cuervo_er_by_followers = 0.0
 
-    # ER by Impressions: mean of Sprout's engagement_rate_manual for Cuervo posts
-    sprout_ers = []
-    for p in cuervo_posts:
-        manual = p.get("engagement_rate_manual", "")
-        if manual != "" and manual is not None:
-            try:
-                val = float(manual)
-                if val >= 0:
-                    sprout_ers.append(val)
-            except (ValueError, TypeError):
-                pass
-    cuervo_er_by_impressions = (sum(sprout_ers) / len(sprout_ers)) if sprout_ers else 0.0
-
     return {
         "posts": posts,
         "profiles": profiles,
@@ -765,5 +752,4 @@ def run_full_analysis(data_dir: str, benchmark: dict = None) -> dict[str, Any]:
         "creators": creator_analysis,
         "recommendations": recommendations,
         "cuervo_er_by_followers": round(cuervo_er_by_followers, 3),
-        "cuervo_er_by_impressions": round(cuervo_er_by_impressions, 3),
     }

@@ -100,7 +100,7 @@ All targets centralized in `SOCIAL_BRIEF_TARGETS` dict in `config.py`.
 - Page 5 uses `st.session_state["autostrat"]` directly — no quantitative data, sidebar filters do NOT apply. Reports are classified via `BRAND_HASHTAGS` and `CATEGORY_HASHTAGS` config whitelists.
 - Brand colors and CSS match poplife99.com palette (peach #F8C090, blue #2ea3f2, dark #333333)
 - `st.logo("logo.png")` and `st.markdown(CUSTOM_CSS)` must be called in every page file
-- Plotly charts use `width="stretch"` (not deprecated `use_container_width=True`)
+- Plotly charts use `use_container_width=True` for responsive sizing
 - Favicon is `favicon.png` (Poplife "P" icon)
 
 ## Engagement Rate Calculation

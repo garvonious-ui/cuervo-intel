@@ -151,7 +151,7 @@ with tab_kpi:
 
     # ── Platform Cadence Scorecard ─────────────────────────────────────
     st.subheader("Platform Cadence Scorecard")
-    st.caption("Poplife targets: Instagram 8-10 assets/month, TikTok 12-16 assets/month")
+    st.caption("Poplife targets: Instagram 12-16 assets/month, TikTok 12-20 assets/month")
 
     cad1, cad2 = st.columns(2)
     for plat, col in [("Instagram", cad1), ("TikTok", cad2)]:
