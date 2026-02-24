@@ -75,7 +75,6 @@ with tab_scorecard:
 
     # Separate ER metrics
     er_by_followers = results.get("cuervo_er_by_followers", 0)
-    er_by_impressions = results.get("cuervo_er_by_impressions", 0)
     benchmark = results.get("benchmark", {})
     cuervo_bench = benchmark.get("Jose Cuervo", {})
     er_by_views = cuervo_bench.get("er_by_views", 0) if cuervo_bench else 0
@@ -109,10 +108,6 @@ with tab_scorecard:
          "Target": f"{_t['er_by_followers']}%+",
          "Status": "ON TRACK" if er_by_followers >= _t["er_by_followers"] else "BELOW",
          "Gap": f"{er_by_followers - _t['er_by_followers']:+.2f}pp"},
-        {"KPI": "ER by Impressions", "Actual": f"{er_by_impressions:.2f}%",
-         "Target": "\u2014",
-         "Status": "INFO",
-         "Gap": "\u2014"},
         {"KPI": "ER by Views", "Actual": f"{er_by_views:.2f}%",
          "Target": f"{_t['er_by_views']}%+",
          "Status": "ON TRACK" if er_by_views >= _t["er_by_views"] else "BELOW",

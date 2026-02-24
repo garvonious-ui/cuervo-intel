@@ -91,30 +91,26 @@ with tab_kpi:
     IG_PPM_TARGET = _t["ig_posts_per_month"]
     TT_PPW_TARGET = _t["tt_posts_per_week"]
 
-    # ── Three ER metrics ──────────────────────────────────────────────
+    # ── ER metrics ────────────────────────────────────────────────────
     er_by_followers = results.get("cuervo_er_by_followers", 0)
-    er_by_impressions = results.get("cuervo_er_by_impressions", 0)
     benchmark = results.get("benchmark", {})
     cuervo_bench = benchmark.get("Jose Cuervo", {})
     er_by_views = cuervo_bench.get("er_by_views", 0) if cuervo_bench else 0
 
-    k1, k2, k3, k4, k5, k6 = st.columns(6)
+    k1, k2, k3, k4, k5 = st.columns(5)
     with k1:
         st.metric("ER by Followers", f"{er_by_followers:.2f}%",
                   delta=f"{er_by_followers - ER_TARGET:+.2f}% vs {ER_TARGET}% target")
     with k2:
-        st.metric("ER by Impressions", f"{er_by_impressions:.2f}%",
-                  help="From Sprout Social — engagements / impressions")
-    with k3:
         st.metric("ER by Views", f"{er_by_views:.2f}%",
                   delta=f"{er_by_views - ER_BY_VIEWS_TARGET:+.2f}% vs {ER_BY_VIEWS_TARGET}% target")
-    with k4:
+    with k3:
         st.metric("Avg Eng/Reel", f"{avg_eng_per_reel:,.0f}",
                   delta=f"{avg_eng_per_reel - ENG_PER_REEL_TARGET:+,.0f} vs {ENG_PER_REEL_TARGET} target")
-    with k5:
+    with k4:
         st.metric("Reel Ratio (IG)", f"{reel_ratio:.0f}%",
                   delta=f"{reel_ratio - REEL_RATIO_TARGET:+.0f}% vs {REEL_RATIO_TARGET}% target")
-    with k6:
+    with k5:
         st.metric("IG Posts/Mo", f"{ig_ppm:.0f}",
                   delta=f"Target: {IG_PPM_TARGET[0]}-{IG_PPM_TARGET[1]}/mo",
                   delta_color="off")
