@@ -65,16 +65,17 @@ with tab_overview:
             "Followers": followers,
             "Posts": len(plat_df),
             "Posts/Week": round(ppw, 1),
-            "Avg ER %": round(avg_er, 2),
             "Avg Likes": int(_likes),
         }
 
-        # Add benchmark columns when benchmark data is available
+        # Use benchmark ER by Views when available, fall back to post-level avg ER
         if has_bench:
             ig_eng = eng.get("Instagram", {})
             row_data["ER by Views %"] = round(ig_eng.get("benchmark_er_by_views", 0), 2)
             row_data["Reels"] = ig_eng.get("benchmark_reels_count", 0)
             row_data["Avg #tags"] = round(ig_eng.get("benchmark_avg_hashtags", 0), 1)
+        else:
+            row_data["Avg ER %"] = round(avg_er, 2)
 
         rows.append(row_data)
 
@@ -93,26 +94,23 @@ with tab_overview:
                 return "background-color: #FFCDD2"
         return ""
 
-    er_cols = ["Avg ER %"]
+    er_col = "ER by Views %" if has_bench else "Avg ER %"
     fmt = {"Followers": "{:,.0f}", "Avg Likes": "{:,.0f}",
-           "Avg ER %": "{:.2f}", "Posts/Week": "{:.1f}"}
+           er_col: "{:.2f}", "Posts/Week": "{:.1f}"}
     if has_bench:
-        er_cols.append("ER by Views %")
-        fmt["ER by Views %"] = "{:.2f}"
         fmt["Avg #tags"] = "{:.1f}"
 
     styled_tbl = (
         comp_tbl.style
         .apply(highlight_cuervo, axis=1)
-        .map(color_er, subset=er_cols)
+        .map(color_er, subset=[er_col])
         .format(fmt)
     )
     st.dataframe(styled_tbl, use_container_width=True, hide_index=True, height=320)
 
     if has_bench:
         bench_meta = next(iter(benchmark.values()), {})
-        st.caption(f"ER by Views % from external benchmark ({bench_meta.get('date_range', 'N/A')}). "
-                   f"Avg ER % from Sprout post-level data.")
+        st.caption(f"ER by Views % from external benchmark ({bench_meta.get('date_range', 'N/A')}).")
 
     st.markdown("---")
 
