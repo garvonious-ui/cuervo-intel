@@ -112,7 +112,9 @@ data_options = ["Demo Data", "Custom CSV Folder"]
 if has_sprout:
     data_options.insert(1, "Sprout Social Import")
 
-data_mode = st.sidebar.radio("Data source", data_options, index=0)
+# Default to Sprout if available, persist selection across page navigation
+default_idx = 1 if has_sprout else 0
+data_mode = st.sidebar.radio("Data source", data_options, index=default_idx, key="data_source")
 
 if data_mode == "Demo Data":
     results, data_dir = load_demo()

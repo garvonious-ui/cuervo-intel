@@ -223,7 +223,7 @@ with tab_kpi:
         fig_hm.update_layout(template=CHART_TEMPLATE, font=CHART_FONT, height=320,
                              xaxis_title="Hour of Day", yaxis_title="",
                              yaxis=dict(autorange="reversed"))
-        st.plotly_chart(fig_hm, width="stretch")
+        st.plotly_chart(fig_hm, use_container_width=True)
 
         # Best posting time
         best_days = freq_hm.get("best_days", [])
@@ -300,7 +300,7 @@ with tab_content:
                              color_discrete_sequence=["#F8C090", "#2ea3f2", "#7B6B63", "#D4956A"],
                              template=CHART_TEMPLATE)
             fig_fmt.update_layout(font=CHART_FONT, height=350)
-            st.plotly_chart(fig_fmt, width="stretch")
+            st.plotly_chart(fig_fmt, use_container_width=True)
 
         with col_f2:
             st.markdown("**Avg ER by Format**")
@@ -312,7 +312,7 @@ with tab_content:
             fig_fer.add_hline(y=ER_TARGET, line_dash="dash", line_color="#333",
                               annotation_text=f"{ER_TARGET}% Brief target", annotation_position="top right")
             fig_fer.update_layout(font=CHART_FONT, height=350, showlegend=False)
-            st.plotly_chart(fig_fer, width="stretch")
+            st.plotly_chart(fig_fer, use_container_width=True)
 
         # Format KPIs
         reel_pct = len(cuervo_ig[cuervo_ig["post_type"] == "Reel"]) / max(len(cuervo_ig), 1) * 100
@@ -364,7 +364,7 @@ with tab_content:
                             annotation_text=f"{ER_TARGET}% target", annotation_position="top right")
         fig_theme.update_layout(font=CHART_FONT, height=400, showlegend=False,
                                 xaxis_tickangle=-35)
-        st.plotly_chart(fig_theme, width="stretch")
+        st.plotly_chart(fig_theme, use_container_width=True)
 
         # So What
         top_theme = theme_er.iloc[0]
@@ -398,7 +398,7 @@ with tab_content:
                           template=CHART_TEMPLATE,
                           text=tone_df["Pct"].apply(lambda x: f"{x:.0f}%"))
         fig_tone.update_layout(font=CHART_FONT, height=max(250, len(tone_df) * 40), showlegend=False)
-        st.plotly_chart(fig_tone, width="stretch")
+        st.plotly_chart(fig_tone, use_container_width=True)
 
         top_tone = tone_df.iloc[-1]  # Last row is highest after ascending sort
         st.info(f"**Cuervo's voice leans {top_tone['Tone']}** — {top_tone['Pct']:.0f}% of posts. "
@@ -429,7 +429,7 @@ with tab_content:
                          template=CHART_TEMPLATE,
                          text=cta_df["Pct"].apply(lambda x: f"{x:.0f}%"))
         fig_cta.update_layout(font=CHART_FONT, height=max(250, len(cta_df) * 40), showlegend=False)
-        st.plotly_chart(fig_cta, width="stretch")
+        st.plotly_chart(fig_cta, use_container_width=True)
 
         top_cta = cta_df.iloc[-1]
         no_cta_pct = cta_df[cta_df["CTA"].str.lower().isin(["none", "no cta"])]["Pct"].sum()

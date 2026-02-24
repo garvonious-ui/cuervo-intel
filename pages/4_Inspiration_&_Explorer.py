@@ -364,7 +364,7 @@ with tab_explorer:
             lambda row: ["background-color: #FDEBD6" if row.get("brand") == "Jose Cuervo" else "" for _ in row],
             axis=1,
         ),
-        width="stretch",
+        use_container_width=True,
         height=600,
     )
 
