@@ -223,7 +223,7 @@ logo_col, title_col = st.columns([1, 5])
 with logo_col:
     st.image("cuervo_logo.png", width=140)
 with title_col:
-    st.title("Jose Cuervo — Social Media Intelligence")
+    st.title("Cuervo — Social Media Intelligence")
     st.caption(f"Competitive analysis across {len(BRANDS)} tequila brands on Instagram & TikTok  "
                f"|  {len(df)} posts analyzed  |  Gen Z (21-24) strategy focus")
 
