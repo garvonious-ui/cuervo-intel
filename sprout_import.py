@@ -737,10 +737,13 @@ def import_sprout_directory(sprout_dir: str, output_dir: str) -> tuple[list[str]
 
     files = []
 
-    # Write posts_data.csv
+    # Write posts_data.csv (deduplicate overlapping date ranges by post_id + date)
     if all_posts:
         posts_path = os.path.join(output_dir, "posts_data.csv")
-        pd.DataFrame(all_posts).to_csv(posts_path, index=False)
+        posts_df = pd.DataFrame(all_posts)
+        if "post_id" in posts_df.columns and "date" in posts_df.columns:
+            posts_df = posts_df.drop_duplicates(subset=["post_id", "date"], keep="last")
+        posts_df.to_csv(posts_path, index=False)
         files.append(posts_path)
 
     # Fallback follower counts for brands missing from Sprout aggregate data.
