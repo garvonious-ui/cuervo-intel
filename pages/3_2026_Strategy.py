@@ -118,7 +118,7 @@ with tab_scorecard:
 
     st.dataframe(
         sc_df.style.map(color_status, subset=["Status"]),
-        width="stretch", hide_index=True, height=230,
+        use_container_width=True, hide_index=True, height=230,
     )
 
     on_track = sum(1 for s in scorecard_data if s["Status"] == "ON TRACK")
@@ -179,7 +179,7 @@ with tab_scorecard:
                         labels={"ER": "Avg ER %", "Brand": ""},
                         template=CHART_TEMPLATE, text_auto=".2f")
         fig_ds.update_layout(font=CHART_FONT, height=380, legend=dict(orientation="h", y=-0.15))
-        st.plotly_chart(fig_ds, width="stretch")
+        st.plotly_chart(fig_ds, use_container_width=True)
 
     st.info(f"**Dynamic content {'outperforms' if dyn_er > stat_er else 'underperforms vs'} static** by "
             f"{abs(dyn_er - stat_er):.2f}pp ER. Cuervo's dynamic mix is {dyn_pct:.0f}% — "
@@ -219,7 +219,7 @@ with tab_scorecard:
                                      line=dict(color="#333333", width=2, dash="dash")))
         fig_src.update_layout(template=CHART_TEMPLATE, font=CHART_FONT, height=380,
                               yaxis_title="% of Content", legend=dict(orientation="h", y=-0.15))
-        st.plotly_chart(fig_src, width="stretch")
+        st.plotly_chart(fig_src, use_container_width=True)
 
     with col_src2:
         st.markdown("**Content Source Scorecard**")
@@ -274,7 +274,7 @@ with tab_scorecard:
                              annotation_text=f"{ER_TARGET}% target")
             fig_bt.update_layout(font=CHART_FONT, height=max(280, len(theme_rows) * 35),
                                  showlegend=False)
-            st.plotly_chart(fig_bt, width="stretch")
+            st.plotly_chart(fig_bt, use_container_width=True)
 
         st.info(f"**Best theme: {best_theme_name}** at {best_er:.2f}% ER — lean into this for upcoming content. "
                 f"Themes above the {ER_TARGET}% target are proven winners worth scaling.")
@@ -337,7 +337,7 @@ with tab_frameworks:
                                     line=dict(color="#333333", width=2, dash="dash")))
         fig_pd.update_layout(template=CHART_TEMPLATE, font=CHART_FONT, height=380,
                              yaxis_title="% of Content", legend=dict(orientation="h", y=-0.15))
-        st.plotly_chart(fig_pd, width="stretch")
+        st.plotly_chart(fig_pd, use_container_width=True)
 
     with col_pd2:
         st.markdown("**Avg ER by Pillar**")
@@ -348,7 +348,7 @@ with tab_frameworks:
         fig_pe.add_hline(y=ER_TARGET, line_dash="dash", line_color="#333",
                          annotation_text=f"{ER_TARGET}% target", annotation_position="top right")
         fig_pe.update_layout(showlegend=False, font=CHART_FONT, height=380)
-        st.plotly_chart(fig_pe, width="stretch")
+        st.plotly_chart(fig_pe, use_container_width=True)
 
     # Pillar scorecard
     pillar_desc_map = {p["Pillar"]: p["desc"] for p in pillar_data}
@@ -398,7 +398,7 @@ with tab_frameworks:
                                      line=dict(color="#333333", width=2, dash="dash")))
         fig_mix.update_layout(template=CHART_TEMPLATE, font=CHART_FONT, height=380,
                               yaxis_title="% of Content", legend=dict(orientation="h", y=-0.15))
-        st.plotly_chart(fig_mix, width="stretch")
+        st.plotly_chart(fig_mix, use_container_width=True)
 
     with col_mix2:
         st.markdown("**Content Mix Scorecard**")
@@ -448,7 +448,7 @@ with tab_frameworks:
                        template=CHART_TEMPLATE, text_auto=".1f")
     fig_radar.update_layout(height=480, font=CHART_FONT,
                             legend=dict(orientation="h", y=-0.12))
-    st.plotly_chart(fig_radar, width="stretch")
+    st.plotly_chart(fig_radar, use_container_width=True)
 
     # So What
     cuervo_scores = compute_genz_scores(CUERVO)

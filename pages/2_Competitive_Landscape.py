@@ -107,7 +107,7 @@ with tab_overview:
         .map(color_er, subset=er_cols)
         .format(fmt)
     )
-    st.dataframe(styled_tbl, width="stretch", hide_index=True, height=320)
+    st.dataframe(styled_tbl, use_container_width=True, hide_index=True, height=320)
 
     if has_bench:
         bench_meta = next(iter(benchmark.values()), {})
@@ -161,7 +161,7 @@ with tab_overview:
     fig_er.add_hline(y=cat_avg, line_dash="dot", line_color="gray",
                      annotation_text=f"Category avg {cat_avg:.2f}%",
                      annotation_position="bottom right")
-    st.plotly_chart(fig_er, width="stretch")
+    st.plotly_chart(fig_er, use_container_width=True)
 
     st.markdown("---")
 
@@ -203,7 +203,7 @@ with tab_overview:
         styled_top10 = top10_df.style.map(color_top10_er, subset=["ER %"]).format({
             "Likes": "{:,.0f}", "Comments": "{:,.0f}", "Views": "{:,.0f}", "ER %": "{:.2f}"
         })
-        st.dataframe(styled_top10, width="stretch", hide_index=True, height=400)
+        st.dataframe(styled_top10, use_container_width=True, hide_index=True, height=400)
 
         # So What
         best_type = pd.DataFrame(top10_rows).groupby("Type")["ER %"].mean()
@@ -258,7 +258,7 @@ with tab_gaps:
     fig_gap.update_layout(barmode="group", template=CHART_TEMPLATE, font=CHART_FONT,
                           height=420, xaxis_tickangle=-35, yaxis_title="% of Content",
                           legend=dict(orientation="h", y=1.1))
-    st.plotly_chart(fig_gap, width="stretch")
+    st.plotly_chart(fig_gap, use_container_width=True)
 
     # So What — biggest gaps
     top_gaps = gap_df[gap_df["gap"] > 0].head(3)
@@ -282,7 +282,7 @@ with tab_gaps:
                     labels={"pct": "% of Posts", "brand": "", "post_type": "Type"},
                     template=CHART_TEMPLATE, color_discrete_sequence=px.colors.qualitative.Set2)
     fig_ct.update_layout(font=CHART_FONT, height=400, legend=dict(orientation="h", y=1.12))
-    st.plotly_chart(fig_ct, width="stretch")
+    st.plotly_chart(fig_ct, use_container_width=True)
 
     st.markdown("---")
 
@@ -312,7 +312,7 @@ with tab_gaps:
                              annotation_text=f"{ER_TARGET}% target", annotation_position="top right")
         fig_er_fmt.update_layout(font=CHART_FONT, height=420,
                                  legend=dict(orientation="h", y=1.12))
-        st.plotly_chart(fig_er_fmt, width="stretch")
+        st.plotly_chart(fig_er_fmt, use_container_width=True)
 
         # So What
         best_fmt_overall = er_fmt_agg.groupby("Format")["ER %"].mean().sort_values(ascending=False)
@@ -343,7 +343,7 @@ with tab_gaps:
                       labels={"posts_per_week": "Posts / Week", "brand": ""},
                       template=CHART_TEMPLATE)
     fig_freq.update_layout(font=CHART_FONT, height=380, legend=dict(orientation="h", y=1.12))
-    st.plotly_chart(fig_freq, width="stretch")
+    st.plotly_chart(fig_freq, use_container_width=True)
 
     st.markdown("---")
 
