@@ -76,17 +76,18 @@ with tab_kpi:
     # Reel ratio (IG only)
     reel_ratio = len(cuervo_ig[cuervo_ig["post_type"] == "Reel"]) / max(len(cuervo_ig), 1) * 100
 
-    # Posts/week
+    # Posts/week → also compute monthly estimate for target comparison
     freq = results["frequency"].get(CUERVO, {})
     ig_ppw = freq.get("Instagram", {}).get("posts_per_week", 0)
+    ig_ppm = ig_ppw * 4.33  # approximate monthly from weekly
     tt_ppw = freq.get("TikTok", {}).get("posts_per_week", 0)
 
     # Brief targets (centralized in config.py)
     _t = SOCIAL_BRIEF_TARGETS
     ER_TARGET = _t["er"]
     REEL_RATIO_TARGET = _t["reel_ratio"]
-    ENG_PER_REEL_TARGET = _t["engagements_per_reel"]
-    IG_PPW_TARGET = _t["ig_posts_per_week"]
+    ENG_PER_REEL_TARGET = _t["engagements_per_post"]
+    IG_PPM_TARGET = _t["ig_posts_per_month"]
     TT_PPW_TARGET = _t["tt_posts_per_week"]
 
     k1, k2, k3, k4, k5 = st.columns(5)
@@ -102,8 +103,8 @@ with tab_kpi:
         st.metric("Reel Ratio (IG)", f"{reel_ratio:.0f}%",
                   delta=f"{reel_ratio - REEL_RATIO_TARGET:+.0f}% vs {REEL_RATIO_TARGET}% target")
     with k5:
-        st.metric("IG Posts/Wk", f"{ig_ppw:.1f}",
-                  delta=f"Target: {IG_PPW_TARGET[0]}-{IG_PPW_TARGET[1]}/wk",
+        st.metric("IG Posts/Mo", f"{ig_ppm:.0f}",
+                  delta=f"Target: {IG_PPM_TARGET[0]}-{IG_PPM_TARGET[1]}/mo",
                   delta_color="off")
 
     # ── Benchmark Context ─────────────────────────────────────────────
@@ -134,10 +135,10 @@ with tab_kpi:
     else:
         misses.append(f"Avg engagements/Reel ({avg_eng_per_reel:,.0f}) below {ENG_PER_REEL_TARGET} benchmark")
 
-    if IG_PPW_TARGET[0] <= ig_ppw <= IG_PPW_TARGET[1]:
-        hits.append(f"IG posting cadence ({ig_ppw:.1f}/wk) on target")
-    elif ig_ppw < IG_PPW_TARGET[0]:
-        misses.append(f"IG posting at {ig_ppw:.1f}/wk — below {IG_PPW_TARGET[0]}/wk minimum")
+    if IG_PPM_TARGET[0] <= ig_ppm <= IG_PPM_TARGET[1]:
+        hits.append(f"IG posting cadence (~{ig_ppm:.0f}/mo) on target")
+    elif ig_ppm < IG_PPM_TARGET[0]:
+        misses.append(f"IG posting at ~{ig_ppm:.0f}/mo — below {IG_PPM_TARGET[0]}/mo minimum")
 
     narrative = ""
     if hits:
