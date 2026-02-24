@@ -255,7 +255,7 @@ with c3:
     st.metric("Reel Ratio", f"{reel_ratio:.0f}%",
               delta=f"{reel_ratio - _t['reel_ratio']:+.0f}% vs {_t['reel_ratio']}% target")
 with c4:
-    eng_reel_status = "On target" if avg_eng_per_reel >= _t["engagements_per_reel"] else f"Below {_t['engagements_per_reel']}"
+    eng_reel_status = "On target" if avg_eng_per_reel >= _t["engagements_per_post"] else f"Below {_t['engagements_per_post']}"
     st.metric("Avg Eng/Reel", f"{avg_eng_per_reel:,.0f}", delta=eng_reel_status)
 with c5:
     st.metric("Top Brand (ER)", f"{best_brand}", delta=f"{best_er:.2f}%")
