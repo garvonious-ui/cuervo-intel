@@ -717,6 +717,42 @@ def run_full_analysis(data_dir: str, benchmark: dict = None) -> dict[str, Any]:
         hashtag_analysis, theme_analysis, creator_analysis
     )
 
+    # ── Compute separate ER metrics for Cuervo ─────────────────────────
+    import math
+
+    cuervo_posts = [p for p in posts if p["brand"] == "Jose Cuervo"]
+    cuervo_ig_followers = 0
+    for p in profiles:
+        if p["brand"] == "Jose Cuervo" and p["platform"] == "Instagram":
+            cuervo_ig_followers = p["followers"]
+            break
+    # Override with benchmark followers if available (more current)
+    if benchmark and benchmark.get("Jose Cuervo", {}).get("followers", 0) > 0:
+        cuervo_ig_followers = benchmark["Jose Cuervo"]["followers"]
+
+    # ER by Followers: total_engagement / followers × 100 (per-post, then average)
+    if cuervo_ig_followers > 0 and cuervo_posts:
+        er_by_follower_vals = [
+            (p["total_engagement"] / cuervo_ig_followers) * 100
+            for p in cuervo_posts
+        ]
+        cuervo_er_by_followers = sum(er_by_follower_vals) / len(er_by_follower_vals)
+    else:
+        cuervo_er_by_followers = 0.0
+
+    # ER by Impressions: mean of Sprout's engagement_rate_manual for Cuervo posts
+    sprout_ers = []
+    for p in cuervo_posts:
+        manual = p.get("engagement_rate_manual", "")
+        if manual != "" and manual is not None:
+            try:
+                val = float(manual)
+                if val >= 0:
+                    sprout_ers.append(val)
+            except (ValueError, TypeError):
+                pass
+    cuervo_er_by_impressions = (sum(sprout_ers) / len(sprout_ers)) if sprout_ers else 0.0
+
     return {
         "posts": posts,
         "profiles": profiles,
@@ -728,4 +764,6 @@ def run_full_analysis(data_dir: str, benchmark: dict = None) -> dict[str, Any]:
         "themes": theme_analysis,
         "creators": creator_analysis,
         "recommendations": recommendations,
+        "cuervo_er_by_followers": round(cuervo_er_by_followers, 3),
+        "cuervo_er_by_impressions": round(cuervo_er_by_impressions, 3),
     }

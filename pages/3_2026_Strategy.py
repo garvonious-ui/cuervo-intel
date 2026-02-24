@@ -48,7 +48,7 @@ df = st.session_state["df"]  # Unfiltered
 CUERVO = "Jose Cuervo"
 GEN_Z_LEADERS = ["Casamigos", "Teremana"]
 _t = SOCIAL_BRIEF_TARGETS
-ER_TARGET = _t["er"]
+ER_TARGET = _t["er_by_views"]
 
 cuervo_df = df[df["brand"] == CUERVO]
 leader_df = df[df["brand"].isin(GEN_Z_LEADERS)]
@@ -72,6 +72,13 @@ with tab_scorecard:
     cuervo_er = 0 if pd.isna(cuervo_er) else cuervo_er
     cat_er = df[df["brand"] != CUERVO]["engagement_rate"].mean()
     cat_er = 0 if pd.isna(cat_er) else cat_er
+
+    # Separate ER metrics
+    er_by_followers = results.get("cuervo_er_by_followers", 0)
+    er_by_impressions = results.get("cuervo_er_by_impressions", 0)
+    benchmark = results.get("benchmark", {})
+    cuervo_bench = benchmark.get("Jose Cuervo", {})
+    er_by_views = cuervo_bench.get("er_by_views", 0) if cuervo_bench else 0
 
     cuervo_ig = cuervo_df[cuervo_df["platform"] == "Instagram"]
     avg_eng_per_post = cuervo_df["total_engagement"].mean() if len(cuervo_df) else 0
@@ -98,10 +105,18 @@ with tab_scorecard:
     _ig_ppm = _t["ig_posts_per_month"]
     _tt_ppw = _t["tt_posts_per_week"]
     scorecard_data = [
-        {"KPI": "ER by Followers", "Actual": f"{cuervo_er:.2f}%",
-         "Target": f"{_t['er']}%+",
-         "Status": "ON TRACK" if cuervo_er >= _t["er"] else "BELOW",
-         "Gap": f"{cuervo_er - _t['er']:+.2f}pp"},
+        {"KPI": "ER by Followers", "Actual": f"{er_by_followers:.2f}%",
+         "Target": f"{_t['er_by_followers']}%+",
+         "Status": "ON TRACK" if er_by_followers >= _t["er_by_followers"] else "BELOW",
+         "Gap": f"{er_by_followers - _t['er_by_followers']:+.2f}pp"},
+        {"KPI": "ER by Impressions", "Actual": f"{er_by_impressions:.2f}%",
+         "Target": "\u2014",
+         "Status": "INFO",
+         "Gap": "\u2014"},
+        {"KPI": "ER by Views", "Actual": f"{er_by_views:.2f}%",
+         "Target": f"{_t['er_by_views']}%+",
+         "Status": "ON TRACK" if er_by_views >= _t["er_by_views"] else "BELOW",
+         "Gap": f"{er_by_views - _t['er_by_views']:+.2f}pp"},
         {"KPI": "Avg Eng/Post", "Actual": f"{avg_eng_per_post:,.0f}",
          "Target": f"{_t['engagements_per_post']:,}+",
          "Status": "ON TRACK" if avg_eng_per_post >= _t["engagements_per_post"] else "BELOW",
@@ -141,6 +156,8 @@ with tab_scorecard:
             return "background-color: #FFCDD2; color: #C62828; font-weight: bold"
         elif val == "ABOVE":
             return "background-color: #FFE0B2; color: #E65100; font-weight: bold"
+        elif val == "INFO":
+            return "background-color: #E3F2FD; color: #1565C0; font-weight: bold"
         return ""
 
     st.dataframe(

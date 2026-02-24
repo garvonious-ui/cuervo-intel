@@ -84,46 +84,48 @@ with tab_kpi:
 
     # Brief targets (centralized in config.py)
     _t = SOCIAL_BRIEF_TARGETS
-    ER_TARGET = _t["er"]
+    ER_TARGET = _t["er_by_followers"]
+    ER_BY_VIEWS_TARGET = _t["er_by_views"]
     REEL_RATIO_TARGET = _t["reel_ratio"]
     ENG_PER_REEL_TARGET = _t["engagements_per_post"]
     IG_PPM_TARGET = _t["ig_posts_per_month"]
     TT_PPW_TARGET = _t["tt_posts_per_week"]
 
-    k1, k2, k3, k4, k5 = st.columns(5)
+    # ── Three ER metrics ──────────────────────────────────────────────
+    er_by_followers = results.get("cuervo_er_by_followers", 0)
+    er_by_impressions = results.get("cuervo_er_by_impressions", 0)
+    benchmark = results.get("benchmark", {})
+    cuervo_bench = benchmark.get("Jose Cuervo", {})
+    er_by_views = cuervo_bench.get("er_by_views", 0) if cuervo_bench else 0
+
+    k1, k2, k3, k4, k5, k6 = st.columns(6)
     with k1:
-        st.metric("Avg ER", f"{cuervo_er:.2f}%",
-                  delta=f"{cuervo_er - ER_TARGET:+.2f}% vs {ER_TARGET}% target")
+        st.metric("ER by Followers", f"{er_by_followers:.2f}%",
+                  delta=f"{er_by_followers - ER_TARGET:+.2f}% vs {ER_TARGET}% target")
     with k2:
-        st.metric("IG Followers", f"{ig_followers:,}")
+        st.metric("ER by Impressions", f"{er_by_impressions:.2f}%",
+                  help="From Sprout Social — engagements / impressions")
     with k3:
+        st.metric("ER by Views", f"{er_by_views:.2f}%",
+                  delta=f"{er_by_views - ER_BY_VIEWS_TARGET:+.2f}% vs {ER_BY_VIEWS_TARGET}% target")
+    with k4:
         st.metric("Avg Eng/Reel", f"{avg_eng_per_reel:,.0f}",
                   delta=f"{avg_eng_per_reel - ENG_PER_REEL_TARGET:+,.0f} vs {ENG_PER_REEL_TARGET} target")
-    with k4:
+    with k5:
         st.metric("Reel Ratio (IG)", f"{reel_ratio:.0f}%",
                   delta=f"{reel_ratio - REEL_RATIO_TARGET:+.0f}% vs {REEL_RATIO_TARGET}% target")
-    with k5:
+    with k6:
         st.metric("IG Posts/Mo", f"{ig_ppm:.0f}",
                   delta=f"Target: {IG_PPM_TARGET[0]}-{IG_PPM_TARGET[1]}/mo",
                   delta_color="off")
 
-    # ── Benchmark Context ─────────────────────────────────────────────
-    benchmark = results.get("benchmark", {})
-    cuervo_bench = benchmark.get("Jose Cuervo", {})
-    if cuervo_bench:
-        st.caption(
-            f"Benchmark ER by Views: **{cuervo_bench.get('er_by_views', 0):.2f}%** | "
-            f"ER by Reach: **{cuervo_bench.get('er_by_reach', 0):.2f}%** | "
-            f"Period: {cuervo_bench.get('date_range', 'N/A')}"
-        )
-
     # ── "So What" Narrative ────────────────────────────────────────────
     hits = []
     misses = []
-    if cuervo_er >= ER_TARGET:
-        hits.append(f"ER at {cuervo_er:.2f}% meets the {ER_TARGET}% brief target")
+    if er_by_followers >= ER_TARGET:
+        hits.append(f"ER by Followers at {er_by_followers:.2f}% meets the {ER_TARGET}% brief target")
     else:
-        misses.append(f"ER at {cuervo_er:.2f}% is {ER_TARGET - cuervo_er:.2f}pp below the {ER_TARGET}% target")
+        misses.append(f"ER by Followers at {er_by_followers:.2f}% is {ER_TARGET - er_by_followers:.2f}pp below the {ER_TARGET}% target")
 
     if reel_ratio >= REEL_RATIO_TARGET:
         hits.append(f"Reel ratio at {reel_ratio:.0f}% meets the {REEL_RATIO_TARGET}% target")

@@ -69,7 +69,8 @@ Uses autostrat hashtag/keyword/news reports only — sidebar filters do NOT appl
 
 ## Social Brief KPI Targets (2026 Social Strategy Deck)
 All targets centralized in `SOCIAL_BRIEF_TARGETS` dict in `config.py`.
-- ER by Followers: 0.50%+ (updated from 1.8% — based on 2026 deck KPI Framework)
+- ER by Followers: 0.50%+ (2026 deck KPI Framework)
+- ER by Views: 2.0%+ (category median ~1.78%, Cuervo at ~1.29%)
 - Avg Eng/Post: 300+ (updated from 100+)
 - Reel Ratio (IG): 50% of feed
 - Carousel Ratio (IG): 30% of feed

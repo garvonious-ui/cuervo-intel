@@ -248,9 +248,10 @@ best_er = nonzero_ers.max() if len(nonzero_ers) else 0
 _t = SOCIAL_BRIEF_TARGETS
 with c1:
     st.metric("Posts Analyzed", f"{len(df):,}")
+er_by_followers = results.get("cuervo_er_by_followers", 0)
 with c2:
-    st.metric("Cuervo ER", f"{cuervo_er:.2f}%",
-              delta=f"{cuervo_er - _t['er']:+.2f}% vs {_t['er']}% target")
+    st.metric("ER by Followers", f"{er_by_followers:.2f}%",
+              delta=f"{er_by_followers - _t['er_by_followers']:+.2f}% vs {_t['er_by_followers']}% target")
 with c3:
     st.metric("Reel Ratio", f"{reel_ratio:.0f}%",
               delta=f"{reel_ratio - _t['reel_ratio']:+.0f}% vs {_t['reel_ratio']}% target")

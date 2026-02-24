@@ -207,7 +207,8 @@ TESTING_ROADMAP = {
 # the weekly posting targets below are Social Brief KPIs (may differ).
 
 SOCIAL_BRIEF_TARGETS = {
-    "er": 0.50,                         # ER by Followers target (updated from 1.8%)
+    "er_by_followers": 0.50,              # ER by Followers target (2026 deck KPI)
+    "er_by_views": 2.0,                   # ER by Views target (category median ~1.78%, aiming above)
     "engagements_per_post": 300,        # Avg engagements per post target (was 100/reel)
     "reel_ratio": 50,                   # Reel Ratio % on Instagram (Reels = 50% of feed)
     "carousel_ratio": 30,              # Carousel Ratio % on Instagram (new)

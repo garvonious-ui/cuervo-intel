@@ -29,7 +29,7 @@ sel_brands = st.session_state["sel_brands"]
 order = [b for b in BRAND_ORDER if b in sel_brands]
 
 CUERVO = "Jose Cuervo"
-ER_TARGET = SOCIAL_BRIEF_TARGETS["er"]
+ER_TARGET = SOCIAL_BRIEF_TARGETS["er_by_views"]
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 tab_overview, tab_gaps = st.tabs([
