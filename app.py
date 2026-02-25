@@ -43,7 +43,7 @@ def _sprout_fingerprint(sprout_dir: str) -> str:
     when files change OR analysis logic is updated."""
     import hashlib
     # Bump this version whenever sprout_import.py or analysis.py logic changes
-    CODE_VERSION = "v16_adjusted_kpi_targets"
+    CODE_VERSION = "v17_merged_themes"
     entries = [CODE_VERSION]
     if os.path.isdir(sprout_dir):
         for f in sorted(os.listdir(sprout_dir)):
@@ -96,6 +96,15 @@ def results_to_df(results: dict) -> pd.DataFrame:
         df["post_date"] = pd.to_datetime(df["post_date"], errors="coerce")
     if "post_hour" in df.columns:
         df["post_hour"] = pd.to_numeric(df["post_hour"], errors="coerce")
+    # Combine related content themes for clearer analysis
+    if "content_theme" in df.columns:
+        _theme_map = {
+            "Education (Tequila 101)": "Education & Recipes",
+            "Cocktail Recipe": "Education & Recipes",
+            "Event / Activation": "Events & Music",
+            "Music / Party": "Events & Music",
+        }
+        df["content_theme"] = df["content_theme"].replace(_theme_map)
     return df
 
 

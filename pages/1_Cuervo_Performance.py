@@ -348,16 +348,6 @@ with tab_content:
     st.caption("Which themes drive the highest engagement for Cuervo")
 
     if len(cuervo_df) and cuervo_df["content_theme"].notna().any():
-        # Combine related themes for clearer analysis
-        _theme_map = {
-            "Education (Tequila 101)": "Education & Recipes",
-            "Cocktail Recipe": "Education & Recipes",
-            "Event / Activation": "Events & Music",
-            "Music / Party": "Events & Music",
-        }
-        cuervo_df = cuervo_df.copy()
-        cuervo_df["content_theme"] = cuervo_df["content_theme"].replace(_theme_map)
-
         theme_er = (cuervo_df.groupby("content_theme")
                     .agg(avg_er=("engagement_rate", "mean"), count=("engagement_rate", "size"))
                     .reset_index()

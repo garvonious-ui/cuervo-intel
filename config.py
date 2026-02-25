@@ -87,12 +87,12 @@ PRIORITY_COLORS = {
 POPLIFE_PILLAR_MAP = {
     "Cuervo in Culture": [
         "Meme / Humor", "Creator Collab / UGC", "Cultural Moment / Holiday",
-        "Music / Party", "Event / Activation", "Giveaway / Promo",
+        "Events & Music", "Giveaway / Promo",
         "User Repost", "Sports Tie-in", "Lifestyle/Aspirational",
     ],
     "Tradicional, Made Social": [
-        "Brand Heritage / Story", "Education (Tequila 101)", "Behind the Scenes",
-        "Cocktail Recipe", "Product Showcase",
+        "Brand Heritage / Story", "Education & Recipes", "Behind the Scenes",
+        "Product Showcase",
     ],
 }
 POPLIFE_PILLAR_TARGETS = {"Cuervo in Culture": 60, "Tradicional, Made Social": 40}
@@ -147,10 +147,10 @@ CULTURAL_CALENDAR = {
 }
 
 CONTENT_MIX_MAP = {
-    "Entertain": ["Meme / Humor", "Music / Party", "Creator Collab / UGC"],
-    "Educate": ["Education (Tequila 101)", "Behind the Scenes", "Cocktail Recipe", "Brand Heritage / Story"],
+    "Entertain": ["Meme / Humor", "Events & Music", "Creator Collab / UGC"],
+    "Educate": ["Education & Recipes", "Behind the Scenes", "Brand Heritage / Story"],
     "Connect": ["Lifestyle/Aspirational", "Cultural Moment / Holiday", "User Repost", "Sports Tie-in"],
-    "Convince": ["Product Showcase", "Giveaway / Promo", "Event / Activation"],
+    "Convince": ["Product Showcase", "Giveaway / Promo"],
 }
 CONTENT_MIX_TARGETS = {"Entertain": 50, "Educate": 30, "Connect": 10, "Convince": 10}
 CONTENT_MIX_COLORS = {
