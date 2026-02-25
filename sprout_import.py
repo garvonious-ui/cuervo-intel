@@ -210,10 +210,6 @@ THEME_KEYWORDS = {
         "since", "est.", "heritage", "tradition", "founder", "generations",
         "legacy", "history", "roots", "origin", "began in",
     ],
-    "Music / Party": [
-        "playlist", "turn up", "turn it up", "dj", "concert",
-        "festival", "dance", "club", "night out", "pre-game",
-    ],
     "Event / Activation": [
         "pop-up", "pop up", "live from", "activation", "launch party",
         "catch us", "meet us", "join us at", "hosted by",
@@ -221,6 +217,8 @@ THEME_KEYWORDS = {
         "nola", "new orleans", "mexico trip", "workshop", "sustainability workshop",
         "bartender", "hanky panky", "the vertical", "vertical team",
         "festival activation", "on-site", "on site",
+        "playlist", "turn up", "turn it up", "dj", "concert",
+        "festival", "dance", "club", "night out", "pre-game",
     ],
     "Product Showcase": [
         "bottle", "smooth", "bold", "crafted", "premium", "introducing",

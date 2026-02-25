@@ -100,8 +100,7 @@ def results_to_df(results: dict) -> pd.DataFrame:
     if "content_theme" in df.columns:
         _theme_map = {
             "Education (Tequila 101)": "Cocktail Recipe",  # legacy data compat
-            "Event / Activation": "Events & Music",
-            "Music / Party": "Events & Music",
+            "Music / Party": "Event / Activation",          # legacy data compat
         }
         df["content_theme"] = df["content_theme"].replace(_theme_map)
     return df

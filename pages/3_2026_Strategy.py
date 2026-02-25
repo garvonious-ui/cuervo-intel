@@ -230,8 +230,8 @@ with tab_scorecard:
     st.subheader("Content Source Mix — Creator / Brand / Events")
     st.caption("Target: 50% Owned / Sponsored Live Events, 30% Creator / Influencer / UGC, 20% Brand-Owned")
 
-    # Owned / Sponsored Events = event activations, music/party, cultural moments, sponsored events
-    event_themes = ["Event / Activation", "Music / Party", "Cultural Moment / Holiday"]
+    # Owned / Sponsored Events = event activations, cultural moments, sponsored events
+    event_themes = ["Event / Activation", "Cultural Moment / Holiday", "Music / Party"]  # Music / Party kept for legacy data
     event_caption_signals = [
         "ufc", "akamba", "tales_of_the_cocktail", "tales of the cocktail",
         "nola", "new orleans", "workshop", "activation", "festival",

@@ -41,7 +41,6 @@ CONTENT_THEMES = [
     "User Repost",
     "Giveaway / Promo",
     "Brand Heritage / Story",
-    "Music / Party",
     "Sports Tie-in",
     "Other",
 ]
