@@ -359,8 +359,8 @@ with tab_content:
                            labels={"avg_er": "Avg ER %", "content_theme": ""},
                            template=CHART_TEMPLATE, text_auto=".2f",
                            hover_data={"count": True})
-        fig_theme.add_hline(y=ER_TARGET, line_dash="dash", line_color="#333",
-                            annotation_text=f"{ER_TARGET}% target", annotation_position="top right")
+        fig_theme.add_hline(y=ER_BY_VIEWS_TARGET, line_dash="dash", line_color="#333",
+                            annotation_text=f"{ER_BY_VIEWS_TARGET}% target", annotation_position="top right")
         fig_theme.update_layout(font=CHART_FONT, height=400, showlegend=False,
                                 xaxis_tickangle=-35)
         st.plotly_chart(fig_theme, use_container_width=True)
@@ -368,9 +368,9 @@ with tab_content:
         # So What
         top_theme = theme_er.iloc[0]
         bottom_theme = theme_er.iloc[-1] if len(theme_er) > 1 else top_theme
-        themes_above_target = theme_er[theme_er["avg_er"] >= ER_TARGET]
+        themes_above_target = theme_er[theme_er["avg_er"] >= ER_BY_VIEWS_TARGET]
         st.info(f"**Top theme:** {top_theme['content_theme']} at {top_theme['avg_er']:.2f}% ER ({top_theme['count']} posts). "
-                f"{len(themes_above_target)} of {len(theme_er)} themes meet the {ER_TARGET}% target. "
+                f"{len(themes_above_target)} of {len(theme_er)} themes meet the {ER_BY_VIEWS_TARGET}% target. "
                 f"**Lowest:** {bottom_theme['content_theme']} at {bottom_theme['avg_er']:.2f}%.")
 
     st.markdown("---")
