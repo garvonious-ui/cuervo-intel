@@ -186,6 +186,8 @@ THEME_KEYWORDS = {
     "Creator Collab / UGC": [
         "collab", "featuring", "feat.", "ft.", " x @", "with @",
         "repost", "regram", "created by", "styled by", "made by",
+        "cuervopartner", "cuervocollective", "#partner", "#ad ",
+        "#sponsored", "paid partnership",
     ],
     "Giveaway / Promo": [
         "giveaway", "win", "enter to", "chance to", "sweepstakes", "contest",
