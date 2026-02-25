@@ -82,9 +82,10 @@ All targets centralized in `SOCIAL_BRIEF_TARGETS` dict in `config.py`.
 - Creator % of Total: Ramp from 50% (March) to 70% (June)
 
 ## Poplife Playbook Frameworks (config.py) — Updated Feb 2026
-- **Content Pillars** (2): Cuervo in Culture (60% — Especial + RTDs), Tradicional Made Social (40% — Cuervo Tradicional)
+- **Content Pillars** (2): Cuervo in Culture (80% — Especial + RTDs + Tradicional), Tradicional Made Social (20% — Cuervo Tradicional)
 - **Content Mix**: Entertain (50%), Educate (30%), Connect (10%), Convince (10%)
-- **Content Source**: Creator & Influencer (70%), Brand-Owned (15%), Events & Partnerships (15%)
+- **Content Source / Engine**: Owned / Sponsored Live Events (50%), Creator / Influencer / UGC (30%), Brand-Owned (20%)
+- **Product Focus**: Especial (60%), RTDs (10%), Tradicional (30%)
 - **Cadence**: IG 12-16/month, TT 3-5x/week
 - **Execution Engines** (4): Memes + Reactive Culture, Creator-Led + UGC, Event + Festival Trend Factory, Lifestyle Shoot Bank
 - **Creator Archetypes** (5): The Party Starter, The Home Bartender, The Lifestyle Bestie, The Culture Commentator, The Festival Friend

@@ -228,7 +228,7 @@ with tab_scorecard:
 
     # ── Content Source Mix ─────────────────────────────────────────────
     st.subheader("Content Source Mix — Creator / Brand / Events")
-    st.caption("Target: 50% Brand-Owned, 30% Creator & Influencer, 20% Events & Partnerships")
+    st.caption("Target: 50% Owned / Sponsored Live Events, 30% Creator / Influencer / UGC, 20% Brand-Owned")
 
     event_themes = ["Event / Activation", "Music / Party"]
     creator_posts = cuervo_df[cuervo_df["has_creator_collab"] == "Yes"] if "has_creator_collab" in cuervo_df.columns else pd.DataFrame()
@@ -238,12 +238,12 @@ with tab_scorecard:
 
     src_total = max(len(cuervo_df), 1)
     src_data = pd.DataFrame([
-        {"Source": "Brand-Owned", "Actual %": round(brand_posts_count / src_total * 100, 1), "Target %": 50},
-        {"Source": "Creators & Influencers", "Actual %": round(len(creator_posts) / src_total * 100, 1), "Target %": 30},
-        {"Source": "Events & Partnerships", "Actual %": round(len(event_posts) / src_total * 100, 1), "Target %": 20},
+        {"Source": "Owned / Sponsored Events", "Actual %": round(len(event_posts) / src_total * 100, 1), "Target %": 50},
+        {"Source": "Creator / Influencer / UGC", "Actual %": round(len(creator_posts) / src_total * 100, 1), "Target %": 30},
+        {"Source": "Brand-Owned", "Actual %": round(brand_posts_count / src_total * 100, 1), "Target %": 20},
     ])
 
-    src_colors = {"Creators & Influencers": "#2ea3f2", "Events & Partnerships": "#D4956A", "Brand-Owned": "#C9A87E"}
+    src_colors = {"Creator / Influencer / UGC": "#2ea3f2", "Owned / Sponsored Events": "#D4956A", "Brand-Owned": "#C9A87E"}
 
     col_src1, col_src2 = st.columns(2)
     with col_src1:
@@ -272,9 +272,9 @@ with tab_scorecard:
             else:
                 st.warning(f"**{row['Source']}**: {row['Actual %']:.0f}% actual / {row['Target %']}% target ({gap:+.0f}%) — Need LESS")
         st.markdown("")
-        st.info("**Content Engine**: Brand-owned content anchors the feed (50%). "
+        st.info("**Content Engine**: Owned / Sponsored Live Events anchor the feed (50%). "
                 "Creator & influencer partnerships drive 1.7x more engagement (30%). "
-                "Events provide real-time cultural relevance (20%).")
+                "Brand-owned content fills the remaining 20%.")
 
     st.markdown("---")
 

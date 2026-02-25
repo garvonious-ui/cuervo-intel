@@ -95,7 +95,7 @@ POPLIFE_PILLAR_MAP = {
         "Product Showcase",
     ],
 }
-POPLIFE_PILLAR_TARGETS = {"Cuervo in Culture": 60, "Tradicional, Made Social": 40}
+POPLIFE_PILLAR_TARGETS = {"Cuervo in Culture": 80, "Tradicional, Made Social": 20}
 POPLIFE_PILLAR_COLORS = {
     "Cuervo in Culture": "#2ea3f2",          # Blue — culture/entertainment
     "Tradicional, Made Social": "#C9A87E",   # Sandy tan — heritage elevated
@@ -186,9 +186,9 @@ PLATFORM_ROLES = {
 
 # Content source mix targets (2026 Social Strategy deck — "The Content Engine")
 CONTENT_SOURCE_MIX = {
-    "Brand-Owned": 50,
-    "Creator / Influencer Partnerships / UGC": 30,
-    "Events": 20,
+    "Owned / Sponsored Live Events": 50,
+    "Creator / Influencer / UGC": 30,
+    "Brand-Owned": 20,
 }
 
 # Monthly ramp targets (March-June 2026)
@@ -224,7 +224,7 @@ SOCIAL_BRIEF_TARGETS = {
     "save_rate": 5.0,                   # Save Rate % target (current 2.9%, ~1.7x stretch)
     "share_rate": 5.0,                  # Share Rate % target (current 5.9%, already beating)
     "creator_er": 2.0,                  # Creator content ER by views target (current 1.70%)
-    "creator_pct_target_june": 30,     # Creator % of total by June 2026 (Content Engine: 50% brand / 30% creator / 20% events)
+    "creator_pct_target_june": 30,     # Creator % of total by June 2026 (Content Engine: 50% owned/events / 30% creator / 20% brand-owned)
 }
 
 CHART_TEMPLATE = "plotly_white"
