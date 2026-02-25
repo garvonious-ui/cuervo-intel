@@ -228,7 +228,7 @@ with tab_scorecard:
 
     # ── Content Source Mix ─────────────────────────────────────────────
     st.subheader("Content Source Mix — Creator / Brand / Events")
-    st.caption("Poplife target: 70% Creator & Influencer, 15% Brand-Owned, 15% Events & Partnerships")
+    st.caption("Target: 50% Brand-Owned, 30% Creator & Influencer, 20% Events & Partnerships")
 
     event_themes = ["Event / Activation", "Music / Party"]
     creator_posts = cuervo_df[cuervo_df["has_creator_collab"] == "Yes"] if "has_creator_collab" in cuervo_df.columns else pd.DataFrame()
@@ -238,9 +238,9 @@ with tab_scorecard:
 
     src_total = max(len(cuervo_df), 1)
     src_data = pd.DataFrame([
-        {"Source": "Creators & Influencers", "Actual %": round(len(creator_posts) / src_total * 100, 1), "Target %": 70},
-        {"Source": "Events & Partnerships", "Actual %": round(len(event_posts) / src_total * 100, 1), "Target %": 15},
-        {"Source": "Brand-Owned", "Actual %": round(brand_posts_count / src_total * 100, 1), "Target %": 15},
+        {"Source": "Brand-Owned", "Actual %": round(brand_posts_count / src_total * 100, 1), "Target %": 50},
+        {"Source": "Creators & Influencers", "Actual %": round(len(creator_posts) / src_total * 100, 1), "Target %": 30},
+        {"Source": "Events & Partnerships", "Actual %": round(len(event_posts) / src_total * 100, 1), "Target %": 20},
     ])
 
     src_colors = {"Creators & Influencers": "#2ea3f2", "Events & Partnerships": "#D4956A", "Brand-Owned": "#C9A87E"}
@@ -272,8 +272,9 @@ with tab_scorecard:
             else:
                 st.warning(f"**{row['Source']}**: {row['Actual %']:.0f}% actual / {row['Target %']}% target ({gap:+.0f}%) — Need LESS")
         st.markdown("")
-        st.info("**Poplife strategy**: Creators & influencers are the primary content engine. "
-                "Brand-owned anchors the brand world. Events provide real-time cultural relevance.")
+        st.info("**Content Engine**: Brand-owned content anchors the feed (50%). "
+                "Creator & influencer partnerships drive 1.7x more engagement (30%). "
+                "Events provide real-time cultural relevance (20%).")
 
     st.markdown("---")
 

@@ -184,12 +184,19 @@ PLATFORM_ROLES = {
     "YouTube": {"role": "Deep Dive — education + Shorts", "priority": "Secondary", "cadence": "4-5/mo"},
 }
 
+# Content source mix targets (2026 Social Strategy deck — "The Content Engine")
+CONTENT_SOURCE_MIX = {
+    "Brand-Owned": 50,
+    "Creator / Influencer Partnerships / UGC": 30,
+    "Events": 20,
+}
+
 # Monthly ramp targets (March-June 2026)
 MONTHLY_RAMP = {
-    "March": {"creator_pct": "50%+", "er_target": "0.25%", "proactive_comments_wk": "15-20"},
-    "April": {"creator_pct": "60%+", "er_target": "0.30%", "proactive_comments_wk": "20-25"},
-    "May": {"creator_pct": "65%+", "er_target": "0.40%", "proactive_comments_wk": "25-30"},
-    "June": {"creator_pct": "70%", "er_target": "0.50%", "proactive_comments_wk": "30+"},
+    "March": {"creator_pct": "20%+", "er_target": "0.15%", "proactive_comments_wk": "15-20"},
+    "April": {"creator_pct": "23%+", "er_target": "0.18%", "proactive_comments_wk": "20-25"},
+    "May": {"creator_pct": "27%+", "er_target": "0.22%", "proactive_comments_wk": "25-30"},
+    "June": {"creator_pct": "30%", "er_target": "0.25%", "proactive_comments_wk": "30+"},
 }
 
 # Testing roadmap (March-June 2026)
@@ -207,17 +214,17 @@ TESTING_ROADMAP = {
 # the weekly posting targets below are Social Brief KPIs (may differ).
 
 SOCIAL_BRIEF_TARGETS = {
-    "er_by_followers": 0.50,              # ER by Followers target (2026 deck KPI)
+    "er_by_followers": 0.25,              # ER by Followers target (current 0.11%, 2x stretch)
     "er_by_views": 2.0,                   # ER by Views target (category median ~1.78%, aiming above)
-    "engagements_per_post": 300,        # Avg engagements per post target (was 100/reel)
+    "engagements_per_post": 200,        # Avg engagements per post target (current 122, ~1.6x stretch)
     "reel_ratio": 50,                   # Reel Ratio % on Instagram (Reels = 50% of feed)
-    "carousel_ratio": 30,              # Carousel Ratio % on Instagram (new)
-    "ig_posts_per_month": (12, 16),    # IG posts/month range (was 4-5/wk)
-    "tt_posts_per_week": (3, 5),       # TT posts/week range (was 2-3)
-    "save_rate": 8.0,                   # Save Rate % target (was 3%)
-    "share_rate": 5.0,                  # Share Rate % target (was 7%)
-    "creator_er": 7.0,                  # Creator content ER target (new — maintain 7%+)
-    "creator_pct_target_june": 70,     # Creator % of total by June 2026
+    "carousel_ratio": 30,              # Carousel Ratio % on Instagram
+    "ig_posts_per_month": (12, 16),    # IG posts/month range
+    "tt_posts_per_week": (3, 5),       # TT posts/week range
+    "save_rate": 5.0,                   # Save Rate % target (current 2.9%, ~1.7x stretch)
+    "share_rate": 5.0,                  # Share Rate % target (current 5.9%, already beating)
+    "creator_er": 2.0,                  # Creator content ER by views target (current 1.70%)
+    "creator_pct_target_june": 30,     # Creator % of total by June 2026 (Content Engine: 50% brand / 30% creator / 20% events)
 }
 
 CHART_TEMPLATE = "plotly_white"
