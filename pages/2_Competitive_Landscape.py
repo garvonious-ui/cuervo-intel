@@ -71,6 +71,14 @@ with tab_overview:
         # Use benchmark ER by Views when available, fall back to post-level avg ER
         if has_bench:
             ig_eng = eng.get("Instagram", {})
+            # Override posts/avg eng with benchmark-window data when available
+            bench_posts = ig_eng.get("benchmark_posts", 0)
+            if bench_posts:
+                row_data["Posts"] = bench_posts
+                row_data["Posts/Week"] = round(bench_posts / 4, 1)
+            bench_avg_eng = ig_eng.get("benchmark_avg_engagement", 0)
+            if bench_avg_eng:
+                row_data["Avg Likes"] = int(bench_avg_eng)
             row_data["ER by Views %"] = round(ig_eng.get("benchmark_er_by_views", 0), 2)
             row_data["Reels"] = ig_eng.get("benchmark_reels_count", 0)
             row_data["Avg #tags"] = round(ig_eng.get("benchmark_avg_hashtags", 0), 1)
