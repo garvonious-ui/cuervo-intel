@@ -308,8 +308,8 @@ with tab_content:
                              labels={"avg_er": "Avg ER %", "post_type": ""},
                              template=CHART_TEMPLATE, text_auto=".2f")
             # Add ER target line
-            fig_fer.add_hline(y=ER_TARGET, line_dash="dash", line_color="#333",
-                              annotation_text=f"{ER_TARGET}% Brief target", annotation_position="top right")
+            fig_fer.add_hline(y=ER_BY_VIEWS_TARGET, line_dash="dash", line_color="#333",
+                              annotation_text=f"{ER_BY_VIEWS_TARGET}% ER by Views target", annotation_position="top right")
             fig_fer.update_layout(font=CHART_FONT, height=350, showlegend=False)
             st.plotly_chart(fig_fer, use_container_width=True)
 
