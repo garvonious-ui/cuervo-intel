@@ -177,6 +177,9 @@ THEME_KEYWORDS = {
         "recipe", "cocktail", "margarita", "paloma", "mix", "ingredients",
         "garnish", "pour", "shake", "stir", "muddle", "splash", "oz",
         "simple syrup", "lime juice", "make this", "how to make",
+        "tequila 101", "did you know", "the difference", "blanco vs",
+        "reposado vs", "añejo", "cristalino", "guide to",
+        "everything you need", "what makes", "how tequila",
     ],
     "Meme / Humor": [
         "pov:", "pov ", "when you", "when someone", "mood:", "me:", "me when",
@@ -207,11 +210,6 @@ THEME_KEYWORDS = {
         "since", "est.", "heritage", "tradition", "founder", "generations",
         "legacy", "history", "roots", "origin", "began in",
     ],
-    "Education (Tequila 101)": [
-        "tequila 101", "did you know", "the difference", "blanco vs",
-        "reposado vs", "añejo", "cristalino", "guide to",
-        "everything you need", "what makes", "how tequila",
-    ],
     "Music / Party": [
         "playlist", "turn up", "turn it up", "dj", "concert",
         "festival", "dance", "club", "night out", "pre-game",
@@ -219,6 +217,10 @@ THEME_KEYWORDS = {
     "Event / Activation": [
         "pop-up", "pop up", "live from", "activation", "launch party",
         "catch us", "meet us", "join us at", "hosted by",
+        "ufc", "akamba", "tales_of_the_cocktail", "tales of the cocktail",
+        "nola", "new orleans", "mexico trip", "workshop", "sustainability workshop",
+        "bartender", "hanky panky", "the vertical", "vertical team",
+        "festival activation", "on-site", "on site",
     ],
     "Product Showcase": [
         "bottle", "smooth", "bold", "crafted", "premium", "introducing",
@@ -326,6 +328,11 @@ def detect_creator_collab(caption: str, brand_handle: str = "") -> tuple[bool, s
     brand_clean = brand_handle.replace("@", "").lower()
     other_mentions = [m for m in mentions if m.replace("@", "").lower() != brand_clean]
     text = caption.lower()
+    # Cuervo-specific creator program tags — always counts as creator content
+    creator_program_signals = ["cuervopartner", "cuervocollective", "@cuervocollective"]
+    if any(s in text for s in creator_program_signals):
+        handle = other_mentions[0] if other_mentions else ""
+        return True, handle
     collab_signals = ["collab", "featuring", "feat.", "ft.", " x @", "with @",
                        "created by", "styled by", "made by", "partnered with"]
     has_signal = any(s in text for s in collab_signals)

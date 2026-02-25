@@ -38,7 +38,6 @@ CONTENT_THEMES = [
     "Event / Activation",
     "Cultural Moment / Holiday",
     "Meme / Humor",
-    "Education (Tequila 101)",
     "User Repost",
     "Giveaway / Promo",
     "Brand Heritage / Story",

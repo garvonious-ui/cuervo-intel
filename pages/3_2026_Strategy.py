@@ -230,10 +230,20 @@ with tab_scorecard:
     st.subheader("Content Source Mix — Creator / Brand / Events")
     st.caption("Target: 50% Owned / Sponsored Live Events, 30% Creator / Influencer / UGC, 20% Brand-Owned")
 
-    event_themes = ["Event / Activation", "Music / Party"]
+    # Owned / Sponsored Events = event activations, music/party, cultural moments, sponsored events
+    event_themes = ["Event / Activation", "Music / Party", "Cultural Moment / Holiday"]
+    event_caption_signals = [
+        "ufc", "akamba", "tales_of_the_cocktail", "tales of the cocktail",
+        "nola", "new orleans", "workshop", "activation", "festival",
+        "hanky panky", "vertical team", "mexico on film", "brought the party",
+    ]
     creator_posts = cuervo_df[cuervo_df["has_creator_collab"] == "Yes"] if "has_creator_collab" in cuervo_df.columns else pd.DataFrame()
-    event_posts = cuervo_df[(cuervo_df["content_theme"].isin(event_themes)) &
-                            (cuervo_df.get("has_creator_collab", pd.Series(dtype=str)) != "Yes")] if "has_creator_collab" in cuervo_df.columns else cuervo_df[cuervo_df["content_theme"].isin(event_themes)]
+    # Event posts that aren't already counted as creator collabs
+    non_creator_mask = ~cuervo_df.index.isin(creator_posts.index) if len(creator_posts) > 0 else pd.Series(True, index=cuervo_df.index)
+    theme_match = cuervo_df["content_theme"].isin(event_themes)
+    caption_col = cuervo_df["caption_text"].fillna("").str.lower() if "caption_text" in cuervo_df.columns else cuervo_df.get("caption", pd.Series("", index=cuervo_df.index)).fillna("").str.lower()
+    caption_match = caption_col.apply(lambda t: any(s in t for s in event_caption_signals))
+    event_posts = cuervo_df[(theme_match | caption_match) & non_creator_mask]
     brand_posts_count = len(cuervo_df) - len(creator_posts) - len(event_posts)
 
     src_total = max(len(cuervo_df), 1)
