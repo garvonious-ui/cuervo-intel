@@ -292,20 +292,10 @@ with tab_content:
         format_er = cuervo_ig.groupby("post_type")["engagement_rate"].mean().reset_index()
         format_er.columns = ["post_type", "avg_er"]
 
-        # Avg impressions by format (reach metric)
-        if "impressions" in cuervo_ig.columns:
-            cuervo_ig = cuervo_ig.copy()
-            cuervo_ig["impressions"] = pd.to_numeric(cuervo_ig["impressions"], errors="coerce").fillna(0)
-        has_impressions = "impressions" in cuervo_ig.columns and (cuervo_ig["impressions"] > 0).any()
-        if has_impressions:
-            format_reach = (cuervo_ig[cuervo_ig["impressions"] > 0]
-                            .groupby("post_type")["impressions"].mean().reset_index())
-            format_reach.columns = ["post_type", "avg_impressions"]
-            # Count posts with impression data per format
-            format_data_counts = (cuervo_ig[cuervo_ig["impressions"] > 0]
-                                  .groupby("post_type").size().reset_index(name="posts_with_data"))
-        else:
-            format_reach = None
+        # Avg total engagements by format (volume metric)
+        format_vol = (cuervo_ig[cuervo_ig["total_engagement"] > 0]
+                      .groupby("post_type")["total_engagement"].mean().reset_index())
+        format_vol.columns = ["post_type", "avg_engagements"]
 
         col_f1, col_f2 = st.columns(2)
         with col_f1:
@@ -328,27 +318,16 @@ with tab_content:
             fig_fer.update_layout(font=CHART_FONT, height=350, showlegend=False)
             st.plotly_chart(fig_fer, use_container_width=True)
 
-        # Avg Reach by Format chart (if impressions available)
-        if has_impressions and format_reach is not None and len(format_reach):
-            st.markdown("**Avg Reach (Impressions) by Format**")
-            fig_reach = px.bar(format_reach, x="post_type", y="avg_impressions",
-                               color_discrete_sequence=["#2ea3f2"],
-                               labels={"avg_impressions": "Avg Impressions", "post_type": ""},
-                               template=CHART_TEMPLATE, text_auto=",.0f")
-            fig_reach.update_layout(font=CHART_FONT, height=350, showlegend=False)
-            st.plotly_chart(fig_reach, width="stretch")
-
-            # Data completeness note
-            completeness_parts = []
-            for _, row in format_data_counts.iterrows():
-                total = format_counts[format_counts["post_type"] == row["post_type"]]["count"].values
-                total = total[0] if len(total) else 0
-                if row["posts_with_data"] < total:
-                    completeness_parts.append(
-                        f"{row['post_type']}: {row['posts_with_data']}/{total} posts have impression data"
-                    )
-            if completeness_parts:
-                st.caption(f"Data completeness: {' | '.join(completeness_parts)}")
+        # Avg Engagements by Format chart
+        if len(format_vol):
+            st.markdown("**Avg Total Engagements by Format**")
+            fig_vol = px.bar(format_vol, x="post_type", y="avg_engagements",
+                             color_discrete_sequence=["#2ea3f2"],
+                             labels={"avg_engagements": "Avg Engagements", "post_type": ""},
+                             template=CHART_TEMPLATE, text_auto=",.0f")
+            fig_vol.update_layout(font=CHART_FONT, height=350, showlegend=False)
+            st.plotly_chart(fig_vol, use_container_width=True)
+            st.caption("Total engagements = likes + comments + shares + saves")
 
         # Format KPIs
         reel_pct = len(cuervo_ig[cuervo_ig["post_type"] == "Reel"]) / max(len(cuervo_ig), 1) * 100
@@ -360,13 +339,13 @@ with tab_content:
         best_er_fmt = best_fmt_er.idxmax() if len(best_fmt_er) else "N/A"
         best_er_val = best_fmt_er.max() if len(best_fmt_er) else 0
 
-        # Best format by reach
-        if has_impressions and format_reach is not None and len(format_reach):
-            best_reach_fmt = format_reach.loc[format_reach["avg_impressions"].idxmax(), "post_type"]
-            best_reach_val = format_reach["avg_impressions"].max()
+        # Best format by volume (total engagements)
+        if len(format_vol):
+            best_vol_fmt = format_vol.loc[format_vol["avg_engagements"].idxmax(), "post_type"]
+            best_vol_val = format_vol["avg_engagements"].max()
         else:
-            best_reach_fmt = "N/A"
-            best_reach_val = 0
+            best_vol_fmt = "N/A"
+            best_vol_val = 0
 
         fk1, fk2, fk3, fk4 = st.columns(4)
         with fk1:
@@ -379,16 +358,16 @@ with tab_content:
             st.metric("Best ER", best_er_fmt, delta=f"{best_er_val:.2f}%",
                       help="Format with highest avg engagement rate")
         with fk4:
-            st.metric("Best Reach", best_reach_fmt,
-                      delta=f"{best_reach_val:,.0f} avg impressions" if best_reach_val else "N/A",
-                      help="Format with highest avg impressions per post")
+            st.metric("Most Engaging", best_vol_fmt,
+                      delta=f"{best_vol_val:,.0f} avg engagements" if best_vol_val else "N/A",
+                      help="Format with highest avg total engagements per post")
 
         # So What — balanced narrative
-        if best_er_fmt != best_reach_fmt and best_reach_fmt != "N/A":
+        if best_er_fmt != best_vol_fmt and best_vol_fmt != "N/A":
             st.info(
                 f"**Format trade-off:** {best_er_fmt}s lead on engagement rate ({best_er_val:.2f}%), "
-                f"but {best_reach_fmt}s deliver more reach ({best_reach_val:,.0f} avg impressions). "
-                f"Optimize for ER when building community; lean on {best_reach_fmt}s for awareness plays."
+                f"but {best_vol_fmt}s drive more total engagement ({best_vol_val:,.0f} avg per post). "
+                f"Optimize for ER when building community; lean on {best_vol_fmt}s for volume."
             )
         elif reel_pct < REEL_RATIO_TARGET:
             st.info(f"**Format gap:** Reels at {reel_pct:.0f}% — the Brief targets {REEL_RATIO_TARGET}%+. "
