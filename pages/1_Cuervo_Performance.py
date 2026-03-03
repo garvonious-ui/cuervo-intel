@@ -293,7 +293,10 @@ with tab_content:
         format_er.columns = ["post_type", "avg_er"]
 
         # Avg impressions by format (reach metric)
-        has_impressions = "impressions" in cuervo_ig.columns and cuervo_ig["impressions"].notna().any()
+        if "impressions" in cuervo_ig.columns:
+            cuervo_ig = cuervo_ig.copy()
+            cuervo_ig["impressions"] = pd.to_numeric(cuervo_ig["impressions"], errors="coerce").fillna(0)
+        has_impressions = "impressions" in cuervo_ig.columns and (cuervo_ig["impressions"] > 0).any()
         if has_impressions:
             format_reach = (cuervo_ig[cuervo_ig["impressions"] > 0]
                             .groupby("post_type")["impressions"].mean().reset_index())
