@@ -148,6 +148,7 @@ Currently 7 CSV exports covering Oct 1, 2025 – Jan 31, 2026:
 - `Profile Performance` — Cuervo only (123 rows)
 
 ## Pending / Known Issues
+- **Impressions data incoming:** Sprout's Post Performance export only has impressions for Stories, not feed posts (Reels/Carousels/Static). The format breakdown chart currently uses total engagements as a volume proxy. Once we get post-level impressions data, swap the "Avg Total Engagements by Format" chart in Page 1 Tab 2 back to "Avg Reach (Impressions) by Format" — the impressions code path is already in `sprout_import.py` (the `impressions` field is imported), just needs data that has non-zero values for feed posts.
 - TikTok data not yet in Sprout exports — TikTok sections show zeros on Sprout import mode
 - TikTok autostrat reports (hashtags, keywords) not yet imported — directories exist with templates only. TikTok profiles imported for 4 reference brands.
 - Instagram keyword autostrat reports: 2 Cuervo reports imported (jose_cuervo, cuervo_tequila); no competitor keyword reports yet
