@@ -284,13 +284,25 @@ with tab_content:
 
     # ── Format Breakdown ───────────────────────────────────────────────
     st.subheader("Content Format Breakdown")
-    st.caption("Cuervo's format mix on Instagram — Reels should be the primary driver per the Social Brief")
+    st.caption("Cuervo's format mix on Instagram — reach vs engagement by format")
 
     if len(cuervo_ig):
         format_counts = cuervo_ig.groupby("post_type").size().reset_index(name="count")
         format_counts["pct"] = (format_counts["count"] / format_counts["count"].sum() * 100).round(1)
         format_er = cuervo_ig.groupby("post_type")["engagement_rate"].mean().reset_index()
         format_er.columns = ["post_type", "avg_er"]
+
+        # Avg impressions by format (reach metric)
+        has_impressions = "impressions" in cuervo_ig.columns and cuervo_ig["impressions"].notna().any()
+        if has_impressions:
+            format_reach = (cuervo_ig[cuervo_ig["impressions"] > 0]
+                            .groupby("post_type")["impressions"].mean().reset_index())
+            format_reach.columns = ["post_type", "avg_impressions"]
+            # Count posts with impression data per format
+            format_data_counts = (cuervo_ig[cuervo_ig["impressions"] > 0]
+                                  .groupby("post_type").size().reset_index(name="posts_with_data"))
+        else:
+            format_reach = None
 
         col_f1, col_f2 = st.columns(2)
         with col_f1:
@@ -313,31 +325,74 @@ with tab_content:
             fig_fer.update_layout(font=CHART_FONT, height=350, showlegend=False)
             st.plotly_chart(fig_fer, use_container_width=True)
 
+        # Avg Reach by Format chart (if impressions available)
+        if has_impressions and format_reach is not None and len(format_reach):
+            st.markdown("**Avg Reach (Impressions) by Format**")
+            fig_reach = px.bar(format_reach, x="post_type", y="avg_impressions",
+                               color_discrete_sequence=["#2ea3f2"],
+                               labels={"avg_impressions": "Avg Impressions", "post_type": ""},
+                               template=CHART_TEMPLATE, text_auto=",.0f")
+            fig_reach.update_layout(font=CHART_FONT, height=350, showlegend=False)
+            st.plotly_chart(fig_reach, width="stretch")
+
+            # Data completeness note
+            completeness_parts = []
+            for _, row in format_data_counts.iterrows():
+                total = format_counts[format_counts["post_type"] == row["post_type"]]["count"].values
+                total = total[0] if len(total) else 0
+                if row["posts_with_data"] < total:
+                    completeness_parts.append(
+                        f"{row['post_type']}: {row['posts_with_data']}/{total} posts have impression data"
+                    )
+            if completeness_parts:
+                st.caption(f"Data completeness: {' | '.join(completeness_parts)}")
+
         # Format KPIs
         reel_pct = len(cuervo_ig[cuervo_ig["post_type"] == "Reel"]) / max(len(cuervo_ig), 1) * 100
         carousel_pct = len(cuervo_ig[cuervo_ig["post_type"] == "Carousel"]) / max(len(cuervo_ig), 1) * 100
+
+        # Best format by ER
         best_fmt_er = cuervo_ig.groupby("post_type")["engagement_rate"].mean()
         best_fmt_er = best_fmt_er[best_fmt_er > 0]
-        best_fmt = best_fmt_er.idxmax() if len(best_fmt_er) else "N/A"
-        best_val = best_fmt_er.max() if len(best_fmt_er) else 0
+        best_er_fmt = best_fmt_er.idxmax() if len(best_fmt_er) else "N/A"
+        best_er_val = best_fmt_er.max() if len(best_fmt_er) else 0
 
-        fk1, fk2, fk3 = st.columns(3)
+        # Best format by reach
+        if has_impressions and format_reach is not None and len(format_reach):
+            best_reach_fmt = format_reach.loc[format_reach["avg_impressions"].idxmax(), "post_type"]
+            best_reach_val = format_reach["avg_impressions"].max()
+        else:
+            best_reach_fmt = "N/A"
+            best_reach_val = 0
+
+        fk1, fk2, fk3, fk4 = st.columns(4)
         with fk1:
             st.metric("Reel %", f"{reel_pct:.0f}%",
                       delta=f"{reel_pct - REEL_RATIO_TARGET:+.0f}% vs {REEL_RATIO_TARGET}% target")
         with fk2:
             st.metric("Carousel %", f"{carousel_pct:.0f}%",
-                      help="Carousels drive saves — aim for 20-25%")
+                      help="Carousels drive reach and saves")
         with fk3:
-            st.metric("Best Format (ER)", best_fmt, delta=f"{best_val:.2f}%")
+            st.metric("Best ER", best_er_fmt, delta=f"{best_er_val:.2f}%",
+                      help="Format with highest avg engagement rate")
+        with fk4:
+            st.metric("Best Reach", best_reach_fmt,
+                      delta=f"{best_reach_val:,.0f} avg impressions" if best_reach_val else "N/A",
+                      help="Format with highest avg impressions per post")
 
-        # So What
-        if reel_pct < 50:
+        # So What — balanced narrative
+        if best_er_fmt != best_reach_fmt and best_reach_fmt != "N/A":
+            st.info(
+                f"**Format trade-off:** {best_er_fmt}s lead on engagement rate ({best_er_val:.2f}%), "
+                f"but {best_reach_fmt}s deliver more reach ({best_reach_val:,.0f} avg impressions). "
+                f"Optimize for ER when building community; lean on {best_reach_fmt}s for awareness plays."
+            )
+        elif reel_pct < REEL_RATIO_TARGET:
             st.info(f"**Format gap:** Reels at {reel_pct:.0f}% — the Brief targets {REEL_RATIO_TARGET}%+. "
-                    f"{best_fmt} is the highest-performing format at {best_val:.2f}% ER.")
+                    f"{best_er_fmt} is the highest-performing format at {best_er_val:.2f}% ER.")
         else:
             st.info(f"**On track:** Reel ratio at {reel_pct:.0f}% exceeds the {REEL_RATIO_TARGET}% target. "
-                    f"{best_fmt} drives the best ER at {best_val:.2f}%.")
+                    f"{best_er_fmt} drives the best ER at {best_er_val:.2f}%.")
     else:
         st.info("No Cuervo Instagram posts in the dataset.")
 
