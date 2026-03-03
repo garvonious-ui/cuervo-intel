@@ -442,6 +442,7 @@ def import_sprout_posts(csv_path: str) -> list[dict]:
         shares = safe_int(row.get(col_map.get("shares", ""), 0))
         saves = safe_int(row.get(col_map.get("saves", ""), 0))
         views = safe_int(row.get(col_map.get("views", ""), 0))
+        impressions = safe_int(row.get(col_map.get("impressions", ""), 0))
 
         # Capture Sprout's pre-calculated ER (per impression) when available
         sprout_er = safe_float_er(row.get(col_map.get("engagement_rate", ""), ""))
@@ -473,6 +474,7 @@ def import_sprout_posts(csv_path: str) -> list[dict]:
             "shares": shares,
             "saves": saves,
             "views": views,
+            "impressions": impressions,
             "engagement_rate_manual": sprout_er,
             "content_theme": theme,
             "visual_style": "",
