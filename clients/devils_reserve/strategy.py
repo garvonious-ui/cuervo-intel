@@ -1,43 +1,41 @@
 """
 Devils Reserve Client — Strategy Frameworks
 ==============================================
-From the 2026 Social Brief: Events, Influencer Content, Flavor Profile Forward.
+North Star: "Raise a little hell"
+2 pillars: Chaos (Lifestyle) 75%, Flavor (Product) 25%
+Content Mediums: Events, Partnerships, Influencers/Creators, Evergreen Photoshoots
 Target: Gen Z (21-28), trend-savvy, short-form video.
 """
 
-# ── Content Pillars (from the brief) ─────────────────────────────────
-# 3 pillars: Events, Influencer Content, Flavor Profile
+# ── Content Pillars ──────────────────────────────────────────────────
+# North Star: "Raise a little hell"
+# 2 pillars: Chaos (Lifestyle) 75%, Flavor (Product) 25%
 
 PILLAR_MAP = {
-    "Event Energy": [
+    "Chaos (Lifestyle)": [
         "Event/Activation", "Sports Tie-in", "Cultural Moment/Holiday",
-        "Meme/Humor", "User Repost",
+        "Meme/Humor", "User Repost", "Creator Collab", "Partner",
+        "Giveaway/Promo", "Behind the Scenes",
     ],
-    "Creator & Influencer": [
-        "Creator Collab", "Partner", "Giveaway/Promo",
-    ],
-    "Flavor Forward": [
-        "Product/Lifestyle", "Cocktail Highlights", "Behind the Scenes",
+    "Flavor (Product)": [
+        "Product/Lifestyle", "Cocktail Highlights",
         "Brand Heritage / Culture",
     ],
 }
 
 PILLAR_TARGETS = {
-    "Event Energy": 45,
-    "Creator & Influencer": 30,
-    "Flavor Forward": 25,
+    "Chaos (Lifestyle)": 75,
+    "Flavor (Product)": 25,
 }
 
 PILLAR_COLORS = {
-    "Event Energy": "#CC0000",       # Devil red — high energy events
-    "Creator & Influencer": "#F8C090",  # Warm peach — creator content
-    "Flavor Forward": "#2ea3f2",     # Cool blue — product/flavor
+    "Chaos (Lifestyle)": "#CC0000",    # Devil red — raise a little hell
+    "Flavor (Product)": "#F8C090",     # Warm peach — product/flavor
 }
 
 PILLAR_DESCRIPTIONS = {
-    "Event Energy": "NASCAR, Spring Break, festivals — show the 'fun' atmosphere DR shows up in",
-    "Creator & Influencer": "Paid influencer content into organic strategy + Barstool IT Girl content",
-    "Flavor Forward": "Weave in the flavor profile (pineapple + jalapeño tequila) without being stiff",
+    "Chaos (Lifestyle)": "Raise a little hell — events, partnerships, creators, mischievous energy",
+    "Flavor (Product)": "Pineapple + jalapeño tequila — cocktail moments, taste reactions, product content",
 }
 
 # ── SKU Strategy ──────────────────────────────────────────────────────
@@ -52,10 +50,10 @@ SKU_STRATEGY = {
 # ── Execution Engines ─────────────────────────────────────────────────
 
 EXECUTION_ENGINES = {
-    "Event Content Factory": "Capture NASCAR, Spring Break, festival moments for TikTok — film with trend formats in mind BEFORE the event.",
-    "Creator-Led + Barstool": "Leverage paid influencer content into organic. Barstool IT Girl content. Creator diaries, POV storytelling.",
-    "Flavor Profile Content": "Pineapple + jalapeño tequila — cocktail moments, taste reactions, recipe content that feels natural, not stiff.",
-    "Memes + Reactive Culture": "Fun, mischievous, internet-native. Real-time commentary, cultural remixing, devil-themed humor.",
+    "Events": "Capture NASCAR, Spring Break, festival moments — film with trend formats in mind BEFORE the event.",
+    "Partnerships": "Brand collaborations, co-branded content, cross-promotions that amplify reach.",
+    "Influencers / Content Creators": "Leverage paid influencer content into organic. Barstool IT Girl content. Creator diaries, POV storytelling.",
+    "Evergreen Photoshoots": "Planned product/lifestyle shoots — cocktail moments, flavor-forward visuals, brand world-building.",
 }
 
 # ── Creator Archetypes ────────────────────────────────────────────────
@@ -141,9 +139,10 @@ PLATFORM_ROLES = {
 # ── Content Source Mix ────────────────────────────────────────────────
 
 CONTENT_SOURCE_MIX = {
-    "Event Content (NASCAR, Spring Break)": 45,
-    "Creator / Influencer / Barstool": 30,
-    "Brand-Owned (Flavor, Product)": 25,
+    "Events": 30,
+    "Partnerships": 20,
+    "Influencers / Content Creators": 30,
+    "Evergreen Photoshoots": 20,
 }
 
 # ── Monthly Ramp Targets ─────────────────────────────────────────────

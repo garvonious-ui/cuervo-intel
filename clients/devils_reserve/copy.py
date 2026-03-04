@@ -25,7 +25,7 @@ NAV_TABLE = """
 |------|--------------------|
 | **Devils Reserve Performance** | KPI scorecard, content format & theme performance, self-audit intelligence |
 | **Competitive Landscape** | 5-brand comparison (Fireball, Pink Whitney, Jagermeister, Cazadores), content gaps |
-| **Strategy & Brief** | Scorecard, 3 content pillars (Events / Creator / Flavor), action plan |
+| **Strategy & Brief** | Scorecard, 2 content pillars (Chaos 75% / Flavor 25%), action plan |
 | **Inspiration & Explorer** | Duolingo, Chipotle, Dunkin', Poppi reference profiles + full data explorer |
 | **Conversation Intel** | Competitor keyword analysis, category intel |
 """
@@ -57,8 +57,8 @@ NARRATIVE = {
     "strategy": {
         "kpi_header": "KPI Scorecard",
         "kpi_caption": "Current performance vs 2026 targets",
-        "pillar_caption": "3 pillars from the Social Brief — Event Energy, Creator & Influencer, Flavor Forward",
-        "content_engine_narrative": "Event content anchors the feed (45%). Creator & influencer partnerships drive authentic reach (30%). Flavor-forward brand content fills gaps (25%).",
+        "pillar_caption": "North Star: \"Raise a little hell\" — 2 pillars: Chaos (Lifestyle) 75%, Flavor (Product) 25%",
+        "content_engine_narrative": "Chaos lifestyle content drives the feed (75%) — events, partnerships, creators, mischievous energy. Flavor product content (25%) weaves in the pineapple + jalapeño tequila story.",
         "theme_caption": "Which content theme drives the highest engagement for Devils Reserve",
         "crew_header": "The Devils Reserve Crew — Creator Archetypes",
         "mix_caption": "Grab attention first (Entertain 50%), then guide to action (Convince 10%)",
