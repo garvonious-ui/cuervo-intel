@@ -213,15 +213,15 @@ TESTING_ROADMAP = {
 # the weekly posting targets below are Social Brief KPIs (may differ).
 
 SOCIAL_BRIEF_TARGETS = {
-    "engagements_per_post": 200,        # Avg engagements per post target (current 122, ~1.6x stretch)
-    "eng_per_1k_followers": 1.5,        # Engagements per 1K followers target (for cross-brand comparison)
-    "reel_ratio": 50,                   # Reel Ratio % on Instagram (Reels = 50% of feed)
-    "carousel_ratio": 30,              # Carousel Ratio % on Instagram
-    "ig_posts_per_month": (12, 16),    # IG posts/month range
+    "engagements_per_post": 150,        # Avg engagements per post target (actual: 118, ~1.3x stretch)
+    "eng_per_1k_followers": 1.5,        # Engagements per 1K followers target (actual: 1.06, category median ~2.1)
+    "reel_ratio": 50,                   # Reel Ratio % on Instagram (actual: 40%, target 50%)
+    "carousel_ratio": 30,              # Carousel Ratio % on Instagram (actual: 49%, over-indexing)
+    "ig_posts_per_month": (12, 16),    # IG posts/month range (actual: 13.2, on target)
     "tt_posts_per_week": (3, 5),       # TT posts/week range
-    "save_rate": 5.0,                   # Save Rate % target (current 2.9%, ~1.7x stretch)
-    "share_rate": 5.0,                  # Share Rate % target (current 5.9%, already beating)
-    "creator_engagements_per_post": 300, # Creator content avg engagements target
+    "save_rate": 3.0,                   # Save % of total engagement (actual: 2.7%)
+    "share_rate": 5.0,                  # Share % of total engagement (actual: 5.6%, already beating)
+    "creator_engagements_per_post": 200, # Creator content avg engagements target (aligned with overall)
     "creator_pct_target_june": 30,     # Creator % of total by June 2026 (Content Engine: 50% owned/events / 30% creator / 20% brand-owned)
 }
 
