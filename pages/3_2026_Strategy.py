@@ -604,31 +604,28 @@ with tab_platform:
     _primary_color = "#333333"
     _secondary_color = "#888888"
 
-    _table_html = f"""
-    <table style="width:100%; border-collapse:collapse; font-family:Barlow Condensed, Helvetica, Arial, sans-serif; font-size:0.95rem;">
-      <thead>
-        <tr style="background:{_header_bg}; color:white;">
-          <th style="padding:12px 16px; text-align:left; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Platform</th>
-          <th style="padding:12px 16px; text-align:left; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Role</th>
-          <th style="padding:12px 16px; text-align:left; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Priority</th>
-          <th style="padding:12px 16px; text-align:left; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Cadence</th>
-        </tr>
-      </thead>
-      <tbody>
-    """
+    _rows_html = ""
     for i, (plat, info) in enumerate(PLATFORM_ROLES.items()):
         is_primary = info["priority"] == "Primary"
         name_style = f"font-weight:700; color:{_primary_color}" if is_primary else f"color:{_secondary_color}"
         row_bg = "#ffffff" if i % 2 == 0 else _row_bg
-        border = "border-bottom:1px solid #e0ddd8;"
-        _table_html += f"""
-        <tr style="background:{row_bg}; {border}">
-          <td style="padding:10px 16px; {name_style}">{plat}</td>
-          <td style="padding:10px 16px;">{info['role']}</td>
-          <td style="padding:10px 16px;">{info['priority']}</td>
-          <td style="padding:10px 16px;">{info['cadence']}</td>
-        </tr>"""
-    _table_html += "</tbody></table>"
+        _rows_html += (
+            f'<tr style="background:{row_bg}; border-bottom:1px solid #e0ddd8;">'
+            f'<td style="padding:10px 16px; {name_style}">{plat}</td>'
+            f'<td style="padding:10px 16px;">{info["role"]}</td>'
+            f'<td style="padding:10px 16px;">{info["priority"]}</td>'
+            f'<td style="padding:10px 16px;">{info["cadence"]}</td>'
+            f'</tr>'
+        )
+    _table_html = (
+        f'<table style="width:100%; border-collapse:collapse; font-family:Barlow Condensed, Helvetica, Arial, sans-serif; font-size:0.95rem;">'
+        f'<thead><tr style="background:{_header_bg}; color:white;">'
+        f'<th style="padding:12px 16px; text-align:left; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Platform</th>'
+        f'<th style="padding:12px 16px; text-align:left; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Role</th>'
+        f'<th style="padding:12px 16px; text-align:left; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Priority</th>'
+        f'<th style="padding:12px 16px; text-align:left; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Cadence</th>'
+        f'</tr></thead><tbody>{_rows_html}</tbody></table>'
+    )
     st.markdown(_table_html, unsafe_allow_html=True)
 
     st.markdown("---")
