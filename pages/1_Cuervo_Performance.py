@@ -121,10 +121,10 @@ with tab_kpi:
     else:
         misses.append(f"Reel ratio at {reel_ratio:.0f}% — need {REEL_RATIO_TARGET - reel_ratio:.0f}pp more to hit {REEL_RATIO_TARGET}%")
 
-    if avg_eng_per_reel >= ENG_PER_REEL_TARGET:
-        hits.append(f"Avg engagements/Reel ({avg_eng_per_reel:,.0f}) above {ENG_PER_REEL_TARGET} benchmark")
+    if avg_eng_per_reel >= ENG_PER_POST_TARGET:
+        hits.append(f"Avg engagements/Reel ({avg_eng_per_reel:,.0f}) above {ENG_PER_POST_TARGET} benchmark")
     else:
-        misses.append(f"Avg engagements/Reel ({avg_eng_per_reel:,.0f}) below {ENG_PER_REEL_TARGET} benchmark")
+        misses.append(f"Avg engagements/Reel ({avg_eng_per_reel:,.0f}) below {ENG_PER_POST_TARGET} benchmark")
 
     if IG_PPM_TARGET[0] <= ig_ppm <= IG_PPM_TARGET[1]:
         hits.append(f"IG posting cadence (~{ig_ppm:.0f}/mo) on target")
