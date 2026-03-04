@@ -349,7 +349,7 @@ def create_content_strategy(wb: Workbook, results: dict):
         for theme_name, perf in sorted_themes:
             values = [
                 brand, theme_name, perf["count"],
-                f"{perf['pct_of_content']}%", perf["avg_engagements"],
+                f"{perf['pct_of_content']}%", perf.get("avg_engagements", 0),
             ]
             for c, v in enumerate(values, 1):
                 ws.cell(row=row, column=c, value=v)
