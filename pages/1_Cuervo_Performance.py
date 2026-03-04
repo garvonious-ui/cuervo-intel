@@ -60,9 +60,6 @@ with tab_kpi:
     st.subheader("Social Brief KPI Scorecard")
 
     # Compute KPIs
-    cuervo_er = cuervo_df["engagement_rate"].mean()
-    cuervo_er = 0 if pd.isna(cuervo_er) else cuervo_er
-
     # Follower growth — not available from static export, show followers
     eng = results["engagement"].get(CUERVO, {})
     ig_followers = eng.get("Instagram", {}).get("followers", 0)
@@ -84,44 +81,40 @@ with tab_kpi:
 
     # Brief targets (centralized in config.py)
     _t = SOCIAL_BRIEF_TARGETS
-    ER_TARGET = _t["er_by_followers"]
-    ER_BY_VIEWS_TARGET = _t["er_by_views"]
+    ENG_PER_POST_TARGET = _t["engagements_per_post"]
     REEL_RATIO_TARGET = _t["reel_ratio"]
-    ENG_PER_REEL_TARGET = _t["engagements_per_post"]
     IG_PPM_TARGET = _t["ig_posts_per_month"]
     TT_PPW_TARGET = _t["tt_posts_per_week"]
 
-    # ── ER metrics ────────────────────────────────────────────────────
-    er_by_followers = results.get("cuervo_er_by_followers", 0)
-    benchmark = results.get("benchmark", {})
-    cuervo_bench = benchmark.get("Jose Cuervo", {})
-    er_by_views = cuervo_bench.get("er_by_views", 0) if cuervo_bench else 0
+    # ── Engagement metrics ────────────────────────────────────────────
+    avg_eng_per_post = cuervo_df["total_engagement"].mean() if len(cuervo_df) else 0
+    avg_eng_per_post = 0 if pd.isna(avg_eng_per_post) else avg_eng_per_post
 
     k1, k2, k3, k4, k5 = st.columns(5)
     with k1:
-        st.metric("ER by Followers", f"{er_by_followers:.2f}%",
-                  delta=f"{er_by_followers - ER_TARGET:+.2f}% vs {ER_TARGET}% target")
+        st.metric("Avg Eng/Post", f"{avg_eng_per_post:,.0f}",
+                  delta=f"{avg_eng_per_post - ENG_PER_POST_TARGET:+,.0f} vs {ENG_PER_POST_TARGET} target")
     with k2:
-        st.metric("ER by Views", f"{er_by_views:.2f}%",
-                  delta=f"{er_by_views - ER_BY_VIEWS_TARGET:+.2f}% vs {ER_BY_VIEWS_TARGET}% target")
-    with k3:
         st.metric("Avg Eng/Reel", f"{avg_eng_per_reel:,.0f}",
-                  delta=f"{avg_eng_per_reel - ENG_PER_REEL_TARGET:+,.0f} vs {ENG_PER_REEL_TARGET} target")
-    with k4:
+                  delta=f"{avg_eng_per_reel - ENG_PER_POST_TARGET:+,.0f} vs {ENG_PER_POST_TARGET} target")
+    with k3:
         st.metric("Reel Ratio (IG)", f"{reel_ratio:.0f}%",
                   delta=f"{reel_ratio - REEL_RATIO_TARGET:+.0f}% vs {REEL_RATIO_TARGET}% target")
-    with k5:
+    with k4:
         st.metric("IG Posts/Mo", f"{ig_ppm:.0f}",
                   delta=f"Target: {IG_PPM_TARGET[0]}-{IG_PPM_TARGET[1]}/mo",
                   delta_color="off")
+    with k5:
+        ig_followers_display = f"{ig_followers:,}" if ig_followers else "N/A"
+        st.metric("IG Followers", ig_followers_display)
 
     # ── "So What" Narrative ────────────────────────────────────────────
     hits = []
     misses = []
-    if er_by_followers >= ER_TARGET:
-        hits.append(f"ER by Followers at {er_by_followers:.2f}% meets the {ER_TARGET}% brief target")
+    if avg_eng_per_post >= ENG_PER_POST_TARGET:
+        hits.append(f"Avg engagements/post ({avg_eng_per_post:,.0f}) above {ENG_PER_POST_TARGET} target")
     else:
-        misses.append(f"ER by Followers at {er_by_followers:.2f}% is {ER_TARGET - er_by_followers:.2f}pp below the {ER_TARGET}% target")
+        misses.append(f"Avg engagements/post ({avg_eng_per_post:,.0f}) below {ENG_PER_POST_TARGET} target — gap of {ENG_PER_POST_TARGET - avg_eng_per_post:,.0f}")
 
     if reel_ratio >= REEL_RATIO_TARGET:
         hits.append(f"Reel ratio at {reel_ratio:.0f}% meets the {REEL_RATIO_TARGET}% target")
@@ -289,13 +282,10 @@ with tab_content:
     if len(cuervo_ig):
         format_counts = cuervo_ig.groupby("post_type").size().reset_index(name="count")
         format_counts["pct"] = (format_counts["count"] / format_counts["count"].sum() * 100).round(1)
-        format_er = cuervo_ig.groupby("post_type")["engagement_rate"].mean().reset_index()
-        format_er.columns = ["post_type", "avg_er"]
 
-        # Avg total engagements by format (volume metric)
-        format_vol = (cuervo_ig[cuervo_ig["total_engagement"] > 0]
-                      .groupby("post_type")["total_engagement"].mean().reset_index())
-        format_vol.columns = ["post_type", "avg_engagements"]
+        # Avg total engagements by format
+        format_eng = (cuervo_ig.groupby("post_type")["total_engagement"].mean().reset_index())
+        format_eng.columns = ["post_type", "avg_engagements"]
 
         col_f1, col_f2 = st.columns(2)
         with col_f1:
@@ -307,47 +297,27 @@ with tab_content:
             st.plotly_chart(fig_fmt, use_container_width=True)
 
         with col_f2:
-            st.markdown("**Avg ER by Format**")
-            fig_fer = px.bar(format_er, x="post_type", y="avg_er",
+            st.markdown("**Avg Engagements by Format**")
+            fig_eng = px.bar(format_eng, x="post_type", y="avg_engagements",
                              color_discrete_sequence=[BRAND_COLORS[CUERVO]],
-                             labels={"avg_er": "Avg ER %", "post_type": ""},
-                             template=CHART_TEMPLATE, text_auto=".2f")
-            # Add ER target line
-            fig_fer.add_hline(y=ER_BY_VIEWS_TARGET, line_dash="dash", line_color="#333",
-                              annotation_text=f"{ER_BY_VIEWS_TARGET}% ER by Views target", annotation_position="top right")
-            fig_fer.update_layout(font=CHART_FONT, height=350, showlegend=False)
-            st.plotly_chart(fig_fer, use_container_width=True)
-
-        # Avg Engagements by Format chart
-        if len(format_vol):
-            st.markdown("**Avg Total Engagements by Format**")
-            fig_vol = px.bar(format_vol, x="post_type", y="avg_engagements",
-                             color_discrete_sequence=["#2ea3f2"],
                              labels={"avg_engagements": "Avg Engagements", "post_type": ""},
                              template=CHART_TEMPLATE, text_auto=",.0f")
-            fig_vol.update_layout(font=CHART_FONT, height=350, showlegend=False)
-            st.plotly_chart(fig_vol, use_container_width=True)
-            st.caption("Total engagements = likes + comments + shares + saves")
+            fig_eng.add_hline(y=ENG_PER_POST_TARGET, line_dash="dash", line_color="#333",
+                              annotation_text=f"{ENG_PER_POST_TARGET} eng/post target", annotation_position="top right")
+            fig_eng.update_layout(font=CHART_FONT, height=350, showlegend=False)
+            st.plotly_chart(fig_eng, use_container_width=True)
+
+        st.caption("Total engagements = likes + comments + shares + saves")
 
         # Format KPIs
         reel_pct = len(cuervo_ig[cuervo_ig["post_type"] == "Reel"]) / max(len(cuervo_ig), 1) * 100
         carousel_pct = len(cuervo_ig[cuervo_ig["post_type"] == "Carousel"]) / max(len(cuervo_ig), 1) * 100
 
-        # Best format by ER
-        best_fmt_er = cuervo_ig.groupby("post_type")["engagement_rate"].mean()
-        best_fmt_er = best_fmt_er[best_fmt_er > 0]
-        best_er_fmt = best_fmt_er.idxmax() if len(best_fmt_er) else "N/A"
-        best_er_val = best_fmt_er.max() if len(best_fmt_er) else 0
+        # Best format by engagements
+        best_eng_fmt = format_eng.loc[format_eng["avg_engagements"].idxmax(), "post_type"] if len(format_eng) else "N/A"
+        best_eng_val = format_eng["avg_engagements"].max() if len(format_eng) else 0
 
-        # Best format by volume (total engagements)
-        if len(format_vol):
-            best_vol_fmt = format_vol.loc[format_vol["avg_engagements"].idxmax(), "post_type"]
-            best_vol_val = format_vol["avg_engagements"].max()
-        else:
-            best_vol_fmt = "N/A"
-            best_vol_val = 0
-
-        fk1, fk2, fk3, fk4 = st.columns(4)
+        fk1, fk2, fk3 = st.columns(3)
         with fk1:
             st.metric("Reel %", f"{reel_pct:.0f}%",
                       delta=f"{reel_pct - REEL_RATIO_TARGET:+.0f}% vs {REEL_RATIO_TARGET}% target")
@@ -355,26 +325,17 @@ with tab_content:
             st.metric("Carousel %", f"{carousel_pct:.0f}%",
                       help="Carousels drive reach and saves")
         with fk3:
-            st.metric("Best ER", best_er_fmt, delta=f"{best_er_val:.2f}%",
-                      help="Format with highest avg engagement rate")
-        with fk4:
-            st.metric("Most Engaging", best_vol_fmt,
-                      delta=f"{best_vol_val:,.0f} avg engagements" if best_vol_val else "N/A",
+            st.metric("Most Engaging Format", best_eng_fmt,
+                      delta=f"{best_eng_val:,.0f} avg engagements" if best_eng_val else "N/A",
                       help="Format with highest avg total engagements per post")
 
-        # So What — balanced narrative
-        if best_er_fmt != best_vol_fmt and best_vol_fmt != "N/A":
-            st.info(
-                f"**Format trade-off:** {best_er_fmt}s lead on engagement rate ({best_er_val:.2f}%), "
-                f"but {best_vol_fmt}s drive more total engagement ({best_vol_val:,.0f} avg per post). "
-                f"Optimize for ER when building community; lean on {best_vol_fmt}s for volume."
-            )
-        elif reel_pct < REEL_RATIO_TARGET:
+        # So What
+        if reel_pct < REEL_RATIO_TARGET:
             st.info(f"**Format gap:** Reels at {reel_pct:.0f}% — the Brief targets {REEL_RATIO_TARGET}%+. "
-                    f"{best_er_fmt} is the highest-performing format at {best_er_val:.2f}% ER.")
+                    f"{best_eng_fmt} drives the most engagement at {best_eng_val:,.0f} avg per post.")
         else:
             st.info(f"**On track:** Reel ratio at {reel_pct:.0f}% exceeds the {REEL_RATIO_TARGET}% target. "
-                    f"{best_er_fmt} drives the best ER at {best_er_val:.2f}%.")
+                    f"{best_eng_fmt} drives the most engagement at {best_eng_val:,.0f} avg per post.")
     else:
         st.info("No Cuervo Instagram posts in the dataset.")
 
@@ -385,30 +346,30 @@ with tab_content:
     st.caption("Which themes drive the highest engagement for Cuervo")
 
     if len(cuervo_df) and cuervo_df["content_theme"].notna().any():
-        theme_er = (cuervo_df.groupby("content_theme")
-                    .agg(avg_er=("engagement_rate", "mean"), count=("engagement_rate", "size"))
-                    .reset_index()
-                    .sort_values("avg_er", ascending=False))
-        theme_er["avg_er"] = theme_er["avg_er"].round(2)
+        theme_eng = (cuervo_df.groupby("content_theme")
+                     .agg(avg_eng=("total_engagement", "mean"), count=("total_engagement", "size"))
+                     .reset_index()
+                     .sort_values("avg_eng", ascending=False))
+        theme_eng["avg_eng"] = theme_eng["avg_eng"].round(0)
 
-        fig_theme = px.bar(theme_er, x="content_theme", y="avg_er",
+        fig_theme = px.bar(theme_eng, x="content_theme", y="avg_eng",
                            color_discrete_sequence=[BRAND_COLORS[CUERVO]],
-                           labels={"avg_er": "Avg ER %", "content_theme": ""},
-                           template=CHART_TEMPLATE, text_auto=".2f",
+                           labels={"avg_eng": "Avg Engagements", "content_theme": ""},
+                           template=CHART_TEMPLATE, text_auto=",.0f",
                            hover_data={"count": True})
-        fig_theme.add_hline(y=ER_BY_VIEWS_TARGET, line_dash="dash", line_color="#333",
-                            annotation_text=f"{ER_BY_VIEWS_TARGET}% target", annotation_position="top right")
+        fig_theme.add_hline(y=ENG_PER_POST_TARGET, line_dash="dash", line_color="#333",
+                            annotation_text=f"{ENG_PER_POST_TARGET} eng/post target", annotation_position="top right")
         fig_theme.update_layout(font=CHART_FONT, height=400, showlegend=False,
                                 xaxis_tickangle=-35)
         st.plotly_chart(fig_theme, use_container_width=True)
 
         # So What
-        top_theme = theme_er.iloc[0]
-        bottom_theme = theme_er.iloc[-1] if len(theme_er) > 1 else top_theme
-        themes_above_target = theme_er[theme_er["avg_er"] >= ER_BY_VIEWS_TARGET]
-        st.info(f"**Top theme:** {top_theme['content_theme']} at {top_theme['avg_er']:.2f}% ER ({top_theme['count']} posts). "
-                f"{len(themes_above_target)} of {len(theme_er)} themes meet the {ER_BY_VIEWS_TARGET}% target. "
-                f"**Lowest:** {bottom_theme['content_theme']} at {bottom_theme['avg_er']:.2f}%.")
+        top_theme = theme_eng.iloc[0]
+        bottom_theme = theme_eng.iloc[-1] if len(theme_eng) > 1 else top_theme
+        themes_above_target = theme_eng[theme_eng["avg_eng"] >= ENG_PER_POST_TARGET]
+        st.info(f"**Top theme:** {top_theme['content_theme']} at {top_theme['avg_eng']:,.0f} avg engagements ({top_theme['count']} posts). "
+                f"{len(themes_above_target)} of {len(theme_eng)} themes meet the {ENG_PER_POST_TARGET} eng/post target. "
+                f"**Lowest:** {bottom_theme['content_theme']} at {bottom_theme['avg_eng']:,.0f}.")
 
     st.markdown("---")
 
@@ -484,20 +445,20 @@ with tab_content:
     st.subheader("Best & Worst Posts")
 
     if len(cuervo_df):
-        post_cols = ["platform", "post_type", "engagement_rate", "likes", "comments",
+        post_cols = ["platform", "post_type", "total_engagement", "likes", "comments",
                      "shares", "views", "content_theme", "post_date", "caption_text", "post_url"]
         available_cols = [c for c in post_cols if c in cuervo_df.columns]
 
         col_best, col_worst = st.columns(2)
         with col_best:
-            st.markdown("**Top 5 by ER**")
-            top5 = cuervo_df.nlargest(5, "engagement_rate")[available_cols].reset_index(drop=True)
+            st.markdown("**Top 5 by Engagements**")
+            top5 = cuervo_df.nlargest(5, "total_engagement")[available_cols].reset_index(drop=True)
             top5.index = top5.index + 1
             for idx, row in top5.iterrows():
                 caption_preview = str(row.get("caption_text", ""))[:100]
-                er_val = row["engagement_rate"]
+                eng_val = row["total_engagement"]
                 url = row.get("post_url", "")
-                with st.expander(f"#{idx} — {er_val:.2f}% ER | {row.get('post_type', '')} | {row.get('content_theme', '')}"):
+                with st.expander(f"#{idx} — {eng_val:,} eng | {row.get('post_type', '')} | {row.get('content_theme', '')}"):
                     st.markdown(f"*\"{caption_preview}...\"*")
                     st.caption(f"Likes: {row.get('likes', 0):,} | Comments: {row.get('comments', 0):,} | "
                                f"Shares: {row.get('shares', 0):,} | Views: {row.get('views', 0):,}")
@@ -505,14 +466,14 @@ with tab_content:
                         st.markdown(f"[View post]({url})")
 
         with col_worst:
-            st.markdown("**Bottom 5 by ER**")
-            bottom5 = cuervo_df.nsmallest(5, "engagement_rate")[available_cols].reset_index(drop=True)
+            st.markdown("**Bottom 5 by Engagements**")
+            bottom5 = cuervo_df.nsmallest(5, "total_engagement")[available_cols].reset_index(drop=True)
             bottom5.index = bottom5.index + 1
             for idx, row in bottom5.iterrows():
                 caption_preview = str(row.get("caption_text", ""))[:100]
-                er_val = row["engagement_rate"]
+                eng_val = row["total_engagement"]
                 url = row.get("post_url", "")
-                with st.expander(f"#{idx} — {er_val:.2f}% ER | {row.get('post_type', '')} | {row.get('content_theme', '')}"):
+                with st.expander(f"#{idx} — {eng_val:,} eng | {row.get('post_type', '')} | {row.get('content_theme', '')}"):
                     st.markdown(f"*\"{caption_preview}...\"*")
                     st.caption(f"Likes: {row.get('likes', 0):,} | Comments: {row.get('comments', 0):,} | "
                                f"Shares: {row.get('shares', 0):,} | Views: {row.get('views', 0):,}")

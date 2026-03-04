@@ -36,13 +36,13 @@ data/autostrat/pdfs/   # Drop autostrat PDF/PPTX exports here for import
 
 ### Page 1: Cuervo Performance ("The Mirror")
 Uses UNFILTERED data — sidebar filters do NOT apply. Cuervo-only view.
-- **Tab 1: KPI Dashboard** — Social Brief KPI scorecard (ER vs 3%, Reel ratio vs 50%, Reel views vs 10K, posts/week vs targets), "So What" narrative, platform cadence scorecard, engagement signals (save/share/comment rates)
-- **Tab 2: Content Performance** — Format breakdown (pie + ER by format), theme performance chart, best & worst 5 posts with caption previews
+- **Tab 1: KPI Dashboard** — Social Brief KPI scorecard (Avg Eng/Post vs 200, Reel ratio vs 50%, Reel views vs 10K, posts/week vs targets), "So What" narrative, platform cadence scorecard, engagement signals (save/share/comment rates)
+- **Tab 2: Content Performance** — Format breakdown (pie + engagements by format), theme performance chart, best & worst 5 posts with caption previews
 - **Tab 3: Self-Audit Intelligence** — All Cuervo-related autostrat reports across platforms (dynamically loaded via `CUERVO_HASHTAG_IDS` + `CATEGORY_HASHTAGS`). Each report in a collapsible accordion. Hashtag reports: key insights, NOPD, How to Win, strategic actions, verbatims. Google News accordion: overview, sentiment breakdown, SWOT analysis, action items. Platform badges (IG/TT) on each expander.
 
 ### Page 2: Competitive Landscape ("The Window")
 Uses FILTERED data — sidebar brand/platform/type filters apply.
-- **Tab 1: Competitive Overview** — Side-by-side comparison table, "Who's Winning & Why" narrative, ER bar chart with 3% target line
+- **Tab 1: Competitive Overview** — Side-by-side comparison table, "Who's Winning & Why" narrative, Eng/1K Followers bar chart with 1.5 target line
 - **Tab 2: Content Gaps** — Cuervo vs category theme gap analysis, format strategy stacked bar, posting frequency comparison, "What to Steal" cards for brands beating Cuervo
 - *(Purely quantitative — all qualitative competitor intel moved to Page 5)*
 
@@ -69,17 +69,16 @@ Uses autostrat hashtag/keyword/news reports only — sidebar filters do NOT appl
 
 ## Social Brief KPI Targets (2026 Social Strategy Deck)
 All targets centralized in `SOCIAL_BRIEF_TARGETS` dict in `config.py`.
-- ER by Followers: 0.50%+ (2026 deck KPI Framework)
-- ER by Views: 2.0%+ (category median ~1.78%, Cuervo at ~1.29%)
-- Avg Eng/Post: 300+ (updated from 100+)
+- Avg Engagements/Post: 200 (primary metric — total_engagement = likes + comments + shares + saves)
+- Engagements per 1K Followers: 1.5 (for cross-brand normalization on Page 2)
+- Creator Avg Engagements/Post: 300
 - Reel Ratio (IG): 50% of feed
 - Carousel Ratio (IG): 30% of feed
 - IG Posts/Month: 12-16 (updated from 8-10)
 - TT Posts/Week: 3-5x (updated from 2-3x)
-- Save Rate: 8.0%+ (updated from 3%)
-- Share Rate: 5.0%+ (updated from 7%)
-- Creator ER: Maintain 7%+ (new)
-- Creator % of Total: Ramp from 50% (March) to 70% (June)
+- Save Rate: 5.0%+
+- Share Rate: 5.0%+
+- Creator % of Total: Ramp to 30% by June 2026
 
 ## Poplife Playbook Frameworks (config.py) — Updated Feb 2026
 - **Content Pillars** (2): Cuervo in Culture (80% — Especial + RTDs + Tradicional), Tradicional Made Social (20% — Cuervo Tradicional)
@@ -104,12 +103,11 @@ All targets centralized in `SOCIAL_BRIEF_TARGETS` dict in `config.py`.
 - Plotly charts use `use_container_width=True` for responsive sizing
 - Favicon is `favicon.png` (Poplife "P" icon)
 
-## Engagement Rate Calculation
-- **ER per Impression** (industry standard / Sprout Social): `engagements / impressions × 100` — used for Cuervo posts where Sprout provides it
-- **Benchmark ER by Views** (competitors): Actual measured ER from external benchmark CSV (`Benchmark_CSV_ig_*.csv` in `data/sprout/`). Covers all 13 brands. This replaced the previous ~18.8x scaling factor estimation.
-- **ER per Follower** (fallback / demo data): `total_engagement / followers × 100` — used when neither Sprout ER nor benchmark data is available
-- **3-tier priority in `calc_engagement_rate()`**: (1) Sprout ER per impression → (2) Benchmark ER by Views → (3) per-follower fallback
-- **Benchmark CSV** (`import_benchmark_csv()` in `sprout_import.py`): Parses brand-level aggregate metrics including ER by Views/Followers/Reach, follower counts, Reels count/engagement, avg hashtags per post. Auto-detected when filename starts with `benchmark_csv`. Benchmark follower counts override Sprout/fallback followers.
+## Engagement Methodology
+- **Primary metric**: `total_engagement` (likes + comments + shares + saves) — raw count, reliably available across all data sources
+- **Cross-brand normalization**: `engagement_per_1k_followers` = `(avg_engagement / followers) × 1000` — used on Page 2 (Competitive Landscape) for fair comparison across different audience sizes
+- **No ER calculation**: The old 3-tier engagement rate system (`calc_engagement_rate()`) was removed. All charts/scorecards now use raw engagement counts or per-1K-followers normalization.
+- **Benchmark CSV** (`import_benchmark_csv()` in `sprout_import.py`): Still used for follower counts, Reels data, and avg hashtags per post. Auto-detected when filename starts with `benchmark_csv`. Benchmark follower counts override Sprout/fallback followers.
 - **Fallback follower counts** in `sprout_import.py` for brands missing from Sprout aggregates: 1800 Tequila (108K), Don Julio (460K), El Jimador (43.4K), Hornitos (36.1K), Lunazul (12.2K), Milagro (23.7K). Overridden by benchmark when present.
 - **Cache busting**: `_sprout_fingerprint()` in `app.py` includes `CODE_VERSION` string — bump this whenever sprout_import.py or analysis.py logic changes
 
@@ -155,4 +153,4 @@ Currently 7 CSV exports covering Oct 1, 2025 – Jan 31, 2026:
 - Don Julio and 1800 Tequila awaiting data population in Sprout (using fallback follower counts)
 - Content theme classifier is keyword-based (~80-85% accuracy) — can be improved
 - Follower growth % not trackable from single-month static exports
-- Competitor ERs are estimates (scaled from aggregate per-follower ER, not actual per-impression) — accuracy depends on Cuervo's scaling factor being representative
+- Cross-brand engagement comparison uses per-1K-followers normalization (not ER) — accuracy depends on follower count data quality

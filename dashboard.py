@@ -109,11 +109,11 @@ def create_executive_summary(wb: Workbook, results: dict):
     row += 2
 
     # Engagement snapshot
-    ws.cell(row=row, column=1, value="ENGAGEMENT RATE SNAPSHOT").font = SUBTITLE_FONT
+    ws.cell(row=row, column=1, value="ENGAGEMENT SNAPSHOT").font = SUBTITLE_FONT
     row += 1
 
-    headers = ["Brand", "IG Followers", "IG Avg ER%", "IG Posts/30d",
-               "TT Followers", "TT Avg ER%", "TT Posts/30d"]
+    headers = ["Brand", "IG Followers", "IG Avg Eng", "IG Posts/30d",
+               "TT Followers", "TT Avg Eng", "TT Posts/30d"]
     for c, h in enumerate(headers, 1):
         ws.cell(row=row, column=c, value=h)
     style_header_row(ws, row, len(headers))
@@ -129,10 +129,10 @@ def create_executive_summary(wb: Workbook, results: dict):
         values = [
             brand,
             ig.get("followers", 0),
-            ig.get("avg_engagement_rate", 0),
+            ig.get("avg_engagements", 0),
             ig_freq.get("total_posts", 0),
             tt.get("followers", 0),
-            tt.get("avg_engagement_rate", 0),
+            tt.get("avg_engagements", 0),
             tt_freq.get("total_posts", 0),
         ]
         for c, v in enumerate(values, 1):
@@ -190,7 +190,7 @@ def create_brand_comparison(wb: Workbook, results: dict):
 
     ig_headers = [
         "Brand", "Followers", "Posts/30d", "Posts/Week",
-        "Avg ER%", "Avg Likes", "Avg Comments", "Avg Views",
+        "Avg Eng", "Avg Likes", "Avg Comments", "Avg Views",
         "Top Content Type", "Collab %", "Avg Hashtags/Post",
     ]
     for c, h in enumerate(ig_headers, 1):
@@ -214,7 +214,7 @@ def create_brand_comparison(wb: Workbook, results: dict):
             eng.get("followers", 0),
             freq.get("total_posts", 0),
             freq.get("posts_per_week", 0),
-            eng.get("avg_engagement_rate", 0),
+            eng.get("avg_engagements", 0),
             eng.get("avg_likes", 0),
             eng.get("avg_comments", 0),
             eng.get("avg_views", 0),
@@ -235,7 +235,7 @@ def create_brand_comparison(wb: Workbook, results: dict):
 
     tt_headers = [
         "Brand", "Followers", "Posts/30d", "Posts/Week",
-        "Avg ER%", "Avg Likes", "Avg Comments", "Avg Shares",
+        "Avg Eng", "Avg Likes", "Avg Comments", "Avg Shares",
         "Avg Views", "Collab %", "Avg Hashtags/Post",
     ]
     for c, h in enumerate(tt_headers, 1):
@@ -255,7 +255,7 @@ def create_brand_comparison(wb: Workbook, results: dict):
             eng.get("followers", 0),
             freq.get("total_posts", 0),
             freq.get("posts_per_week", 0),
-            eng.get("avg_engagement_rate", 0),
+            eng.get("avg_engagements", 0),
             eng.get("avg_likes", 0),
             eng.get("avg_comments", 0),
             eng.get("avg_shares", 0),
@@ -304,7 +304,7 @@ def create_content_strategy(wb: Workbook, results: dict):
         best_er = 0
         if best_theme != "N/A":
             perf = theme.get("theme_performance", {}).get(best_theme, {})
-            best_er = perf.get("avg_engagement_rate", 0)
+            best_er = perf.get("avg_engagements", 0)
 
         avg_words = round((cap_ig.get("avg_word_count", 0) + cap_tt.get("avg_word_count", 0)) / 2, 1)
 
@@ -334,7 +334,7 @@ def create_content_strategy(wb: Workbook, results: dict):
     ws.cell(row=row, column=1, value="DETAILED THEME BREAKDOWN").font = SUBTITLE_FONT
     row += 1
 
-    detail_headers = ["Brand", "Theme", "Post Count", "% of Content", "Avg ER%"]
+    detail_headers = ["Brand", "Theme", "Post Count", "% of Content", "Avg Eng"]
     for c, h in enumerate(detail_headers, 1):
         ws.cell(row=row, column=c, value=h)
     style_header_row(ws, row, len(detail_headers))
@@ -349,7 +349,7 @@ def create_content_strategy(wb: Workbook, results: dict):
         for theme_name, perf in sorted_themes:
             values = [
                 brand, theme_name, perf["count"],
-                f"{perf['pct_of_content']}%", perf["avg_engagement_rate"],
+                f"{perf['pct_of_content']}%", perf["avg_engagements"],
             ]
             for c, v in enumerate(values, 1):
                 ws.cell(row=row, column=c, value=v)
@@ -413,7 +413,7 @@ def create_engagement_benchmarks(wb: Workbook, results: dict):
             all_types.update(eng.get("engagement_by_type", {}).keys())
         all_types = sorted(all_types)
 
-        headers = ["Brand"] + list(all_types) + ["Overall Avg ER%"]
+        headers = ["Brand"] + list(all_types) + ["Overall Avg Eng"]
         for c, h in enumerate(headers, 1):
             ws.cell(row=row, column=c, value=h)
         style_header_row(ws, row, len(headers))
@@ -430,7 +430,7 @@ def create_engagement_benchmarks(wb: Workbook, results: dict):
             values = [brand]
             for t in all_types:
                 values.append(by_type.get(t, 0))
-            values.append(eng.get("avg_engagement_rate", 0))
+            values.append(eng.get("avg_engagements", 0))
 
             for c, v in enumerate(values, 1):
                 ws.cell(row=row, column=c, value=v)
@@ -441,7 +441,7 @@ def create_engagement_benchmarks(wb: Workbook, results: dict):
         if all_types and len(BRANDS) > 0:
             chart = BarChart()
             chart.type = "col"
-            chart.title = f"{platform} Avg Engagement Rate by Content Type"
+            chart.title = f"{platform} Avg Engagements by Content Type"
             chart.y_axis.title = "Engagement Rate %"
             chart.x_axis.title = "Brand"
             chart.style = 10
@@ -466,8 +466,8 @@ def create_engagement_benchmarks(wb: Workbook, results: dict):
     ws.cell(row=row, column=1, value="CREATOR COLLAB VS. BRAND CONTENT ENGAGEMENT").font = SUBTITLE_FONT
     row += 1
 
-    collab_headers = ["Brand", "Collab Posts", "Collab ER%", "Non-Collab ER%",
-                      "ER Lift from Collabs", "Unique Creators", "Paid Partnerships"]
+    collab_headers = ["Brand", "Collab Posts", "Collab Avg Eng", "Non-Collab Avg Eng",
+                      "Eng Lift from Collabs", "Unique Creators", "Paid Partnerships"]
     for c, h in enumerate(collab_headers, 1):
         ws.cell(row=row, column=c, value=h)
     style_header_row(ws, row, len(collab_headers))
@@ -479,8 +479,8 @@ def create_engagement_benchmarks(wb: Workbook, results: dict):
         values = [
             brand,
             cr.get("total_collab_posts", 0),
-            cr.get("avg_collab_engagement_rate", 0),
-            cr.get("avg_non_collab_engagement_rate", 0),
+            cr.get("avg_collab_engagements", 0),
+            cr.get("avg_non_collab_engagements", 0),
             cr.get("collab_engagement_lift", 0),
             cr.get("unique_creators", 0),
             cr.get("paid_partnerships", 0),
@@ -583,7 +583,7 @@ def create_top_posts(wb: Workbook, results: dict):
             ws.cell(row=row, column=1, value=platform).font = SUBHEADER_FONT
             row += 1
 
-            top_headers = ["Rank", "URL", "Date", "Type", "ER%",
+            top_headers = ["Rank", "URL", "Date", "Type", "Engagements",
                            "Likes", "Comments", "Views", "Theme", "Caption Preview"]
             for c, h in enumerate(top_headers, 1):
                 ws.cell(row=row, column=c, value=h)
@@ -604,7 +604,7 @@ def create_top_posts(wb: Workbook, results: dict):
                         post.get("url", ""),
                         post.get("date", ""),
                         post.get("type", ""),
-                        post.get("engagement_rate", 0),
+                        post.get("total_engagement", 0),
                         post.get("likes", 0),
                         post.get("comments", 0),
                         post.get("views", 0),
@@ -708,7 +708,7 @@ def create_raw_data(wb: Workbook, posts: list[dict]):
     headers = [
         "brand", "platform", "post_url", "post_date", "post_time",
         "post_type", "video_length_seconds", "likes", "comments",
-        "shares", "saves", "views", "total_engagement", "engagement_rate",
+        "shares", "saves", "views", "total_engagement",
         "content_theme", "visual_style", "caption_tone", "cta_type",
         "has_creator_collab", "caption_word_count", "emoji_count_in_caption",
     ]

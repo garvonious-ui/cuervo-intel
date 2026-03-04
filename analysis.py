@@ -144,32 +144,6 @@ def extract_hashtags(text: str) -> list[str]:
 # ─── ANALYSIS FUNCTIONS ───────────────────────────────────────────────
 
 
-def calc_engagement_rate(post: dict, follower_count: int,
-                         estimated_er: float = 0) -> float:
-    """Calculate engagement rate, preferring Sprout's pre-calculated ER per
-    impression when available.  Falls back to an estimated ER per impression
-    (derived from aggregate data × scaling factor) for competitor posts.
-    Last resort: (total engagements / followers) * 100 for demo data.
-    Returns float('nan') when no source is usable so these posts are
-    excluded from average calculations rather than dragging them to 0."""
-    # 1. Prefer Sprout's ER per impression (already a percentage)
-    manual = post.get("engagement_rate_manual", "")
-    if manual != "" and manual is not None:
-        try:
-            val = float(manual)
-            if val >= 0:
-                return val
-        except (ValueError, TypeError):
-            pass
-    # 2. Use estimated ER from aggregate data (competitor posts)
-    if estimated_er > 0:
-        return estimated_er
-    # 3. Fallback: ER per follower (demo data)
-    if follower_count == 0:
-        return float('nan')
-    return (post["total_engagement"] / follower_count) * 100
-
-
 def analyze_posting_frequency(posts: list[dict]) -> dict[str, Any]:
     """Analyze posting frequency by brand, platform, day, hour, and content type."""
     results = {}
@@ -230,48 +204,21 @@ def analyze_posting_frequency(posts: list[dict]) -> dict[str, Any]:
 
 def analyze_engagement(posts: list[dict], profiles: list[dict],
                        benchmark: dict = None) -> dict[str, Any]:
-    """Analyze engagement rates by brand, platform, and content type.
-    When benchmark data is available (ER by Views from external CSV),
-    uses it directly instead of the scaling factor estimation."""
-    # Build follower lookup and aggregate ER lookup
+    """Analyze engagement by brand, platform, and content type.
+    Uses raw engagement counts as primary metric and engagements per
+    1K followers for cross-brand normalization."""
+    # Build follower lookup
     follower_map = {}
-    aggregate_er_map = {}
     for p in profiles:
         key = (p["brand"], p["platform"])
         follower_map[key] = p["followers"]
-        agg_er = p.get("aggregate_er", 0)
-        if agg_er and float(agg_er) > 0:
-            aggregate_er_map[key] = float(agg_er)
 
-    # Build benchmark ER map (ER by Views — actual measured data)
-    benchmark_er_map = {}
+    # Override followers with benchmark's (more current) count
     if benchmark:
         for brand_name, bdata in benchmark.items():
             key = (brand_name, "Instagram")  # Benchmark is IG-only
-            benchmark_er_map[key] = bdata["er_by_views"]
-            # Override followers with benchmark's (more current) count
             if bdata.get("followers", 0) > 0:
                 follower_map[key] = bdata["followers"]
-
-    # Fallback: scaling factor for brands without benchmark data
-    scaling_factor = 0
-    if not benchmark:
-        cuervo_sprout_ers = [p.get("engagement_rate_manual", "")
-                             for p in posts if p.get("brand") == "Jose Cuervo"]
-        cuervo_valid_ers = []
-        for v in cuervo_sprout_ers:
-            if v != "" and v is not None:
-                try:
-                    fv = float(v)
-                    if fv > 0:
-                        cuervo_valid_ers.append(fv)
-                except (ValueError, TypeError):
-                    pass
-        cuervo_er_per_impression = (sum(cuervo_valid_ers) / len(cuervo_valid_ers)
-                                     if cuervo_valid_ers else 0)
-        cuervo_agg_er = aggregate_er_map.get(("Jose Cuervo", "Instagram"), 0)
-        scaling_factor = (cuervo_er_per_impression / cuervo_agg_er
-                          if cuervo_agg_er > 0 else 0)
 
     results = {}
 
@@ -283,52 +230,35 @@ def analyze_engagement(posts: list[dict], profiles: list[dict],
             plat_posts = [p for p in brand_posts if p["platform"] == platform]
             followers = follower_map.get((brand, platform), 0)
 
-            # Determine estimated ER for competitor posts without Sprout ER
-            bench_er = benchmark_er_map.get((brand, platform), 0)
-            if bench_er > 0:
-                # Tier 2: Benchmark ER by Views (actual measured data)
-                estimated_er = bench_er
-            else:
-                # Tier 2 fallback: scaling factor estimation
-                agg_er = aggregate_er_map.get((brand, platform), 0)
-                estimated_er = (agg_er * scaling_factor) if (agg_er > 0 and scaling_factor > 0) else 0
-                estimated_er = min(estimated_er, 8.0)
-
-            # Calculate engagement rate for each post
-            for p in plat_posts:
-                p["engagement_rate"] = calc_engagement_rate(p, followers, estimated_er)
-
-            # Overall averages (exclude NaN ER from brands with no follower data)
+            # Overall averages
             if plat_posts:
-                import math
-                valid_ers = [p["engagement_rate"] for p in plat_posts if not math.isnan(p["engagement_rate"])]
-                avg_er = sum(valid_ers) / len(valid_ers) if valid_ers else 0
+                avg_engagement = sum(p["total_engagement"] for p in plat_posts) / len(plat_posts)
                 avg_likes = sum(p["likes"] for p in plat_posts) / len(plat_posts)
                 avg_comments = sum(p["comments"] for p in plat_posts) / len(plat_posts)
                 avg_shares = sum(p["shares"] for p in plat_posts) / len(plat_posts)
                 avg_views = sum(p["views"] for p in plat_posts) / len(plat_posts)
             else:
-                avg_er = avg_likes = avg_comments = avg_shares = avg_views = 0
+                avg_engagement = avg_likes = avg_comments = avg_shares = avg_views = 0
 
-            # By content type (exclude NaN ERs)
+            # Engagements per 1K followers (for cross-brand comparison)
+            eng_per_1k = round((avg_engagement / followers) * 1000, 2) if followers > 0 else 0
+
+            # By content type: avg engagements per type
             type_engagement = defaultdict(list)
             for p in plat_posts:
-                er = p["engagement_rate"]
-                if not math.isnan(er):
-                    type_engagement[p.get("post_type", "Unknown")].append(er)
+                type_engagement[p.get("post_type", "Unknown")].append(p["total_engagement"])
 
             type_avg = {}
-            for ptype, rates in type_engagement.items():
-                type_avg[ptype] = round(sum(rates) / len(rates), 3) if rates else 0
+            for ptype, engs in type_engagement.items():
+                type_avg[ptype] = round(sum(engs) / len(engs), 1) if engs else 0
 
-            # Top 10 posts by engagement rate (exclude NaN)
-            valid_posts = [p for p in plat_posts if not math.isnan(p["engagement_rate"])]
-            top_10 = sorted(valid_posts, key=lambda x: x["engagement_rate"], reverse=True)[:10]
+            # Top 10 posts by total engagement
+            top_10 = sorted(plat_posts, key=lambda x: x["total_engagement"], reverse=True)[:10]
             top_10_summary = [{
                 "url": p.get("post_url", ""),
                 "date": p.get("post_date", ""),
                 "type": p.get("post_type", ""),
-                "engagement_rate": round(p["engagement_rate"], 3),
+                "total_engagement": p["total_engagement"],
                 "likes": p["likes"],
                 "comments": p["comments"],
                 "views": p["views"],
@@ -341,17 +271,15 @@ def analyze_engagement(posts: list[dict], profiles: list[dict],
 
             results[brand][platform] = {
                 "followers": followers,
-                "avg_engagement_rate": round(avg_er, 3),
+                "avg_engagements": round(avg_engagement, 1),
+                "engagement_per_1k_followers": eng_per_1k,
                 "avg_likes": round(avg_likes, 1),
                 "avg_comments": round(avg_comments, 1),
                 "avg_shares": round(avg_shares, 1),
                 "avg_views": round(avg_views, 1),
                 "engagement_by_type": type_avg,
                 "top_10_posts": top_10_summary,
-                # Benchmark fields
-                "benchmark_er_by_views": bench.get("er_by_views", 0),
-                "benchmark_er_by_followers": bench.get("er_by_followers", 0),
-                "benchmark_er_by_reach": bench.get("er_by_reach", 0),
+                # Benchmark fields (keep for follower/reels data)
                 "benchmark_reels_count": bench.get("reels_count", 0),
                 "benchmark_reels_engagement": bench.get("reels_engagement", 0),
                 "benchmark_avg_hashtags": bench.get("avg_hashtags_per_post", 0),
@@ -402,11 +330,9 @@ def analyze_captions(posts: list[dict]) -> dict[str, Any]:
 
             # Correlation: do longer captions get more engagement?
             if len(plat_posts) >= 5:
-                import math
-                er_posts = [p for p in plat_posts if not math.isnan(p.get("engagement_rate", 0))]
-                sorted_by_er = sorted(er_posts, key=lambda x: x.get("engagement_rate", 0), reverse=True) if er_posts else []
-                top_half = sorted_by_er[:len(sorted_by_er)//2]
-                bottom_half = sorted_by_er[len(sorted_by_er)//2:]
+                sorted_by_eng = sorted(plat_posts, key=lambda x: x.get("total_engagement", 0), reverse=True)
+                top_half = sorted_by_eng[:len(sorted_by_eng)//2]
+                bottom_half = sorted_by_eng[len(sorted_by_eng)//2:]
                 top_avg_words = sum(p["caption_word_count"] for p in top_half) / len(top_half) if top_half else 0
                 bottom_avg_words = sum(p["caption_word_count"] for p in bottom_half) / len(bottom_half) if bottom_half else 0
                 caption_length_insight = "longer" if top_avg_words > bottom_avg_words * 1.15 else \
@@ -475,21 +401,19 @@ def analyze_content_themes(posts: list[dict]) -> dict[str, Any]:
         # Theme distribution
         themes = Counter(p.get("content_theme", "Unknown") for p in brand_posts if p.get("content_theme"))
 
-        # Theme performance (avg engagement rate, excluding NaN)
-        import math
+        # Theme performance (avg engagements per theme)
         theme_engagement = defaultdict(list)
         for p in brand_posts:
             theme = p.get("content_theme", "Unknown")
-            er = p.get("engagement_rate", 0)
-            if theme and not math.isnan(er):
-                theme_engagement[theme].append(er)
+            if theme:
+                theme_engagement[theme].append(p.get("total_engagement", 0))
 
         theme_performance = {}
-        for theme, rates in theme_engagement.items():
+        for theme, engs in theme_engagement.items():
             theme_performance[theme] = {
-                "count": len(rates),
-                "avg_engagement_rate": round(sum(rates) / len(rates), 3) if rates else 0,
-                "pct_of_content": round(len(rates) / len(brand_posts) * 100, 1) if brand_posts else 0,
+                "count": len(engs),
+                "avg_engagements": round(sum(engs) / len(engs), 1) if engs else 0,
+                "pct_of_content": round(len(engs) / len(brand_posts) * 100, 1) if brand_posts else 0,
             }
 
         results[brand] = {
@@ -497,7 +421,7 @@ def analyze_content_themes(posts: list[dict]) -> dict[str, Any]:
             "theme_performance": theme_performance,
             "top_theme": themes.most_common(1)[0] if themes else ("N/A", 0),
             "best_performing_theme": max(theme_performance.items(),
-                                         key=lambda x: x[1]["avg_engagement_rate"])[0] if theme_performance else "N/A",
+                                         key=lambda x: x[1]["avg_engagements"])[0] if theme_performance else "N/A",
         }
 
     return results
@@ -520,12 +444,11 @@ def analyze_creators(posts: list[dict], creator_data: list[dict]) -> dict[str, A
         collab_count = len(collab_posts)
         total = len(brand_posts)
 
-        # Engagement comparison: collab vs. non-collab (exclude NaN ERs)
-        import math
-        collab_valid = [p.get("engagement_rate", 0) for p in collab_posts if not math.isnan(p.get("engagement_rate", 0))]
-        non_collab_valid = [p.get("engagement_rate", 0) for p in non_collab_posts if not math.isnan(p.get("engagement_rate", 0))]
-        collab_er = sum(collab_valid) / len(collab_valid) if collab_valid else 0
-        non_collab_er = sum(non_collab_valid) / len(non_collab_valid) if non_collab_valid else 0
+        # Engagement comparison: collab vs. non-collab (avg total engagements)
+        collab_engs = [p.get("total_engagement", 0) for p in collab_posts]
+        non_collab_engs = [p.get("total_engagement", 0) for p in non_collab_posts]
+        collab_avg_eng = sum(collab_engs) / len(collab_engs) if collab_engs else 0
+        non_collab_avg_eng = sum(non_collab_engs) / len(non_collab_engs) if non_collab_engs else 0
 
         # Paid vs. organic collabs
         paid = sum(1 for p in collab_posts if p.get("is_paid_partnership", "").lower() in ("yes", "true", "1"))
@@ -543,9 +466,9 @@ def analyze_creators(posts: list[dict], creator_data: list[dict]) -> dict[str, A
             "total_collab_posts": collab_count,
             "collab_pct": round(collab_count / total * 100, 1) if total else 0,
             "unique_creators": len(unique_creators),
-            "avg_collab_engagement_rate": round(collab_er, 3),
-            "avg_non_collab_engagement_rate": round(non_collab_er, 3),
-            "collab_engagement_lift": round(collab_er - non_collab_er, 3),
+            "avg_collab_engagements": round(collab_avg_eng, 1),
+            "avg_non_collab_engagements": round(non_collab_avg_eng, 1),
+            "collab_engagement_lift": round(collab_avg_eng - non_collab_avg_eng, 1),
             "paid_partnerships": paid,
             "organic_collabs": collab_count - paid,
         }
@@ -601,19 +524,19 @@ def generate_cuervo_recommendations(
                 "recommendation": f"Test {', '.join(missing_types)} content — competitors are finding success with these formats",
             })
 
-    # 3. Engagement rate benchmarking
+    # 3. Engagement benchmarking (per 1K followers for fair comparison)
     for platform in ["Instagram", "TikTok"]:
-        cuervo_er = engagement.get(cuervo, {}).get(platform, {}).get("avg_engagement_rate", 0)
-        comp_ers = [engagement.get(b, {}).get(platform, {}).get("avg_engagement_rate", 0) for b in competitors]
-        best_comp_er = max(comp_ers) if comp_ers else 0
-        best_comp_name = competitors[comp_ers.index(best_comp_er)] if comp_ers and best_comp_er > 0 else "Unknown"
+        cuervo_epk = engagement.get(cuervo, {}).get(platform, {}).get("engagement_per_1k_followers", 0)
+        comp_epks = [engagement.get(b, {}).get(platform, {}).get("engagement_per_1k_followers", 0) for b in competitors]
+        best_comp_epk = max(comp_epks) if comp_epks else 0
+        best_comp_name = competitors[comp_epks.index(best_comp_epk)] if comp_epks and best_comp_epk > 0 else "Unknown"
 
-        if cuervo_er < best_comp_er * 0.7 and best_comp_er > 0:
+        if cuervo_epk < best_comp_epk * 0.7 and best_comp_epk > 0:
             recs.append({
                 "category": "Engagement Gap",
                 "platform": platform,
                 "priority": "High",
-                "insight": f"Cuervo's avg ER ({cuervo_er}%) trails {best_comp_name} ({best_comp_er}%) on {platform}",
+                "insight": f"Cuervo's avg eng/1K followers ({cuervo_epk}) trails {best_comp_name} ({best_comp_epk}) on {platform}",
                 "recommendation": f"Study {best_comp_name}'s top-performing content and adapt successful patterns",
             })
 
@@ -634,12 +557,12 @@ def generate_cuervo_recommendations(
     # Check if collabs drive engagement lift across the category
     for b in competitors:
         lift = creators.get(b, {}).get("collab_engagement_lift", 0)
-        if lift > 0.5:
+        if lift > 50:
             recs.append({
                 "category": "Creator Strategy",
                 "platform": "Both",
                 "priority": "Medium",
-                "insight": f"{b} sees +{lift}% ER lift from creator collabs vs. brand-only content",
+                "insight": f"{b} sees +{round(lift)} avg engagements from creator collabs vs. brand-only content",
                 "recommendation": "Creator collabs outperform brand content across the category — prioritize partnerships",
             })
             break  # One example is enough
@@ -663,17 +586,17 @@ def generate_cuervo_recommendations(
         cuervo_cap = captions.get(cuervo, {}).get(platform, {})
         for b in competitors:
             comp_cap = captions.get(b, {}).get(platform, {})
-            comp_er = engagement.get(b, {}).get(platform, {}).get("avg_engagement_rate", 0)
-            cuervo_er = engagement.get(cuervo, {}).get(platform, {}).get("avg_engagement_rate", 0)
+            comp_eng = engagement.get(b, {}).get(platform, {}).get("engagement_per_1k_followers", 0)
+            cuervo_eng = engagement.get(cuervo, {}).get(platform, {}).get("engagement_per_1k_followers", 0)
 
-            if comp_er > cuervo_er and comp_cap.get("top_ctas"):
+            if comp_eng > cuervo_eng and comp_cap.get("top_ctas"):
                 top_cta = comp_cap["top_ctas"][0][0] if comp_cap["top_ctas"] else "None"
                 if top_cta != "None":
                     recs.append({
                         "category": "Caption Strategy",
                         "platform": platform,
                         "priority": "Medium",
-                        "insight": f"{b} (higher ER) heavily uses '{top_cta}' CTAs on {platform}",
+                        "insight": f"{b} (higher engagement) heavily uses '{top_cta}' CTAs on {platform}",
                         "recommendation": f"Incorporate more '{top_cta}' CTAs in {platform} captions",
                     })
                     break
@@ -726,29 +649,6 @@ def run_full_analysis(data_dir: str, benchmark: dict = None) -> dict[str, Any]:
         hashtag_analysis, theme_analysis, creator_analysis
     )
 
-    # ── Compute separate ER metrics for Cuervo ─────────────────────────
-    import math
-
-    cuervo_posts = [p for p in posts if p["brand"] == "Jose Cuervo"]
-    cuervo_ig_followers = 0
-    for p in profiles:
-        if p["brand"] == "Jose Cuervo" and p["platform"] == "Instagram":
-            cuervo_ig_followers = p["followers"]
-            break
-    # Override with benchmark followers if available (more current)
-    if benchmark and benchmark.get("Jose Cuervo", {}).get("followers", 0) > 0:
-        cuervo_ig_followers = benchmark["Jose Cuervo"]["followers"]
-
-    # ER by Followers: total_engagement / followers × 100 (per-post, then average)
-    if cuervo_ig_followers > 0 and cuervo_posts:
-        er_by_follower_vals = [
-            (p["total_engagement"] / cuervo_ig_followers) * 100
-            for p in cuervo_posts
-        ]
-        cuervo_er_by_followers = sum(er_by_follower_vals) / len(er_by_follower_vals)
-    else:
-        cuervo_er_by_followers = 0.0
-
     return {
         "posts": posts,
         "profiles": profiles,
@@ -760,5 +660,4 @@ def run_full_analysis(data_dir: str, benchmark: dict = None) -> dict[str, Any]:
         "themes": theme_analysis,
         "creators": creator_analysis,
         "recommendations": recommendations,
-        "cuervo_er_by_followers": round(cuervo_er_by_followers, 3),
     }

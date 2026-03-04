@@ -29,7 +29,8 @@ sel_brands = st.session_state["sel_brands"]
 order = [b for b in BRAND_ORDER if b in sel_brands]
 
 CUERVO = "Jose Cuervo"
-ER_TARGET = SOCIAL_BRIEF_TARGETS["er_by_views"]
+ENG_PER_POST_TARGET = SOCIAL_BRIEF_TARGETS["engagements_per_post"]
+ENG_PER_1K_TARGET = SOCIAL_BRIEF_TARGETS["eng_per_1k_followers"]
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 tab_overview, tab_gaps = st.tabs([
@@ -54,36 +55,38 @@ with tab_overview:
         eng = results["engagement"].get(brand, {})
         freq_b = results["frequency"].get(brand, {})
         followers = sum(eng.get(p, {}).get("followers", 0) for p in ["Instagram", "TikTok"])
-        avg_er = plat_df["engagement_rate"].mean() if len(plat_df) else 0
-        avg_er = 0 if pd.isna(avg_er) else avg_er
+        avg_eng = plat_df["total_engagement"].mean() if len(plat_df) else 0
+        avg_eng = 0 if pd.isna(avg_eng) else avg_eng
         ppw = sum(freq_b.get(p, {}).get("posts_per_week", 0) for p in ["Instagram", "TikTok"])
         _likes = plat_df["likes"].mean() if len(plat_df) else 0
         _likes = 0 if pd.isna(_likes) else _likes
+
+        # Engagement per 1K followers (avg across platforms)
+        epk_vals = [eng.get(p, {}).get("engagement_per_1k_followers", 0) for p in ["Instagram", "TikTok"]]
+        epk_vals = [v for v in epk_vals if v > 0]
+        eng_per_1k = sum(epk_vals) / len(epk_vals) if epk_vals else 0
 
         row_data = {
             "Brand": brand,
             "Followers": followers,
             "Posts": len(plat_df),
             "Posts/Week": round(ppw, 1),
+            "Avg Eng": int(avg_eng),
+            "Eng/1K Fol": round(eng_per_1k, 2),
             "Avg Likes": int(_likes),
         }
 
-        # Use benchmark ER by Views when available, fall back to post-level avg ER
         if has_bench:
             ig_eng = eng.get("Instagram", {})
-            # Override posts/avg eng with benchmark-window data when available
             bench_posts = ig_eng.get("benchmark_posts", 0)
             if bench_posts:
                 row_data["Posts"] = bench_posts
                 row_data["Posts/Week"] = round(bench_posts / 4, 1)
             bench_avg_eng = ig_eng.get("benchmark_avg_engagement", 0)
             if bench_avg_eng:
-                row_data["Avg Likes"] = int(bench_avg_eng)
-            row_data["ER by Views %"] = round(ig_eng.get("benchmark_er_by_views", 0), 2)
+                row_data["Avg Eng"] = int(bench_avg_eng)
             row_data["Reels"] = ig_eng.get("benchmark_reels_count", 0)
             row_data["Avg #tags"] = round(ig_eng.get("benchmark_avg_hashtags", 0), 1)
-        else:
-            row_data["Avg ER %"] = round(avg_er, 2)
 
         rows.append(row_data)
 
@@ -92,82 +95,84 @@ with tab_overview:
     def highlight_cuervo(row):
         return ["background-color: #FDEBD6" if row["Brand"] == CUERVO else "" for _ in row]
 
-    def color_er(val):
+    def color_epk(val):
         if isinstance(val, (int, float)):
-            if val >= ER_TARGET * 1.5:
+            if val >= ENG_PER_1K_TARGET * 1.5:
                 return "background-color: #C8E6C9"
-            elif val >= ER_TARGET * 0.85:
+            elif val >= ENG_PER_1K_TARGET * 0.85:
                 return "background-color: #FDEBD6"
             elif val > 0:
                 return "background-color: #FFCDD2"
         return ""
 
-    er_col = "ER by Views %" if has_bench else "Avg ER %"
-    fmt = {"Followers": "{:,.0f}", "Avg Likes": "{:,.0f}",
-           er_col: "{:.2f}", "Posts/Week": "{:.1f}"}
+    fmt = {"Followers": "{:,.0f}", "Avg Eng": "{:,.0f}", "Avg Likes": "{:,.0f}",
+           "Eng/1K Fol": "{:.2f}", "Posts/Week": "{:.1f}"}
     if has_bench:
         fmt["Avg #tags"] = "{:.1f}"
 
     styled_tbl = (
         comp_tbl.style
         .apply(highlight_cuervo, axis=1)
-        .map(color_er, subset=[er_col])
+        .map(color_epk, subset=["Eng/1K Fol"])
         .format(fmt)
     )
     st.dataframe(styled_tbl, use_container_width=True, hide_index=True, height=320)
-
-    if has_bench:
-        bench_meta = next(iter(benchmark.values()), {})
-        st.caption(f"ER by Views % from external benchmark ({bench_meta.get('date_range', 'N/A')}).")
 
     st.markdown("---")
 
     # ── "Who's Winning & Why" ──────────────────────────────────────────
     st.subheader("Who's Winning & Why")
 
-    brand_ers = df.groupby("brand")["engagement_rate"].mean().dropna()
-    brand_ers = brand_ers[brand_ers > 0].sort_values(ascending=False)
-    top3 = brand_ers.head(3)
+    brand_engs = df.groupby("brand")["total_engagement"].mean().dropna()
+    brand_engs = brand_engs[brand_engs > 0].sort_values(ascending=False)
+    top3 = brand_engs.head(3)
 
-    for rank, (brand, er) in enumerate(top3.items(), 1):
+    for rank, (brand, avg_e) in enumerate(top3.items(), 1):
         brand_df = df[df["brand"] == brand]
-        top_theme = brand_df.groupby("content_theme")["engagement_rate"].mean()
+        top_theme = brand_df.groupby("content_theme")["total_engagement"].mean()
         best_theme = top_theme.idxmax() if len(top_theme) else "N/A"
         reel_pct = len(brand_df[brand_df["post_type"] == "Reel"]) / max(len(brand_df), 1) * 100
 
         st.markdown(
-            f"**#{rank} {brand}** — {er:.2f}% ER | "
+            f"**#{rank} {brand}** — {avg_e:,.0f} avg engagements | "
             f"Top theme: {best_theme} | Reel mix: {reel_pct:.0f}%"
         )
 
-    cuervo_er = brand_ers.get(CUERVO, 0)
-    cuervo_rank = list(brand_ers.index).index(CUERVO) + 1 if CUERVO in brand_ers.index else len(brand_ers)
-    st.info(f"**Cuervo ranks #{cuervo_rank}** out of {len(brand_ers)} brands at {cuervo_er:.2f}% ER. "
-            f"The top brand beats Cuervo by {top3.iloc[0] - cuervo_er:.2f}pp." if len(top3) and cuervo_er < top3.iloc[0] else
-            f"**Cuervo leads** at {cuervo_er:.2f}% ER.")
+    cuervo_avg_eng = brand_engs.get(CUERVO, 0)
+    cuervo_rank = list(brand_engs.index).index(CUERVO) + 1 if CUERVO in brand_engs.index else len(brand_engs)
+    st.info(f"**Cuervo ranks #{cuervo_rank}** out of {len(brand_engs)} brands at {cuervo_avg_eng:,.0f} avg engagements. "
+            f"The top brand leads by {top3.iloc[0] - cuervo_avg_eng:,.0f}." if len(top3) and cuervo_avg_eng < top3.iloc[0] else
+            f"**Cuervo leads** at {cuervo_avg_eng:,.0f} avg engagements.")
 
     st.markdown("---")
 
-    # ── ER Comparison Bar Chart ────────────────────────────────────────
-    st.subheader("Engagement Rate by Brand")
+    # ── Engagement per 1K Followers Chart ──────────────────────────────
+    st.subheader("Engagements per 1K Followers by Brand")
 
-    er_data = df.groupby("brand")["engagement_rate"].mean().reset_index()
-    er_data = er_data[er_data["brand"].isin(sel_brands)]
+    epk_rows = []
+    for brand in sel_brands:
+        eng_b = results["engagement"].get(brand, {})
+        epk_vals = [eng_b.get(p, {}).get("engagement_per_1k_followers", 0) for p in ["Instagram", "TikTok"]]
+        epk_vals = [v for v in epk_vals if v > 0]
+        avg_epk = sum(epk_vals) / len(epk_vals) if epk_vals else 0
+        epk_rows.append({"brand": brand, "eng_per_1k": avg_epk})
 
-    fig_er = px.bar(er_data, x="brand", y="engagement_rate",
-                    color="brand", color_discrete_map=BRAND_COLORS,
-                    category_orders={"brand": order},
-                    labels={"engagement_rate": "Avg ER %", "brand": ""},
-                    template=CHART_TEMPLATE)
-    fig_er.update_layout(font=CHART_FONT, height=420, showlegend=False)
-    fig_er.add_hline(y=ER_TARGET, line_dash="dash", line_color="#D9534F",
-                     annotation_text=f"{ER_TARGET}% Social Brief target",
-                     annotation_position="top right")
-    cat_avg = er_data[er_data["engagement_rate"] > 0]["engagement_rate"].mean()
-    fig_er.add_hline(y=cat_avg, line_dash="dot", line_color="gray",
-                     annotation_text=f"Category avg {cat_avg:.2f}%",
-                     annotation_position="bottom right")
-    st.plotly_chart(fig_er, use_container_width=True)
+    epk_data = pd.DataFrame(epk_rows)
+
+    fig_epk = px.bar(epk_data, x="brand", y="eng_per_1k",
+                     color="brand", color_discrete_map=BRAND_COLORS,
+                     category_orders={"brand": order},
+                     labels={"eng_per_1k": "Eng / 1K Followers", "brand": ""},
+                     template=CHART_TEMPLATE)
+    fig_epk.update_layout(font=CHART_FONT, height=420, showlegend=False)
+    fig_epk.add_hline(y=ENG_PER_1K_TARGET, line_dash="dash", line_color="#D9534F",
+                      annotation_text=f"{ENG_PER_1K_TARGET} eng/1K target",
+                      annotation_position="top right")
+    cat_avg_epk = epk_data[epk_data["eng_per_1k"] > 0]["eng_per_1k"].mean()
+    fig_epk.add_hline(y=cat_avg_epk, line_dash="dot", line_color="gray",
+                      annotation_text=f"Category avg {cat_avg_epk:.2f}",
+                      annotation_position="bottom right")
+    st.plotly_chart(fig_epk, use_container_width=True)
 
     st.markdown("---")
 
@@ -186,7 +191,7 @@ with tab_overview:
             top10_rows.append({
                 "#": i,
                 "Caption": (p.get("caption_preview", "") or "")[:60] + ("..." if len(p.get("caption_preview", "")) > 60 else ""),
-                "ER %": round(p.get("engagement_rate", 0), 2),
+                "Engagements": p.get("total_engagement", 0),
                 "Likes": p.get("likes", 0),
                 "Comments": p.get("comments", 0),
                 "Views": p.get("views", 0),
@@ -196,26 +201,26 @@ with tab_overview:
             })
         top10_df = pd.DataFrame(top10_rows)
 
-        def color_top10_er(val):
+        def color_top10_eng(val):
             if isinstance(val, (int, float)):
-                if val >= 4:
+                if val >= 500:
                     return "background-color: #C8E6C9"
-                elif val >= 2.5:
+                elif val >= 200:
                     return "background-color: #FDEBD6"
                 elif val > 0:
                     return "background-color: #FFCDD2"
             return ""
 
-        styled_top10 = top10_df.style.map(color_top10_er, subset=["ER %"]).format({
-            "Likes": "{:,.0f}", "Comments": "{:,.0f}", "Views": "{:,.0f}", "ER %": "{:.2f}"
+        styled_top10 = top10_df.style.map(color_top10_eng, subset=["Engagements"]).format({
+            "Engagements": "{:,.0f}", "Likes": "{:,.0f}", "Comments": "{:,.0f}", "Views": "{:,.0f}"
         })
         st.dataframe(styled_top10, use_container_width=True, hide_index=True, height=400)
 
         # So What
-        best_type = pd.DataFrame(top10_rows).groupby("Type")["ER %"].mean()
+        best_type = pd.DataFrame(top10_rows).groupby("Type")["Engagements"].mean()
         best_type_name = best_type.idxmax() if len(best_type) else "N/A"
-        avg_top10_er = sum(r["ER %"] for r in top10_rows) / len(top10_rows)
-        st.info(f"**{top10_brand}'s top 10** average {avg_top10_er:.2f}% ER on {top10_plat}. "
+        avg_top10_eng = sum(r["Engagements"] for r in top10_rows) / len(top10_rows)
+        st.info(f"**{top10_brand}'s top 10** average {avg_top10_eng:,.0f} engagements on {top10_plat}. "
                 f"Best-performing format: **{best_type_name}**. "
                 f"{'Study their approach for Cuervo adaptation.' if top10_brand != CUERVO else 'Keep doubling down on what works.'}")
     else:
@@ -233,7 +238,7 @@ with tab_gaps:
 
     # ── Content Gap Analysis ───────────────────────────────────────────
     st.subheader("Content Gap Analysis: Cuervo vs Category")
-    st.caption("Where competitors invest more content — and whether those themes drive higher ER")
+    st.caption("Where competitors invest more content — and whether those themes drive higher engagement")
 
     all_themes = sorted(full_df["content_theme"].dropna().unique())
     cuervo_total = len(cuervo_df) or 1
@@ -243,15 +248,15 @@ with tab_gaps:
     for theme in all_themes:
         c_pct = len(cuervo_df[cuervo_df["content_theme"] == theme]) / cuervo_total * 100
         cat_pct = len(comp_df[comp_df["content_theme"] == theme]) / comp_total * 100
-        c_er = cuervo_df[cuervo_df["content_theme"] == theme]["engagement_rate"].mean()
-        cat_er = comp_df[comp_df["content_theme"] == theme]["engagement_rate"].mean()
+        c_eng = cuervo_df[cuervo_df["content_theme"] == theme]["total_engagement"].mean()
+        cat_eng = comp_df[comp_df["content_theme"] == theme]["total_engagement"].mean()
         gap_rows.append({
             "theme": theme,
             "Cuervo %": round(c_pct, 1),
             "Category %": round(cat_pct, 1),
             "gap": round(cat_pct - c_pct, 1),
-            "Cuervo ER": round(c_er, 2) if pd.notna(c_er) else 0,
-            "Category ER": round(cat_er, 2) if pd.notna(cat_er) else 0,
+            "Cuervo Avg Eng": round(c_eng, 0) if pd.notna(c_eng) else 0,
+            "Cat Avg Eng": round(cat_eng, 0) if pd.notna(cat_eng) else 0,
         })
 
     gap_df = pd.DataFrame(gap_rows).sort_values("gap", ascending=False)
@@ -272,7 +277,7 @@ with tab_gaps:
         st.markdown("**Biggest content gaps (themes competitors use more):**")
         for _, row in top_gaps.iterrows():
             st.markdown(f"- **{row['theme']}**: Category at {row['Category %']}% vs Cuervo {row['Cuervo %']}% "
-                        f"(+{row['gap']}% gap) — Category ER: {row['Category ER']}%")
+                        f"(+{row['gap']}% gap) — Category avg eng: {row['Cat Avg Eng']:,.0f}")
 
     st.markdown("---")
 
@@ -292,40 +297,39 @@ with tab_gaps:
 
     st.markdown("---")
 
-    # ── Engagement Rate by Format (Cross-Brand) ─────────────────────
-    st.subheader("Engagement Rate by Format — Cross-Brand")
-    st.caption("Which content formats drive the highest ER for each brand")
+    # ── Avg Engagements by Format (Cross-Brand) ─────────────────────
+    st.subheader("Avg Engagements by Format — Cross-Brand")
+    st.caption("Which content formats drive the most engagement for each brand")
 
-    er_by_fmt_rows = []
+    eng_by_fmt_rows = []
     for brand in order:
         for plat in ["Instagram", "TikTok"]:
             eng_by_type = results["engagement"].get(brand, {}).get(plat, {}).get("engagement_by_type", {})
-            for fmt, er_val in eng_by_type.items():
-                er_by_fmt_rows.append({"Brand": brand, "Format": fmt, "ER %": round(er_val, 2)})
+            for fmt, eng_val in eng_by_type.items():
+                eng_by_fmt_rows.append({"Brand": brand, "Format": fmt, "Avg Eng": round(eng_val, 0)})
 
-    if er_by_fmt_rows:
-        er_fmt_df = pd.DataFrame(er_by_fmt_rows)
-        # Aggregate across platforms
-        er_fmt_agg = er_fmt_df.groupby(["Brand", "Format"])["ER %"].mean().reset_index()
+    if eng_by_fmt_rows:
+        eng_fmt_df = pd.DataFrame(eng_by_fmt_rows)
+        eng_fmt_agg = eng_fmt_df.groupby(["Brand", "Format"])["Avg Eng"].mean().reset_index()
 
-        fig_er_fmt = px.bar(er_fmt_agg, x="Brand", y="ER %", color="Format",
-                            barmode="group",
-                            category_orders={"Brand": order},
-                            labels={"ER %": "Avg ER %", "Brand": ""},
-                            template=CHART_TEMPLATE,
-                            color_discrete_sequence=["#F8C090", "#2ea3f2", "#7B6B63", "#D4956A", "#C9A87E"])
-        fig_er_fmt.add_hline(y=ER_TARGET, line_dash="dash", line_color="#D9534F",
-                             annotation_text=f"{ER_TARGET}% target", annotation_position="top right")
-        fig_er_fmt.update_layout(font=CHART_FONT, height=420,
-                                 legend=dict(orientation="h", y=1.12))
-        st.plotly_chart(fig_er_fmt, use_container_width=True)
+        fig_eng_fmt = px.bar(eng_fmt_agg, x="Brand", y="Avg Eng", color="Format",
+                             barmode="group",
+                             category_orders={"Brand": order},
+                             labels={"Avg Eng": "Avg Engagements", "Brand": ""},
+                             template=CHART_TEMPLATE,
+                             color_discrete_sequence=["#F8C090", "#2ea3f2", "#7B6B63", "#D4956A", "#C9A87E"])
+        fig_eng_fmt.add_hline(y=ENG_PER_POST_TARGET, line_dash="dash", line_color="#D9534F",
+                              annotation_text=f"{ENG_PER_POST_TARGET} eng/post target", annotation_position="top right")
+        fig_eng_fmt.update_layout(font=CHART_FONT, height=420,
+                                  legend=dict(orientation="h", y=1.12))
+        st.plotly_chart(fig_eng_fmt, use_container_width=True)
 
         # So What
-        best_fmt_overall = er_fmt_agg.groupby("Format")["ER %"].mean().sort_values(ascending=False)
+        best_fmt_overall = eng_fmt_agg.groupby("Format")["Avg Eng"].mean().sort_values(ascending=False)
         if len(best_fmt_overall):
             top_fmt = best_fmt_overall.index[0]
-            top_fmt_er = best_fmt_overall.iloc[0]
-            st.info(f"**{top_fmt}** drives the highest average ER across brands at {top_fmt_er:.2f}%. "
+            top_fmt_eng = best_fmt_overall.iloc[0]
+            st.info(f"**{top_fmt}** drives the highest avg engagement across brands at {top_fmt_eng:,.0f}. "
                     f"Ensure Cuervo's content mix prioritizes this format.")
     else:
         st.info("No engagement-by-format data available.")
@@ -357,22 +361,22 @@ with tab_gaps:
     st.subheader("What to Steal")
     st.caption("Specific tactics from brands outperforming Cuervo")
 
-    cuervo_er_val = full_df[full_df["brand"] == CUERVO]["engagement_rate"].mean()
-    cuervo_er_val = 0 if pd.isna(cuervo_er_val) else cuervo_er_val
+    cuervo_avg_eng_val = full_df[full_df["brand"] == CUERVO]["total_engagement"].mean()
+    cuervo_avg_eng_val = 0 if pd.isna(cuervo_avg_eng_val) else cuervo_avg_eng_val
 
-    all_brand_ers = full_df.groupby("brand")["engagement_rate"].mean().dropna()
-    all_brand_ers = all_brand_ers[all_brand_ers > 0]
-    beating_brands = all_brand_ers[all_brand_ers > cuervo_er_val].index.tolist() if CUERVO in full_df["brand"].values else []
+    all_brand_avgs = full_df.groupby("brand")["total_engagement"].mean().dropna()
+    all_brand_avgs = all_brand_avgs[all_brand_avgs > 0]
+    beating_brands = all_brand_avgs[all_brand_avgs > cuervo_avg_eng_val].index.tolist() if CUERVO in full_df["brand"].values else []
     beating_brands = [b for b in beating_brands if b != CUERVO]
 
     if beating_brands:
         steal_cols = st.columns(min(len(beating_brands), 3))
         for i, brand in enumerate(beating_brands[:6]):
             bdf = full_df[full_df["brand"] == brand]
-            brand_er = bdf["engagement_rate"].mean()
-            top_theme_s = bdf.groupby("content_theme")["engagement_rate"].mean()
+            brand_avg = bdf["total_engagement"].mean()
+            top_theme_s = bdf.groupby("content_theme")["total_engagement"].mean()
             best_theme_s = top_theme_s.idxmax() if len(top_theme_s) else "N/A"
-            best_theme_er = top_theme_s.max() if len(top_theme_s) else 0
+            best_theme_eng = top_theme_s.max() if len(top_theme_s) else 0
             reel_pct = len(bdf[bdf["post_type"] == "Reel"]) / max(len(bdf), 1) * 100
             with steal_cols[i % len(steal_cols)]:
                 st.markdown(f"""
@@ -382,8 +386,8 @@ with tab_gaps:
                     <h4 style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
                                color: #333; margin: 0 0 8px 0;">{brand}</h4>
                     <p style="font-size: 0.9rem; color: #555; margin: 0;">
-                        <strong>{brand_er:.2f}% ER</strong> (+{brand_er - cuervo_er_val:.2f}pp vs Cuervo)<br>
-                        Top theme: <strong>{best_theme_s}</strong> ({best_theme_er:.2f}% ER)<br>
+                        <strong>{brand_avg:,.0f} avg eng</strong> (+{brand_avg - cuervo_avg_eng_val:,.0f} vs Cuervo)<br>
+                        Top theme: <strong>{best_theme_s}</strong> ({best_theme_eng:,.0f} avg eng)<br>
                         Reel mix: <strong>{reel_pct:.0f}%</strong>
                     </p>
                 </div>

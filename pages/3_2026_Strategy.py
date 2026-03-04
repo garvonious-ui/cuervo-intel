@@ -48,7 +48,7 @@ df = st.session_state["df"]  # Unfiltered
 CUERVO = "Jose Cuervo"
 GEN_Z_LEADERS = ["Casamigos", "Teremana"]
 _t = SOCIAL_BRIEF_TARGETS
-ER_TARGET = _t["er_by_views"]
+ENG_PER_POST_TARGET = _t["engagements_per_post"]
 
 cuervo_df = df[df["brand"] == CUERVO]
 leader_df = df[df["brand"].isin(GEN_Z_LEADERS)]
@@ -68,17 +68,6 @@ with tab_scorecard:
     st.subheader("Social Brief KPI Scorecard")
     st.caption("Current performance vs 2026 Social Brief targets")
 
-    cuervo_er = cuervo_df["engagement_rate"].mean()
-    cuervo_er = 0 if pd.isna(cuervo_er) else cuervo_er
-    cat_er = df[df["brand"] != CUERVO]["engagement_rate"].mean()
-    cat_er = 0 if pd.isna(cat_er) else cat_er
-
-    # Separate ER metrics
-    er_by_followers = results.get("cuervo_er_by_followers", 0)
-    benchmark = results.get("benchmark", {})
-    cuervo_bench = benchmark.get("Jose Cuervo", {})
-    er_by_views = cuervo_bench.get("er_by_views", 0) if cuervo_bench else 0
-
     cuervo_ig = cuervo_df[cuervo_df["platform"] == "Instagram"]
     avg_eng_per_post = cuervo_df["total_engagement"].mean() if len(cuervo_df) else 0
     avg_eng_per_post = 0 if pd.isna(avg_eng_per_post) else avg_eng_per_post
@@ -93,8 +82,8 @@ with tab_scorecard:
     # Creator content %
     creator_posts = cuervo_df[cuervo_df["has_creator_collab"].astype(str).str.lower() == "yes"] if "has_creator_collab" in cuervo_df.columns else pd.DataFrame()
     creator_pct = len(creator_posts) / max(len(cuervo_df), 1) * 100
-    creator_er = creator_posts["engagement_rate"].mean() if len(creator_posts) else 0
-    creator_er = 0 if pd.isna(creator_er) else creator_er
+    creator_avg_eng = creator_posts["total_engagement"].mean() if len(creator_posts) else 0
+    creator_avg_eng = 0 if pd.isna(creator_avg_eng) else creator_avg_eng
 
     freq = results["frequency"].get(CUERVO, {})
     ig_ppm = freq.get("Instagram", {}).get("posts_per_week", 0) * 4.33  # Convert to monthly
@@ -104,18 +93,14 @@ with tab_scorecard:
     _ig_ppm = _t["ig_posts_per_month"]
     _tt_ppw = _t["tt_posts_per_week"]
     scorecard_data = [
-        {"KPI": "ER by Followers", "Actual": f"{er_by_followers:.2f}%",
-         "Target": f"{_t['er_by_followers']}%+",
-         "Status": "ON TRACK" if er_by_followers >= _t["er_by_followers"] else "BELOW",
-         "Gap": f"{er_by_followers - _t['er_by_followers']:+.2f}pp"},
-        {"KPI": "ER by Views", "Actual": f"{er_by_views:.2f}%",
-         "Target": f"{_t['er_by_views']}%+",
-         "Status": "ON TRACK" if er_by_views >= _t["er_by_views"] else "BELOW",
-         "Gap": f"{er_by_views - _t['er_by_views']:+.2f}pp"},
         {"KPI": "Avg Eng/Post", "Actual": f"{avg_eng_per_post:,.0f}",
          "Target": f"{_t['engagements_per_post']:,}+",
          "Status": "ON TRACK" if avg_eng_per_post >= _t["engagements_per_post"] else "BELOW",
          "Gap": f"{avg_eng_per_post - _t['engagements_per_post']:+,.0f}"},
+        {"KPI": "Creator Avg Eng", "Actual": f"{creator_avg_eng:,.0f}",
+         "Target": f"{_t['creator_engagements_per_post']:,}+",
+         "Status": "ON TRACK" if creator_avg_eng >= _t["creator_engagements_per_post"] else "BELOW",
+         "Gap": f"{creator_avg_eng - _t['creator_engagements_per_post']:+,.0f}"},
         {"KPI": "Save Rate", "Actual": f"{save_rate:.1f}%",
          "Target": f"{_t['save_rate']}%+",
          "Status": "ON TRACK" if save_rate >= _t["save_rate"] else "BELOW",
@@ -124,10 +109,6 @@ with tab_scorecard:
          "Target": f"{_t['share_rate']}%+",
          "Status": "ON TRACK" if share_rate >= _t["share_rate"] else "BELOW",
          "Gap": f"{share_rate - _t['share_rate']:+.1f}pp"},
-        {"KPI": "Creator ER", "Actual": f"{creator_er:.2f}%",
-         "Target": f"{_t['creator_er']}%+",
-         "Status": "ON TRACK" if creator_er >= _t["creator_er"] else "BELOW",
-         "Gap": f"{creator_er - _t['creator_er']:+.2f}pp"},
         {"KPI": "Reel Ratio (IG)", "Actual": f"{reel_ratio:.0f}%",
          "Target": f"{_t['reel_ratio']}%",
          "Status": "ON TRACK" if reel_ratio >= _t["reel_ratio"] else "BELOW",
@@ -169,7 +150,7 @@ with tab_scorecard:
 
     # ── Dynamic vs Static Performance ──────────────────────────────────
     st.subheader("Dynamic vs Static Performance")
-    st.caption("Poplife benchmark: Dynamic (video) delivers 2.8% ER vs Static (image) 2.2% ER")
+    st.caption("Comparing avg engagements: Dynamic (video) vs Static (image) content")
 
     dynamic_types = ["Reel", "Video"]
     static_types = ["Static Image", "Carousel"]
@@ -179,21 +160,21 @@ with tab_scorecard:
     total_ds = len(dyn_posts) + len(stat_posts) or 1
     dyn_pct = len(dyn_posts) / total_ds * 100
     stat_pct = len(stat_posts) / total_ds * 100
-    dyn_er = dyn_posts["engagement_rate"].mean() if len(dyn_posts) else 0
-    stat_er = stat_posts["engagement_rate"].mean() if len(stat_posts) else 0
-    dyn_er = 0 if pd.isna(dyn_er) else dyn_er
-    stat_er = 0 if pd.isna(stat_er) else stat_er
+    dyn_eng = dyn_posts["total_engagement"].mean() if len(dyn_posts) else 0
+    stat_eng = stat_posts["total_engagement"].mean() if len(stat_posts) else 0
+    dyn_eng = 0 if pd.isna(dyn_eng) else dyn_eng
+    stat_eng = 0 if pd.isna(stat_eng) else stat_eng
 
     ds1, ds2, ds3, ds4 = st.columns(4)
     with ds1:
         st.metric("Dynamic %", f"{dyn_pct:.0f}%", help="Reels + Video")
     with ds2:
-        st.metric("Dynamic ER", f"{dyn_er:.2f}%",
-                  delta=f"{dyn_er - stat_er:+.2f}% vs Static" if stat_er > 0 else None)
+        st.metric("Dynamic Avg Eng", f"{dyn_eng:,.0f}",
+                  delta=f"{dyn_eng - stat_eng:+,.0f} vs Static" if stat_eng > 0 else None)
     with ds3:
         st.metric("Static %", f"{stat_pct:.0f}%", help="Static Image + Carousel")
     with ds4:
-        st.metric("Static ER", f"{stat_er:.2f}%")
+        st.metric("Static Avg Eng", f"{stat_eng:,.0f}")
 
     # Cross-brand comparison
     all_brand_ds = []
@@ -203,25 +184,25 @@ with tab_scorecard:
             continue
         b_dyn = bdf[bdf["post_type"].isin(dynamic_types)]
         b_stat = bdf[bdf["post_type"].isin(static_types)]
-        b_dyn_er = b_dyn["engagement_rate"].mean() if len(b_dyn) else 0
-        b_stat_er = b_stat["engagement_rate"].mean() if len(b_stat) else 0
-        b_dyn_er = 0 if pd.isna(b_dyn_er) else b_dyn_er
-        b_stat_er = 0 if pd.isna(b_stat_er) else b_stat_er
-        all_brand_ds.append({"Brand": brand, "Dynamic ER": round(b_dyn_er, 2), "Static ER": round(b_stat_er, 2)})
+        b_dyn_eng = b_dyn["total_engagement"].mean() if len(b_dyn) else 0
+        b_stat_eng = b_stat["total_engagement"].mean() if len(b_stat) else 0
+        b_dyn_eng = 0 if pd.isna(b_dyn_eng) else b_dyn_eng
+        b_stat_eng = 0 if pd.isna(b_stat_eng) else b_stat_eng
+        all_brand_ds.append({"Brand": brand, "Dynamic Eng": round(b_dyn_eng, 0), "Static Eng": round(b_stat_eng, 0)})
 
     if all_brand_ds:
         ds_df = pd.DataFrame(all_brand_ds)
-        ds_melt = pd.melt(ds_df, id_vars=["Brand"], value_vars=["Dynamic ER", "Static ER"],
-                          var_name="Format", value_name="ER")
-        fig_ds = px.bar(ds_melt, x="Brand", y="ER", color="Format", barmode="group",
-                        color_discrete_map={"Dynamic ER": "#2ea3f2", "Static ER": "#C9A87E"},
-                        labels={"ER": "Avg ER %", "Brand": ""},
-                        template=CHART_TEMPLATE, text_auto=".2f")
+        ds_melt = pd.melt(ds_df, id_vars=["Brand"], value_vars=["Dynamic Eng", "Static Eng"],
+                          var_name="Format", value_name="Avg Eng")
+        fig_ds = px.bar(ds_melt, x="Brand", y="Avg Eng", color="Format", barmode="group",
+                        color_discrete_map={"Dynamic Eng": "#2ea3f2", "Static Eng": "#C9A87E"},
+                        labels={"Avg Eng": "Avg Engagements", "Brand": ""},
+                        template=CHART_TEMPLATE, text_auto=",.0f")
         fig_ds.update_layout(font=CHART_FONT, height=380, legend=dict(orientation="h", y=-0.15))
         st.plotly_chart(fig_ds, use_container_width=True)
 
-    st.info(f"**Dynamic content {'outperforms' if dyn_er > stat_er else 'underperforms vs'} static** by "
-            f"{abs(dyn_er - stat_er):.2f}pp ER. Cuervo's dynamic mix is {dyn_pct:.0f}% — "
+    st.info(f"**Dynamic content {'outperforms' if dyn_eng > stat_eng else 'underperforms vs'} static** by "
+            f"{abs(dyn_eng - stat_eng):,.0f} avg engagements. Cuervo's dynamic mix is {dyn_pct:.0f}% — "
             f"{'meeting' if dyn_pct >= 50 else 'below'} the 50%+ target.")
 
     st.markdown("---")
@@ -297,7 +278,7 @@ with tab_scorecard:
 
     if theme_perf and best_theme_name != "N/A":
         best_theme_data = theme_perf.get(best_theme_name, {})
-        best_er = best_theme_data.get("avg_engagement_rate", 0)
+        best_eng = best_theme_data.get("avg_engagements", 0)
         best_count = best_theme_data.get("count", 0)
 
         # Metric card
@@ -305,29 +286,29 @@ with tab_scorecard:
         with bt_col1:
             st.metric("Best Theme", best_theme_name)
         with bt_col2:
-            st.metric("Theme ER", f"{best_er:.2f}%",
-                      delta=f"{best_er - ER_TARGET:+.2f}% vs {ER_TARGET}% target")
+            st.metric("Avg Engagements", f"{best_eng:,.0f}",
+                      delta=f"{best_eng - ENG_PER_POST_TARGET:+,.0f} vs {ENG_PER_POST_TARGET} target")
         with bt_col3:
             st.metric("Posts", f"{best_count}")
 
-        # Mini bar chart of all themes by ER
-        theme_rows = [{"Theme": t, "ER %": round(v["avg_engagement_rate"], 2), "Posts": v["count"]}
-                      for t, v in theme_perf.items() if v.get("avg_engagement_rate", 0) > 0]
+        # Mini bar chart of all themes by engagements
+        theme_rows = [{"Theme": t, "Avg Eng": round(v["avg_engagements"], 0), "Posts": v["count"]}
+                      for t, v in theme_perf.items() if v.get("avg_engagements", 0) > 0]
         if theme_rows:
-            theme_chart_df = pd.DataFrame(theme_rows).sort_values("ER %", ascending=True)
-            fig_bt = px.bar(theme_chart_df, x="ER %", y="Theme", orientation="h",
+            theme_chart_df = pd.DataFrame(theme_rows).sort_values("Avg Eng", ascending=True)
+            fig_bt = px.bar(theme_chart_df, x="Avg Eng", y="Theme", orientation="h",
                             color_discrete_sequence=[BRAND_COLORS[CUERVO]],
-                            labels={"ER %": "Avg ER %", "Theme": ""},
-                            template=CHART_TEMPLATE, text_auto=".2f",
+                            labels={"Avg Eng": "Avg Engagements", "Theme": ""},
+                            template=CHART_TEMPLATE, text_auto=",.0f",
                             hover_data={"Posts": True})
-            fig_bt.add_vline(x=ER_TARGET, line_dash="dash", line_color="#333",
-                             annotation_text=f"{ER_TARGET}% target")
+            fig_bt.add_vline(x=ENG_PER_POST_TARGET, line_dash="dash", line_color="#333",
+                             annotation_text=f"{ENG_PER_POST_TARGET} eng target")
             fig_bt.update_layout(font=CHART_FONT, height=max(280, len(theme_rows) * 35),
                                  showlegend=False)
             st.plotly_chart(fig_bt, use_container_width=True)
 
-        st.info(f"**Best theme: {best_theme_name}** at {best_er:.2f}% ER — lean into this for upcoming content. "
-                f"Themes above the {ER_TARGET}% target are proven winners worth scaling.")
+        st.info(f"**Best theme: {best_theme_name}** at {best_eng:,.0f} avg engagements — lean into this for upcoming content. "
+                f"Themes above the {ENG_PER_POST_TARGET} eng target are proven winners worth scaling.")
     else:
         st.info("No content theme performance data available for Cuervo.")
 
@@ -346,13 +327,13 @@ with tab_frameworks:
     for pillar_name, themes in POPLIFE_PILLAR_MAP.items():
         matching = cuervo_df[cuervo_df["content_theme"].isin(themes)]
         pct = len(matching) / max(len(cuervo_df), 1) * 100
-        er = matching["engagement_rate"].mean() if len(matching) else 0
-        er = 0 if pd.isna(er) else er
+        avg_eng = matching["total_engagement"].mean() if len(matching) else 0
+        avg_eng = 0 if pd.isna(avg_eng) else avg_eng
         pillar_data.append({
             "Pillar": pillar_name,
             "Actual %": round(pct, 1),
             "Target %": POPLIFE_PILLAR_TARGETS[pillar_name],
-            "Avg ER": round(er, 2),
+            "Avg Eng": round(avg_eng, 0),
             "Posts": len(matching),
             "desc": POPLIFE_PILLAR_DESCRIPTIONS.get(pillar_name, ""),
         })
@@ -375,7 +356,7 @@ with tab_frameworks:
             <p style="color:#666; margin:4px 0 8px 0; font-size:0.9rem;">{desc}</p>
             <div style="display:flex; gap:24px; font-size:0.88rem;">
                 <span><strong>{row['Posts']}</strong> posts</span>
-                <span><strong>{row['Avg ER']:.2f}%</strong> avg ER</span>
+                <span><strong>{row['Avg Eng']:,.0f}</strong> avg eng</span>
                 <span style="color:{'#2E7D32' if abs(gap) < 10 else '#C62828'};">{gap:+.0f}pp gap</span>
             </div>
         </div>""", unsafe_allow_html=True)
@@ -396,13 +377,13 @@ with tab_frameworks:
         st.plotly_chart(fig_pd, use_container_width=True)
 
     with col_pd2:
-        st.markdown("**Avg ER by Pillar**")
-        fig_pe = px.bar(pillar_df, x="Pillar", y="Avg ER",
+        st.markdown("**Avg Engagements by Pillar**")
+        fig_pe = px.bar(pillar_df, x="Pillar", y="Avg Eng",
                         color="Pillar", color_discrete_map=POPLIFE_PILLAR_COLORS,
-                        labels={"Avg ER": "Avg ER %", "Pillar": ""},
-                        template=CHART_TEMPLATE, text_auto=".2f")
-        fig_pe.add_hline(y=ER_TARGET, line_dash="dash", line_color="#333",
-                         annotation_text=f"{ER_TARGET}% target", annotation_position="top right")
+                        labels={"Avg Eng": "Avg Engagements", "Pillar": ""},
+                        template=CHART_TEMPLATE, text_auto=",.0f")
+        fig_pe.add_hline(y=ENG_PER_POST_TARGET, line_dash="dash", line_color="#333",
+                         annotation_text=f"{ENG_PER_POST_TARGET} eng target", annotation_position="top right")
         fig_pe.update_layout(showlegend=False, font=CHART_FONT, height=380)
         st.plotly_chart(fig_pe, use_container_width=True)
 
@@ -624,7 +605,7 @@ with tab_action:
     ) / max(len(GEN_Z_LEADERS), 1)
     rec_ppw = round(leader_avg_ppw, 0)
 
-    top_themes_for_leaders = leader_df.groupby("content_theme")["engagement_rate"].mean().nlargest(3)
+    top_themes_for_leaders = leader_df.groupby("content_theme")["total_engagement"].mean().nlargest(3)
 
     cuervo_scores_local = compute_genz_scores(CUERVO)
     video_pct = cuervo_scores_local[3]
@@ -664,9 +645,9 @@ with tab_action:
             "week": "Week 4",
             "focus": "Measure, Learn & Scale",
             "actions": [
-                "Analyze Week 1-3: identify top 3 posts by ER, saves, and shares",
+                "Analyze Week 1-3: identify top 3 posts by engagements, saves, and shares",
                 "Double down on winning formats — scale what works, drop what doesn't",
-                f"Set ER target: close gap to {ER_TARGET}% by 25% within 60 days",
+                f"Set engagement target: close gap to {ENG_PER_POST_TARGET} avg eng/post within 60 days",
                 "Brief next month's cultural calendar content (holidays, events, trending moments)",
             ],
         },
@@ -707,7 +688,7 @@ with tab_action:
         ramp_rows.append({
             "Month": month,
             "Creator % of Total": targets["creator_pct"],
-            "Avg ER Target": targets["er_target"],
+            "Avg Eng Target": targets["er_target"],
             "Proactive Comments/Wk": targets["proactive_comments_wk"],
         })
     ramp_df = pd.DataFrame(ramp_rows)
@@ -742,12 +723,12 @@ with tab_action:
             if highest_poster != CUERVO:
                 st.markdown(f"- {highest_poster} leads with **{highest_post_count}** posts vs Cuervo's **{cuervo_count}** — losing share of voice")
 
-        brand_ers_all = df.groupby("brand")["engagement_rate"].mean()
-        if len(brand_ers_all):
-            best_er_brand = brand_ers_all.idxmax()
-            best_er_val = brand_ers_all.max()
-            if best_er_brand != CUERVO:
-                st.markdown(f"- {best_er_brand} dominates engagement at **{best_er_val:.2f}% ER**")
+        brand_eng_all = df.groupby("brand")["total_engagement"].mean()
+        if len(brand_eng_all):
+            best_eng_brand = brand_eng_all.idxmax()
+            best_eng_val = brand_eng_all.max()
+            if best_eng_brand != CUERVO:
+                st.markdown(f"- {best_eng_brand} dominates engagement at **{best_eng_val:,.0f} avg eng/post**")
 
         if results["creators"]:
             collab_items = [(b, v.get("collab_pct", 0)) for b, v in results["creators"].items() if b != CUERVO]
@@ -760,11 +741,11 @@ with tab_action:
 
     with col_o:
         st.success("**Opportunities for Cuervo**")
-        cuervo_theme_er = cuervo_df.groupby("content_theme")["engagement_rate"].mean() if len(cuervo_df) else pd.Series(dtype=float)
-        cuervo_best_theme = cuervo_theme_er.idxmax() if len(cuervo_theme_er) else "N/A"
-        cuervo_best_er = cuervo_theme_er.max() if len(cuervo_theme_er) else 0
+        cuervo_theme_eng = cuervo_df.groupby("content_theme")["total_engagement"].mean() if len(cuervo_df) else pd.Series(dtype=float)
+        cuervo_best_theme = cuervo_theme_eng.idxmax() if len(cuervo_theme_eng) else "N/A"
+        cuervo_best_eng = cuervo_theme_eng.max() if len(cuervo_theme_eng) else 0
         if cuervo_best_theme != "N/A":
-            st.markdown(f"- Cuervo's **{cuervo_best_theme}** content is the top-performing theme at {cuervo_best_er:.2f}% ER")
+            st.markdown(f"- Cuervo's **{cuervo_best_theme}** content is the top-performing theme at {cuervo_best_eng:,.0f} avg eng")
 
         reel_pct_opp = len(cuervo_df[cuervo_df["post_type"] == "Reel"]) / max(len(cuervo_df[cuervo_df["platform"] == "Instagram"]), 1) * 100
         if reel_pct_opp < 60:

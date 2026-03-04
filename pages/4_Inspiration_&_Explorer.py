@@ -100,8 +100,8 @@ with tab_inspo:
                 with rc4:
                     st.metric("Avg Comments", f"{snapshot.get('avg_comments', 0):,}")
                 with rc5:
-                    er = snapshot.get("avg_engagement_rate", 0)
-                    st.metric("Avg ER", f"{er}%")
+                    avg_eng = snapshot.get("avg_engagements", snapshot.get("avg_engagement_rate", 0))
+                    st.metric("Avg Eng", f"{avg_eng:,.0f}" if isinstance(avg_eng, (int, float)) else str(avg_eng))
                 st.markdown("---")
 
             # ── Creator Summary ────────────────────────────────────────
@@ -163,8 +163,9 @@ with tab_inspo:
                     f"summer kickoff, holiday entertaining)."
                 )
 
-            if snapshot.get("avg_engagement_rate", 0) > 3:
-                steal_points.append(f"**ER benchmark:** {display_name} achieves {snapshot['avg_engagement_rate']}% ER — study their format mix for replicable patterns")
+            avg_eng_val = snapshot.get("avg_engagements", snapshot.get("avg_engagement_rate", 0))
+            if isinstance(avg_eng_val, (int, float)) and avg_eng_val > 500:
+                steal_points.append(f"**Engagement benchmark:** {display_name} averages {avg_eng_val:,.0f} engagements/post — study their format mix for replicable patterns")
 
             if steal_points:
                 for point in steal_points:
@@ -267,10 +268,10 @@ with tab_explorer:
     fc1, fc2, fc3, fc4 = st.columns(4)
 
     with fc1:
-        er_min = float(df["engagement_rate"].min()) if len(df) and df["engagement_rate"].notna().any() else 0.0
-        er_max = float(df["engagement_rate"].max()) if len(df) and df["engagement_rate"].notna().any() else 10.0
-        er_range = st.slider("ER % range", er_min, max(er_max, er_min + 0.1),
-                             (er_min, er_max), step=0.1, key="er_slider")
+        eng_min = int(df["total_engagement"].min()) if len(df) and df["total_engagement"].notna().any() else 0
+        eng_max = int(df["total_engagement"].max()) if len(df) and df["total_engagement"].notna().any() else 1000
+        eng_range = st.slider("Engagements range", eng_min, max(eng_max, eng_min + 1),
+                              (eng_min, eng_max), step=1, key="eng_slider")
 
     with fc2:
         likes_max = int(df["likes"].max()) if len(df) and df["likes"].notna().any() else 100
@@ -298,7 +299,7 @@ with tab_explorer:
 
     # Apply advanced filters
     mask = (
-        df["engagement_rate"].between(er_range[0], er_range[1]) &
+        df["total_engagement"].between(eng_range[0], eng_range[1]) &
         df["likes"].between(likes_range[0], likes_range[1]) &
         (df["content_theme"].isin(sel_themes) | df["content_theme"].isna()) &
         (df["caption_tone"].isin(sel_tones) | df["caption_tone"].isna()) &
@@ -326,7 +327,7 @@ with tab_explorer:
     with m1:
         st.metric("Matching Posts", f"{len(filt):,}")
     with m2:
-        st.metric("Avg ER", f"{filt['engagement_rate'].mean():.2f}%" if len(filt) else "N/A")
+        st.metric("Avg Eng", f"{filt['total_engagement'].mean():,.0f}" if len(filt) else "N/A")
     with m3:
         st.metric("Total Likes", f"{int(filt['likes'].sum()):,}" if len(filt) else "0")
     with m4:
@@ -346,18 +347,15 @@ with tab_explorer:
 
     # ── Data table ─────────────────────────────────────────────────────
     display_cols = [
-        "brand", "platform", "post_date", "post_type", "engagement_rate",
+        "brand", "platform", "post_date", "post_type", "total_engagement",
         "likes", "comments", "shares", "views", "content_theme",
         "caption_tone", "cta_type", "has_creator_collab",
         "caption_word_count", "emoji_count_in_caption", "post_url",
     ]
     show_df = filt[[c for c in display_cols if c in filt.columns]].copy()
-    show_df = show_df.sort_values("engagement_rate", ascending=False).reset_index(drop=True)
+    show_df = show_df.sort_values("total_engagement", ascending=False).reset_index(drop=True)
     show_df.index = show_df.index + 1
     show_df.index.name = "#"
-
-    if "engagement_rate" in show_df.columns:
-        show_df["engagement_rate"] = show_df["engagement_rate"].round(2)
 
     st.dataframe(
         show_df.style.apply(
@@ -371,25 +369,25 @@ with tab_explorer:
     # ── Quick insights ─────────────────────────────────────────────────
     if len(filt) >= 5:
         with st.expander("Quick Insights on Filtered Data"):
-            type_ers = filt.groupby("post_type")["engagement_rate"].mean().dropna()
-            if len(type_ers):
-                st.markdown(f"- **Best content type:** {type_ers.idxmax()} (avg ER {type_ers.max():.2f}%)")
+            type_eng = filt.groupby("post_type")["total_engagement"].mean().dropna()
+            if len(type_eng):
+                st.markdown(f"- **Best content type:** {type_eng.idxmax()} ({type_eng.max():,.0f} avg eng)")
 
-            theme_ers = filt.groupby("content_theme")["engagement_rate"].mean().dropna()
-            if len(theme_ers):
-                st.markdown(f"- **Best theme:** {theme_ers.idxmax()} (avg ER {theme_ers.max():.2f}%)")
+            theme_eng = filt.groupby("content_theme")["total_engagement"].mean().dropna()
+            if len(theme_eng):
+                st.markdown(f"- **Best theme:** {theme_eng.idxmax()} ({theme_eng.max():,.0f} avg eng)")
 
-            collab_er = filt[filt["has_creator_collab"].str.lower() == "yes"]["engagement_rate"].mean()
-            non_er = filt[filt["has_creator_collab"].str.lower() != "yes"]["engagement_rate"].mean()
-            if pd.notna(collab_er) and pd.notna(non_er):
-                lift = collab_er - non_er
-                st.markdown(f"- **Creator collab lift:** {'+' if lift > 0 else ''}{lift:.2f}% ER")
+            collab_eng = filt[filt["has_creator_collab"].str.lower() == "yes"]["total_engagement"].mean()
+            non_eng = filt[filt["has_creator_collab"].str.lower() != "yes"]["total_engagement"].mean()
+            if pd.notna(collab_eng) and pd.notna(non_eng):
+                lift = collab_eng - non_eng
+                st.markdown(f"- **Creator collab lift:** {'+' if lift > 0 else ''}{lift:,.0f} engagements")
 
             best_day = filt.copy()
             best_day["dow"] = pd.to_datetime(best_day["post_date"], errors="coerce").dt.day_name()
-            day_er = best_day.groupby("dow")["engagement_rate"].mean()
-            if len(day_er):
-                st.markdown(f"- **Best posting day:** {day_er.idxmax()} (avg ER {day_er.max():.2f}%)")
+            day_eng = best_day.groupby("dow")["total_engagement"].mean()
+            if len(day_eng):
+                st.markdown(f"- **Best posting day:** {day_eng.idxmax()} ({day_eng.max():,.0f} avg eng)")
 
     # ── Export ─────────────────────────────────────────────────────────
     st.markdown("---")
