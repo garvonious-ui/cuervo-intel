@@ -30,17 +30,17 @@ INSTAGRAM_POST_TYPES = ["Reel", "Carousel", "Static Image", "Story"]
 TIKTOK_POST_TYPES = ["Video", "Photo Carousel", "LIVE (archived)"]
 
 CONTENT_THEMES = [
-    "Product Showcase",
-    "Cocktail Recipe",
-    "Lifestyle/Aspirational",
+    "Product/Lifestyle",
+    "Cocktail Highlights",
+    "Brand Heritage / Culture",
+    "Creator Collab",
+    "Event/Activation",
+    "Partner",
+    "Cultural Moment/Holiday",
+    "Meme/Humor",
+    "Giveaway/Promo",
     "Behind the Scenes",
-    "Creator Collab / UGC",
-    "Event / Activation",
-    "Cultural Moment / Holiday",
-    "Meme / Humor",
     "User Repost",
-    "Giveaway / Promo",
-    "Brand Heritage / Story",
     "Sports Tie-in",
     "Other",
 ]

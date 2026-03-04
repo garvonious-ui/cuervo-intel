@@ -212,7 +212,7 @@ with tab_scorecard:
     st.caption("Target: 50% Owned / Sponsored Live Events, 30% Creator / Influencer / UGC, 20% Brand-Owned")
 
     # Owned / Sponsored Events = event activations, cultural moments, sponsored events
-    event_themes = ["Event / Activation", "Cultural Moment / Holiday", "Music / Party"]  # Music / Party kept for legacy data
+    event_themes = ["Event/Activation", "Cultural Moment/Holiday"]
     event_caption_signals = [
         "ufc", "akamba", "tales_of_the_cocktail", "tales of the cocktail",
         "nola", "new orleans", "workshop", "activation", "festival",
@@ -503,7 +503,7 @@ with tab_frameworks:
         total = len(bdf) or 1
         ugc_pct = len(bdf[bdf["has_creator_collab"].astype(str).str.lower() == "yes"]) / total * 100 if "has_creator_collab" in bdf.columns else 0
         collab_pct = results["creators"].get(brand, {}).get("collab_pct", 0)
-        humor_pct = len(bdf[bdf["content_theme"].isin(["Meme / Humor"])]) / total * 100
+        humor_pct = len(bdf[bdf["content_theme"].isin(["Meme/Humor"])]) / total * 100
         video_pct = len(bdf[bdf["post_type"].isin(["Reel", "Video"])]) / total * 100
         music_pct = len(bdf[bdf["has_music_audio"].str.lower() == "yes"]) / total * 100 if "has_music_audio" in bdf.columns else 0
         comment_rate = (bdf["comments"].sum() / max(bdf["likes"].sum(), 1)) * 100

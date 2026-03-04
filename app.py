@@ -43,7 +43,7 @@ def _sprout_fingerprint(sprout_dir: str) -> str:
     when files change OR analysis logic is updated."""
     import hashlib
     # Bump this version whenever sprout_import.py or analysis.py logic changes
-    CODE_VERSION = "v21_engagements_refactor"
+    CODE_VERSION = "v22_theme_taxonomy"
     entries = [CODE_VERSION]
     if os.path.isdir(sprout_dir):
         for f in sorted(os.listdir(sprout_dir)):
@@ -96,13 +96,44 @@ def results_to_df(results: dict) -> pd.DataFrame:
         df["post_date"] = pd.to_datetime(df["post_date"], errors="coerce")
     if "post_hour" in df.columns:
         df["post_hour"] = pd.to_numeric(df["post_hour"], errors="coerce")
-    # Combine related content themes for clearer analysis
+    # Normalize content themes to current taxonomy
     if "content_theme" in df.columns:
         _theme_map = {
-            "Education (Tequila 101)": "Cocktail Recipe",  # legacy data compat
-            "Music / Party": "Event / Activation",          # legacy data compat
+            # Legacy names → current taxonomy
+            "Education (Tequila 101)": "Cocktail Highlights",
+            "Music / Party": "Event/Activation",
+            "Cocktail Recipe": "Cocktail Highlights",
+            "Brand Heritage / Story": "Brand Heritage / Culture",
+            "Creator Collab / UGC": "Creator Collab",
+            "Event / Activation": "Event/Activation",
+            "Cultural Moment / Holiday": "Cultural Moment/Holiday",
+            "Meme / Humor": "Meme/Humor",
+            "Giveaway / Promo": "Giveaway/Promo",
+            "Product Showcase": "Product/Lifestyle",
+            "Lifestyle/Aspirational": "Product/Lifestyle",
+            "Events & Music": "Event/Activation",
+            "Education & Recipes": "Cocktail Highlights",
         }
         df["content_theme"] = df["content_theme"].replace(_theme_map)
+
+    # Apply manual theme overrides from CSV (Cuervo posts only)
+    override_path = os.path.join("data", "sprout", "theme_overrides.csv")
+    if os.path.isfile(override_path) and "caption_text" in df.columns:
+        try:
+            overrides = pd.read_csv(override_path)
+            if "Primary Theme" in overrides.columns and "Caption (first 200 chars)" in overrides.columns:
+                cuervo_mask = df["brand"] == "Jose Cuervo"
+                for _, orow in overrides.iterrows():
+                    caption_prefix = str(orow.get("Caption (first 200 chars)", ""))[:80].strip()
+                    theme = str(orow["Primary Theme"]).strip()
+                    if not caption_prefix or not theme:
+                        continue
+                    match = cuervo_mask & df["caption_text"].fillna("").str[:80].str.strip().eq(caption_prefix)
+                    if match.any():
+                        df.loc[match, "content_theme"] = theme
+        except Exception:
+            pass  # Silently skip if override CSV is malformed
+
     return df
 
 

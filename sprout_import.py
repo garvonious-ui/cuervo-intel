@@ -173,61 +173,63 @@ def _resolve_post_type(raw_type: str, platform: str, content_type: str = "") -> 
 # ─── CONTENT CLASSIFIERS ─────────────────────────────────────────────
 
 THEME_KEYWORDS = {
-    "Cocktail Recipe": [
+    "Cocktail Highlights": [
         "recipe", "cocktail", "margarita", "paloma", "mix", "ingredients",
         "garnish", "pour", "shake", "stir", "muddle", "splash", "oz",
         "simple syrup", "lime juice", "make this", "how to make",
-        "tequila 101", "did you know", "the difference", "blanco vs",
-        "reposado vs", "añejo", "cristalino", "guide to",
-        "everything you need", "what makes", "how tequila",
+        "highball", "spritz", "mule", "tequila 101", "did you know",
+        "the difference", "blanco vs", "reposado vs", "añejo",
+        "cristalino", "guide to", "everything you need", "what makes",
     ],
-    "Meme / Humor": [
+    "Meme/Humor": [
         "pov:", "pov ", "when you", "when someone", "mood:", "me:", "me when",
         "tell me without telling", "iykyk", "literally", "ngl", "no cap",
         "fr fr", "it's giving", "core", "lol", "lmao",
     ],
-    "Creator Collab / UGC": [
+    "Partner": [
+        "cuervopartner", "cuervocollective", "cuervo collective",
+        "cuervo partner", "#cuervopartner", "#cuervocollective",
+    ],
+    "Creator Collab": [
         "collab", "featuring", "feat.", "ft.", " x @", "with @",
         "repost", "regram", "created by", "styled by", "made by",
-        "cuervopartner", "cuervocollective", "#partner", "#ad ",
-        "#sponsored", "paid partnership",
     ],
-    "Giveaway / Promo": [
+    "Giveaway/Promo": [
         "giveaway", "win", "enter to", "chance to", "sweepstakes", "contest",
         "limited edition", "tag to win",
     ],
-    "Cultural Moment / Holiday": [
+    "Cultural Moment/Holiday": [
         "cinco de mayo", "national margarita day", "new year", "valentine",
         "4th of july", "game day", "super bowl", "halloween", "holiday",
         "thanksgiving", "christmas", "mother's day", "father's day",
+        "friendsgiving", "day of the dead",
     ],
     "Behind the Scenes": [
         "behind the scenes", "bts", "distillery", "how it's made",
         "agave field", "harvest", "process", "master distiller",
         "from agave", "jimador",
     ],
-    "Brand Heritage / Story": [
+    "Brand Heritage / Culture": [
         "since", "est.", "heritage", "tradition", "founder", "generations",
         "legacy", "history", "roots", "origin", "began in",
+        "sustainability", "repurpose", "230 years", "invented tequila",
     ],
-    "Event / Activation": [
+    "Event/Activation": [
         "pop-up", "pop up", "live from", "activation", "launch party",
         "catch us", "meet us", "join us at", "hosted by",
         "ufc", "akamba", "tales_of_the_cocktail", "tales of the cocktail",
-        "nola", "new orleans", "mexico trip", "workshop", "sustainability workshop",
+        "nola", "new orleans", "mexico trip", "workshop",
         "bartender", "hanky panky", "the vertical", "vertical team",
         "festival activation", "on-site", "on site",
         "playlist", "turn up", "turn it up", "dj", "concert",
         "festival", "dance", "club", "night out", "pre-game",
     ],
-    "Product Showcase": [
+    "Product/Lifestyle": [
         "bottle", "smooth", "bold", "crafted", "premium", "introducing",
         "meet the", "collection", "expression", "tasting notes", "new drop",
-    ],
-    "Lifestyle/Aspirational": [
         "sunset", "vibes", "moment", "weekend", "summer",
         "golden hour", "rooftop", "pool", "beach", "cheers",
-        "elevated", "living",
+        "elevated", "living", "shaken or straight",
     ],
 }
 
@@ -289,7 +291,7 @@ def classify_theme(caption: str) -> str:
         score = sum(1 for kw in keywords if kw in text)
         if score > 0:
             scores[theme] = score
-    return max(scores, key=scores.get) if scores else "Lifestyle/Aspirational"
+    return max(scores, key=scores.get) if scores else "Product/Lifestyle"
 
 
 def classify_tone(caption: str) -> str:
