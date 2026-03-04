@@ -38,7 +38,20 @@ if client_id is None:
         st.error("No client configurations found in clients/ directory.")
         st.stop()
 
-    selected = st.selectbox("Select Client", available)
+    # Build display names from each client's config
+    display_names = {}
+    for cid in available:
+        try:
+            _cfg = load_client_config(cid)
+            display_names[cid] = _cfg.hero_brand
+        except Exception:
+            display_names[cid] = cid
+
+    selected = st.selectbox(
+        "Select Client",
+        available,
+        format_func=lambda x: display_names.get(x, x),
+    )
     if st.button("Launch Dashboard"):
         st.query_params["client"] = selected
         st.rerun()
