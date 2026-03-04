@@ -85,7 +85,6 @@ with tab_overview:
             bench_avg_eng = ig_eng.get("benchmark_avg_engagement", 0)
             if bench_avg_eng:
                 row_data["Avg Eng"] = int(bench_avg_eng)
-            row_data["Reels"] = ig_eng.get("benchmark_reels_count", 0)
             row_data["Avg #tags"] = round(ig_eng.get("benchmark_avg_hashtags", 0), 1)
 
         rows.append(row_data)
