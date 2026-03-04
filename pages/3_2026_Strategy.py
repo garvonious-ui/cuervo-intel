@@ -54,8 +54,9 @@ cuervo_df = df[df["brand"] == CUERVO]
 leader_df = df[df["brand"].isin(GEN_Z_LEADERS)]
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-tab_scorecard, tab_frameworks, tab_action = st.tabs([
-    "Social Brief Scorecard", "Content Strategy Frameworks", "Action Plan",
+tab_scorecard, tab_frameworks, tab_platform, tab_action = st.tabs([
+    "Social Brief Scorecard", "Content Strategy Frameworks",
+    "Platform Strategies", "Action Plan",
 ])
 
 # ══════════════════════════════════════════════════════════════════════
@@ -589,7 +590,254 @@ with tab_frameworks:
 
 
 # ══════════════════════════════════════════════════════════════════════
-# TAB 3 — Action Plan
+# TAB 3 — Platform Strategies
+# ══════════════════════════════════════════════════════════════════════
+
+with tab_platform:
+    from config import PLATFORM_ROLES, IG_FORMAT_MIX, POPLIFE_CADENCE_TARGETS
+
+    # ── Section 1: Platform Roles at a Glance ──────────────────────────
+    st.subheader("Platform Roles at a Glance")
+
+    _header_bg = "#4A6B7A"
+    _row_bg = "#F9F7F4"
+    _primary_color = "#333333"
+    _secondary_color = "#888888"
+
+    _table_html = f"""
+    <table style="width:100%; border-collapse:collapse; font-family:Barlow Condensed, Helvetica, Arial, sans-serif; font-size:0.95rem;">
+      <thead>
+        <tr style="background:{_header_bg}; color:white;">
+          <th style="padding:12px 16px; text-align:left; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Platform</th>
+          <th style="padding:12px 16px; text-align:left; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Role</th>
+          <th style="padding:12px 16px; text-align:left; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Priority</th>
+          <th style="padding:12px 16px; text-align:left; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Cadence</th>
+        </tr>
+      </thead>
+      <tbody>
+    """
+    for i, (plat, info) in enumerate(PLATFORM_ROLES.items()):
+        is_primary = info["priority"] == "Primary"
+        name_style = f"font-weight:700; color:{_primary_color}" if is_primary else f"color:{_secondary_color}"
+        row_bg = "#ffffff" if i % 2 == 0 else _row_bg
+        border = "border-bottom:1px solid #e0ddd8;"
+        _table_html += f"""
+        <tr style="background:{row_bg}; {border}">
+          <td style="padding:10px 16px; {name_style}">{plat}</td>
+          <td style="padding:10px 16px;">{info['role']}</td>
+          <td style="padding:10px 16px;">{info['priority']}</td>
+          <td style="padding:10px 16px;">{info['cadence']}</td>
+        </tr>"""
+    _table_html += "</tbody></table>"
+    st.markdown(_table_html, unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # ── Section 2: Instagram Deep Dive ──────────────────────────────────
+    st.subheader("Instagram Deep Dive")
+
+    cuervo_ig = cuervo_df[cuervo_df["platform"] == "Instagram"]
+    ig_total = len(cuervo_ig)
+
+    if ig_total == 0:
+        st.info("No Instagram data available yet.")
+    else:
+        # ── Format Mix: Actual vs Target ────────────────────────────────
+        st.markdown("##### Format Mix: Actual vs Target")
+
+        # Compute actual format distribution
+        _type_counts = cuervo_ig["post_type"].value_counts()
+        _format_map = {
+            "Reels": _type_counts.get("Reel", 0) + _type_counts.get("Video", 0),
+            "Carousels": _type_counts.get("Carousel", 0),
+            "Stories": _type_counts.get("Story", 0),
+            "Collabs/Lives": _type_counts.get("Live", 0),
+        }
+        # Static images count toward Carousels bucket for format mix context,
+        # but let's show them separately and note it
+        _static_count = _type_counts.get("Static Image", 0)
+        if _static_count > 0:
+            _format_map["Static Image"] = _static_count
+
+        _actual_pcts = {k: (v / ig_total * 100) for k, v in _format_map.items() if v > 0}
+
+        _fmt_data = []
+        for fmt, target_info in IG_FORMAT_MIX.items():
+            _fmt_data.append({"Format": fmt, "Type": "Target", "Pct": target_info["pct"],
+                              "Role": target_info["role"]})
+            _fmt_data.append({"Format": fmt, "Type": "Actual", "Pct": _actual_pcts.get(fmt, 0),
+                              "Role": target_info["role"]})
+        # Add Static Image if present (no target for it)
+        if "Static Image" in _actual_pcts:
+            _fmt_data.append({"Format": "Static Image", "Type": "Actual",
+                              "Pct": _actual_pcts["Static Image"], "Role": "—"})
+            _fmt_data.append({"Format": "Static Image", "Type": "Target",
+                              "Pct": 0, "Role": "—"})
+
+        _fmt_df = pd.DataFrame(_fmt_data)
+        fig_fmt = px.bar(
+            _fmt_df, x="Pct", y="Format", color="Type", barmode="group",
+            orientation="h",
+            color_discrete_map={"Target": "#4A6B7A", "Actual": "#F8C090"},
+            text="Pct",
+        )
+        fig_fmt.update_traces(texttemplate="%{text:.0f}%", textposition="outside")
+        fig_fmt.update_layout(
+            template=CHART_TEMPLATE, font=CHART_FONT,
+            xaxis_title="% of Posts", yaxis_title="",
+            legend_title="", height=300,
+            yaxis=dict(categoryorder="array",
+                       categoryarray=list(reversed(list(IG_FORMAT_MIX.keys()) + (["Static Image"] if "Static Image" in _actual_pcts else [])))),
+            margin=dict(l=0, r=40, t=10, b=30),
+        )
+        st.plotly_chart(fig_fmt, use_container_width=True)
+
+        # ── Avg Engagements by Format ───────────────────────────────────
+        col_eng, col_cadence = st.columns(2)
+
+        with col_eng:
+            st.markdown("##### Avg Engagements by Format")
+            _eng_by_type = cuervo_ig.groupby("post_type")["total_engagement"].mean().sort_values(ascending=False)
+            fig_eng = go.Figure()
+            fig_eng.add_trace(go.Bar(
+                x=_eng_by_type.index, y=_eng_by_type.values,
+                marker_color=[BRAND_COLORS.get("Jose Cuervo", "#F8C090")] * len(_eng_by_type),
+                text=[f"{v:.0f}" for v in _eng_by_type.values],
+                textposition="outside",
+            ))
+            fig_eng.add_hline(y=ENG_PER_POST_TARGET, line_dash="dash", line_color="#D9534F",
+                              annotation_text=f"Target: {ENG_PER_POST_TARGET}")
+            fig_eng.update_layout(
+                template=CHART_TEMPLATE, font=CHART_FONT,
+                yaxis_title="Avg Engagements", xaxis_title="",
+                height=350, margin=dict(l=0, r=0, t=30, b=30),
+                showlegend=False,
+            )
+            st.plotly_chart(fig_eng, use_container_width=True)
+
+        # ── Posting Cadence ─────────────────────────────────────────────
+        with col_cadence:
+            st.markdown("##### Monthly Posting Cadence")
+            cuervo_ig_dated = cuervo_ig.copy()
+            cuervo_ig_dated["post_date_parsed"] = pd.to_datetime(cuervo_ig_dated["post_date"], errors="coerce")
+            cuervo_ig_dated["month"] = cuervo_ig_dated["post_date_parsed"].dt.to_period("M")
+            _monthly = cuervo_ig_dated.groupby("month").size().reset_index(name="posts")
+            _monthly["month_str"] = _monthly["month"].astype(str)
+
+            ig_target = POPLIFE_CADENCE_TARGETS.get("Instagram", {})
+            ig_low = ig_target.get("low", 12)
+            ig_high = ig_target.get("high", 16)
+
+            fig_cad = go.Figure()
+            _bar_colors = []
+            for _, row in _monthly.iterrows():
+                if row["posts"] < ig_low:
+                    _bar_colors.append("#D9534F")  # below target
+                elif row["posts"] > ig_high:
+                    _bar_colors.append("#F0AD4E")  # above target
+                else:
+                    _bar_colors.append("#5CB85C")  # on target
+
+            fig_cad.add_trace(go.Bar(
+                x=_monthly["month_str"], y=_monthly["posts"],
+                marker_color=_bar_colors,
+                text=_monthly["posts"], textposition="outside",
+            ))
+            # Target range band
+            fig_cad.add_hrect(y0=ig_low, y1=ig_high, fillcolor="#5CB85C", opacity=0.1,
+                              line_width=0)
+            fig_cad.add_hline(y=ig_low, line_dash="dot", line_color="#5CB85C", opacity=0.5,
+                              annotation_text=f"Target: {ig_low}-{ig_high}/mo",
+                              annotation_position="top right")
+            fig_cad.update_layout(
+                template=CHART_TEMPLATE, font=CHART_FONT,
+                yaxis_title="Posts", xaxis_title="",
+                height=350, margin=dict(l=0, r=0, t=30, b=30),
+                showlegend=False,
+            )
+            st.plotly_chart(fig_cad, use_container_width=True)
+
+        # ── Best Posting Times ──────────────────────────────────────────
+        st.markdown("##### Best Posting Times")
+        _freq = results.get("frequency", {}).get(CUERVO, {}).get("Instagram", {})
+        _best_days = _freq.get("best_days", [])
+        _best_hours = _freq.get("best_hours", [])
+
+        col_days, col_hours, col_themes = st.columns(3)
+        with col_days:
+            st.markdown("**Best Days**")
+            if _best_days:
+                for d in _best_days[:3]:
+                    st.markdown(f"- {d}")
+            else:
+                st.caption("Not enough data")
+
+        with col_hours:
+            st.markdown("**Best Hours**")
+            if _best_hours:
+                for h in _best_hours[:3]:
+                    hr = int(h) if isinstance(h, (int, float)) else h
+                    if isinstance(hr, int):
+                        ampm = "AM" if hr < 12 else "PM"
+                        display_hr = hr if hr <= 12 else hr - 12
+                        if display_hr == 0:
+                            display_hr = 12
+                        st.markdown(f"- {display_hr} {ampm}")
+                    else:
+                        st.markdown(f"- {h}")
+            else:
+                st.caption("Not enough data")
+
+        # ── Top Themes on IG ────────────────────────────────────────────
+        with col_themes:
+            st.markdown("**Top Themes (by Avg Eng)**")
+            if "content_theme" in cuervo_ig.columns:
+                _theme_eng = cuervo_ig.groupby("content_theme")["total_engagement"].mean().sort_values(ascending=False)
+                for theme, eng in _theme_eng.head(5).items():
+                    st.markdown(f"- {theme}: **{eng:.0f}**")
+            else:
+                st.caption("No theme data")
+
+    st.markdown("---")
+
+    # ── Section 3: Other Platforms ──────────────────────────────────────
+    st.subheader("Other Platforms")
+
+    _other_platforms = {k: v for k, v in PLATFORM_ROLES.items() if k != "Instagram"}
+    _cols = st.columns(min(len(_other_platforms), 3))
+
+    for i, (plat, info) in enumerate(_other_platforms.items()):
+        with _cols[i % 3]:
+            is_primary = info["priority"] == "Primary"
+            _border_color = "#F8C090" if is_primary else "#ccc"
+            _priority_badge = f'<span style="background:#F8C090;color:#333;padding:2px 8px;border-radius:4px;font-size:0.8rem;font-weight:600;">PRIMARY</span>' if is_primary else f'<span style="background:#e8e5e0;color:#666;padding:2px 8px;border-radius:4px;font-size:0.8rem;">SECONDARY</span>'
+
+            # Check if we have data for this platform
+            _plat_key = plat.split(" /")[0].split(" ")[0]  # "TikTok", "Facebook", etc.
+            _plat_posts = len(cuervo_df[cuervo_df["platform"] == _plat_key]) if _plat_key in cuervo_df["platform"].values else 0
+
+            if _plat_posts > 0:
+                _status_html = f'<div style="color:#5CB85C;font-size:0.85rem;margin-top:8px;">{_plat_posts} posts tracked</div>'
+            elif is_primary:
+                _status_html = '<div style="color:#F0AD4E;font-size:0.85rem;margin-top:8px;">Data incoming</div>'
+            else:
+                _status_html = '<div style="color:#999;font-size:0.85rem;margin-top:8px;">Not yet tracked</div>'
+
+            st.markdown(f"""
+            <div style="border:1px solid #e0ddd8; border-top:4px solid {_border_color};
+                        border-radius:8px; padding:16px; margin-bottom:12px; min-height:180px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                    <strong style="font-size:1.1rem;">{plat}</strong>
+                    {_priority_badge}
+                </div>
+                <div style="color:#555;font-size:0.9rem;margin-bottom:8px;">{info['role']}</div>
+                <div style="color:#333;font-size:0.9rem;"><strong>Cadence:</strong> {info['cadence']}</div>
+                {_status_html}
+            </div>""", unsafe_allow_html=True)
+
+
+# ══════════════════════════════════════════════════════════════════════
+# TAB 4 — Action Plan
 # ══════════════════════════════════════════════════════════════════════
 
 with tab_action:
