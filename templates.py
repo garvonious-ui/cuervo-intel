@@ -81,7 +81,18 @@ CTA_TYPES = [
 ]
 
 
-def generate_posts_template(output_dir: str) -> str:
+def _resolve_brands(brands=None):
+    """Resolve brands list: use provided, try client config, fall back to module BRANDS."""
+    if brands:
+        return brands
+    try:
+        from client_context import get_client
+        return get_client().brands
+    except Exception:
+        return BRANDS
+
+
+def generate_posts_template(output_dir: str, brands: list[str] = None) -> str:
     """Generate the main posts data collection CSV."""
     filepath = os.path.join(output_dir, "posts_data.csv")
     headers = [
@@ -153,7 +164,7 @@ def generate_posts_template(output_dir: str) -> str:
     return filepath
 
 
-def generate_profile_template(output_dir: str) -> str:
+def generate_profile_template(output_dir: str, brands: list[str] = None) -> str:
     """Generate brand profile overview CSV."""
     filepath = os.path.join(output_dir, "brand_profiles.csv")
     headers = [
@@ -176,7 +187,7 @@ def generate_profile_template(output_dir: str) -> str:
         writer = csv.writer(f)
         writer.writerow(headers)
         # Pre-populate with brand/platform combos
-        for brand in BRANDS:
+        for brand in _resolve_brands(brands):
             for platform in PLATFORMS:
                 writer.writerow([
                     brand, platform, "", "", "", "", "", "", "", "",

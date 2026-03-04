@@ -1,7 +1,10 @@
 """
-Cuervo Competitive Social Intelligence Dashboard
+Social Intelligence Dashboard — Multi-Client
 =================================================
 Main entry point. Run with: streamlit run app.py
+
+Supports multiple clients via ?client= query parameter.
+No param → internal client picker. ?client=cuervo → Cuervo dashboard.
 """
 
 import os
@@ -15,24 +18,64 @@ import streamlit as st
 # Ensure project root is importable
 sys.path.insert(0, os.path.dirname(__file__))
 
-from config import PAGE_CONFIG, CUSTOM_CSS, BRAND_ORDER, SOCIAL_BRIEF_TARGETS
-from templates import BRANDS, CONTENT_THEMES, TONE_OPTIONS
+from client_context import load_client_config, get_client, set_active_client, list_available_clients
+from config import CHART_TEMPLATE, CHART_FONT
 
-st.set_page_config(**PAGE_CONFIG)
-st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+# ── Client Routing ───────────────────────────────────────────────────
+# Must happen before set_page_config so we can use client's page_title.
+
+client_id = st.query_params.get("client", None)
+
+if client_id is None:
+    # Internal view — client picker
+    st.set_page_config(page_title="Poplife | Social Intel", page_icon="favicon.png",
+                       layout="wide", initial_sidebar_state="expanded")
+    st.title("Poplife — Social Media Intelligence")
+    st.caption("Select a client to launch their dashboard")
+
+    available = list_available_clients()
+    if not available:
+        st.error("No client configurations found in clients/ directory.")
+        st.stop()
+
+    selected = st.selectbox("Select Client", available)
+    if st.button("Launch Dashboard"):
+        st.query_params["client"] = selected
+        st.rerun()
+    st.stop()
+
+# Load client config
+try:
+    cfg = load_client_config(client_id)
+    set_active_client(cfg)
+except Exception as e:
+    st.set_page_config(page_title="Error", layout="wide")
+    st.error(f"Failed to load client '{client_id}': {e}")
+    st.stop()
+
+st.set_page_config(
+    page_title=cfg.page_title,
+    page_icon=cfg.favicon_path,
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+st.markdown(cfg.custom_css, unsafe_allow_html=True)
+
+# Store config in session state for pages
+st.session_state["client_config"] = cfg
 
 
 # ── Data Loading ──────────────────────────────────────────────────────
 
-SPROUT_INPUT_DIR = os.path.join(os.path.dirname(__file__), "data", "sprout")
-SPROUT_OUTPUT_DIR = os.path.join(tempfile.gettempdir(), "cuervo_sprout_imported")
+SPROUT_INPUT_DIR = cfg.sprout_dir
+SPROUT_OUTPUT_DIR = cfg.sprout_output_dir
 
 
 @st.cache_data(show_spinner="Running competitive analysis...")
-def load_demo():
+def load_demo(client_id: str):
     from sample_data import generate_all_sample_data
     from analysis import run_full_analysis
-    tmp = os.path.join(tempfile.gettempdir(), "cuervo_demo_streamlit")
+    tmp = os.path.join(tempfile.gettempdir(), f"{client_id}_demo_streamlit")
     os.makedirs(tmp, exist_ok=True)
     generate_all_sample_data(tmp)
     return run_full_analysis(tmp), tmp
@@ -54,10 +97,10 @@ def _sprout_fingerprint(sprout_dir: str) -> str:
 
 
 @st.cache_data(show_spinner="Importing Sprout Social data...")
-def load_sprout(sprout_dir: str, fingerprint: str = ""):
+def load_sprout(sprout_dir: str, output_dir: str, fingerprint: str = ""):
     from sprout_import import import_sprout_directory, import_benchmark_csv
     from analysis import run_full_analysis
-    os.makedirs(SPROUT_OUTPUT_DIR, exist_ok=True)
+    os.makedirs(output_dir, exist_ok=True)
 
     # Load benchmark CSV if present (e.g. Benchmark_CSV_ig_*.csv)
     benchmark_data = {}
@@ -67,9 +110,9 @@ def load_sprout(sprout_dir: str, fingerprint: str = ""):
                 benchmark_data = import_benchmark_csv(os.path.join(sprout_dir, f))
                 break  # Only one benchmark file expected
 
-    files, stats = import_sprout_directory(sprout_dir, SPROUT_OUTPUT_DIR)
-    results = run_full_analysis(SPROUT_OUTPUT_DIR, benchmark=benchmark_data)
-    return results, SPROUT_OUTPUT_DIR, stats
+    files, stats = import_sprout_directory(sprout_dir, output_dir)
+    results = run_full_analysis(output_dir, benchmark=benchmark_data)
+    return results, output_dir, stats
 
 
 @st.cache_data(show_spinner="Analyzing your data...")
@@ -116,19 +159,19 @@ def results_to_df(results: dict) -> pd.DataFrame:
         }
         df["content_theme"] = df["content_theme"].replace(_theme_map)
 
-    # Apply manual theme overrides from CSV (Cuervo posts only)
-    override_path = os.path.join("data", "sprout", "theme_overrides.csv")
+    # Apply manual theme overrides from CSV (hero brand posts only)
+    override_path = os.path.join(cfg.sprout_dir, "theme_overrides.csv")
     if os.path.isfile(override_path) and "caption_text" in df.columns:
         try:
             overrides = pd.read_csv(override_path)
             if "Primary Theme" in overrides.columns and "Caption (first 200 chars)" in overrides.columns:
-                cuervo_mask = df["brand"] == "Jose Cuervo"
+                hero_mask = df["brand"] == cfg.hero_brand
                 for _, orow in overrides.iterrows():
                     caption_prefix = str(orow.get("Caption (first 200 chars)", ""))[:80].strip()
                     theme = str(orow["Primary Theme"]).strip()
                     if not caption_prefix or not theme:
                         continue
-                    match = cuervo_mask & df["caption_text"].fillna("").str[:80].str.strip().eq(caption_prefix)
+                    match = hero_mask & df["caption_text"].fillna("").str[:80].str.strip().eq(caption_prefix)
                     if match.any():
                         df.loc[match, "content_theme"] = theme
         except Exception:
@@ -139,7 +182,7 @@ def results_to_df(results: dict) -> pd.DataFrame:
 
 # ── Load Data ─────────────────────────────────────────────────────────
 
-st.logo("logo.png")
+st.logo(cfg.app_logo_path)
 
 # Check if Sprout Social CSVs are present
 sprout_csvs = [f for f in os.listdir(SPROUT_INPUT_DIR) if f.lower().endswith(".csv")] \
@@ -155,10 +198,11 @@ default_idx = 1 if has_sprout else 0
 data_mode = st.sidebar.radio("Data source", data_options, index=default_idx, key="data_source")
 
 if data_mode == "Demo Data":
-    results, data_dir = load_demo()
+    results, data_dir = load_demo(cfg.client_id)
 elif data_mode == "Sprout Social Import":
     results, data_dir, sprout_stats = load_sprout(
-        SPROUT_INPUT_DIR, fingerprint=_sprout_fingerprint(SPROUT_INPUT_DIR)
+        SPROUT_INPUT_DIR, SPROUT_OUTPUT_DIR,
+        fingerprint=_sprout_fingerprint(SPROUT_INPUT_DIR)
     )
     st.sidebar.success(
         f"Imported {sprout_stats['total_posts']} posts from "
@@ -185,11 +229,11 @@ df = results_to_df(results)
 st.sidebar.markdown("---")
 st.sidebar.subheader("Filters")
 
-cuervo_only = st.sidebar.checkbox("Jose Cuervo only")
-if cuervo_only:
-    sel_brands = ["Jose Cuervo"]
+hero_only = st.sidebar.checkbox(f"{cfg.hero_brand} only")
+if hero_only:
+    sel_brands = [cfg.hero_brand]
 else:
-    sel_brands = st.sidebar.multiselect("Brands", BRAND_ORDER, default=BRAND_ORDER)
+    sel_brands = st.sidebar.multiselect("Brands", cfg.brand_order, default=cfg.brand_order)
 
 sel_platforms = st.sidebar.multiselect("Platforms", ["Instagram", "TikTok"],
                                        default=["Instagram", "TikTok"])
@@ -247,7 +291,7 @@ if st.sidebar.button("Import PDFs"):
         for r in errors:
             st.sidebar.error(f"{r['pdf']}: {r['error']}")
     if not import_results:
-        st.sidebar.info("No PDFs found in data/autostrat/pdfs/")
+        st.sidebar.info("No PDFs found in autostrat/pdfs/")
 
 if has_autostrat_data(autostrat):
     from autostrat_loader import get_report_counts
@@ -259,25 +303,18 @@ if has_autostrat_data(autostrat):
 
 logo_col, title_col = st.columns([1, 5])
 with logo_col:
-    st.image("cuervo_logo.png", width=140)
+    if cfg.logo_path and os.path.isfile(cfg.logo_path):
+        st.image(cfg.logo_path, width=140)
 with title_col:
-    st.title("Cuervo — Social Media Intelligence")
-    st.caption(f"Competitive analysis across {len(BRANDS)} tequila brands on Instagram & TikTok  "
-               f"|  {len(df)} posts analyzed  |  Gen Z (21-24) strategy focus")
+    st.title(cfg.home_title)
+    st.caption(cfg.home_subtitle_template.format(n=len(cfg.brands))
+               + f"  |  {len(df)} posts analyzed")
 
 st.markdown("---")
 
 st.markdown("---")
 st.subheader("Navigate")
-st.markdown("""
-| Page | What you'll find |
-|------|-----------------|
-| **Cuervo Performance** | KPI scorecard vs Brief targets, content format & theme performance, self-audit intelligence |
-| **Competitive Landscape** | 13-brand comparison, content gaps, "What to Steal" cards, competitor autostrat intel |
-| **2026 Strategy & Brief** | Social Brief scorecard, Poplife content pillars & mix funnel, 30-day action plan |
-| **Inspiration & Explorer** | Duolingo & Poppi reference profiles, audience comparison, full data explorer |
-| **Hashtag & Search Intel** | Brand hashtag comparison (#JoseCuervo vs #Cazadores vs #Hornitos), search term intelligence (#MargaritaTime) |
-""")
+st.markdown(cfg.nav_table)
 
 # Excel export
 st.markdown("---")
@@ -285,7 +322,7 @@ st.markdown("---")
 
 def _generate_excel(results):
     from dashboard import generate_dashboard
-    path = os.path.join(tempfile.gettempdir(), "cuervo_report.xlsx")
+    path = os.path.join(tempfile.gettempdir(), f"{cfg.client_id}_report.xlsx")
     generate_dashboard(results, path)
     with open(path, "rb") as f:
         return f.read()
@@ -295,5 +332,5 @@ col_a, col_b = st.columns([3, 1])
 with col_b:
     xlsx_bytes = _generate_excel(results)
     st.download_button("Download Excel Report", xlsx_bytes,
-                       file_name="cuervo_intelligence_report.xlsx",
+                       file_name=cfg.excel_filename,
                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")

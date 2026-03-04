@@ -11,10 +11,34 @@ import json
 import os
 from typing import Any, Optional
 
-from config import REFERENCE_BRANDS
-
 BASE_DIR = os.path.dirname(__file__)
-AUTOSTRAT_DIR = os.path.join(BASE_DIR, "data", "autostrat")
+_DEFAULT_AUTOSTRAT_DIR = os.path.join(BASE_DIR, "data", "cuervo", "autostrat")
+
+
+def _get_autostrat_dir() -> str:
+    """Get autostrat directory from active client config, falling back to default."""
+    try:
+        from client_context import get_client
+        d = get_client().autostrat_dir
+        if d:
+            return d
+    except Exception:
+        pass
+    return _DEFAULT_AUTOSTRAT_DIR
+
+
+def _get_reference_brands() -> list[str]:
+    """Get reference brands from active client config, falling back to config.py."""
+    try:
+        from client_context import get_client
+        return get_client().reference_brands
+    except Exception:
+        pass
+    return []
+
+
+# Backward compat alias
+AUTOSTRAT_DIR = _DEFAULT_AUTOSTRAT_DIR
 
 REPORT_TYPES = [
     "instagram_profiles",
@@ -45,7 +69,7 @@ CONVERSATION_TYPES = ["instagram_hashtags", "tiktok_hashtags", "instagram_keywor
 
 def load_report(report_type: str, filename: str) -> Optional[dict]:
     """Load a single JSON report. Returns None if not found."""
-    path = os.path.join(AUTOSTRAT_DIR, report_type, filename)
+    path = os.path.join(_get_autostrat_dir(), report_type, filename)
     if not os.path.isfile(path):
         return None
     try:
@@ -60,7 +84,7 @@ def load_all_reports(report_type: str) -> dict[str, dict]:
 
     Returns {identifier: report_data} where identifier is the filename stem.
     """
-    report_dir = os.path.join(AUTOSTRAT_DIR, report_type)
+    report_dir = os.path.join(_get_autostrat_dir(), report_type)
     if not os.path.isdir(report_dir):
         return {}
 
@@ -98,7 +122,7 @@ def has_autostrat_data(autostrat: dict) -> bool:
 
 def is_reference_brand(identifier: str) -> bool:
     """Check if an autostrat profile identifier is a reference/inspiration brand."""
-    return identifier.lower() in [rb.lower() for rb in REFERENCE_BRANDS]
+    return identifier.lower() in [rb.lower() for rb in _get_reference_brands()]
 
 
 def get_available_identifiers(autostrat: dict, report_type: str) -> list[str]:
@@ -319,13 +343,17 @@ def get_brand_hashtag_reports(
     Returns {identifier: [(report_type, display_label, report), ...]}.
     Only includes identifiers listed in BRAND_HASHTAGS config.
     """
-    from config import BRAND_HASHTAGS
+    try:
+        from client_context import get_client
+        brand_hashtags = get_client().brand_hashtags
+    except Exception:
+        brand_hashtags = {}
 
     results: dict[str, list] = {}
     for rt in CONVERSATION_TYPES:
         for identifier, report in autostrat.get(rt, {}).items():
-            if identifier in BRAND_HASHTAGS:
-                label = BRAND_HASHTAGS[identifier]
+            if identifier in brand_hashtags:
+                label = brand_hashtags[identifier]
                 results.setdefault(identifier, []).append((rt, label, report))
     return results
 
@@ -338,12 +366,16 @@ def get_category_reports(
     Returns [(report_type, identifier, display_label, report), ...].
     Only includes identifiers listed in CATEGORY_HASHTAGS config.
     """
-    from config import CATEGORY_HASHTAGS
+    try:
+        from client_context import get_client
+        category_hashtags = get_client().category_hashtags
+    except Exception:
+        category_hashtags = {}
 
     results = []
     for rt in CONVERSATION_TYPES:
         for identifier, report in autostrat.get(rt, {}).items():
-            if identifier in CATEGORY_HASHTAGS:
-                label = CATEGORY_HASHTAGS[identifier]
+            if identifier in category_hashtags:
+                label = category_hashtags[identifier]
                 results.append((rt, identifier, label, report))
     return results

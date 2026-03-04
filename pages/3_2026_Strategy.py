@@ -11,17 +11,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-from config import (
-    BRAND_COLORS, CHART_TEMPLATE, CHART_FONT, BRAND_ORDER, CUSTOM_CSS,
-    PRIORITY_COLORS, POPLIFE_CADENCE_TARGETS, SOCIAL_BRIEF_TARGETS,
-    POPLIFE_PILLAR_MAP, POPLIFE_PILLAR_TARGETS, POPLIFE_PILLAR_COLORS,
-    POPLIFE_PILLAR_DESCRIPTIONS,
-    CONTENT_MIX_MAP, CONTENT_MIX_TARGETS, CONTENT_MIX_COLORS,
-    CUERVO_HASHTAG_IDS,
-    EXECUTION_ENGINES, CREATOR_ARCHETYPES, VOICE_PRINCIPLES,
-    SKU_STRATEGY, PLATFORM_ROLES, IG_FORMAT_MIX,
-    CULTURAL_CALENDAR, MONTHLY_RAMP, TESTING_ROADMAP,
-)
+from config import CHART_TEMPLATE, CHART_FONT, PRIORITY_COLORS
+from client_context import get_client
 from autostrat_loader import (
     has_autostrat_data, get_all_how_to_win, get_all_audience_profiles,
     get_all_content_trends, get_all_creator_archetypes,
@@ -33,24 +24,26 @@ from autostrat_components import (
     render_sponsorship_card, render_verbatim_quotes,
 )
 
-st.logo("logo.png")
-st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
-st.header("2026 Strategy & Brief")
-st.caption("The Cuervo Social Brief playbook — sidebar filters do not apply here.")
-
 if "results" not in st.session_state:
     st.warning("Go to the home page first to load data.")
     st.stop()
 
+cfg = get_client()
+
+st.logo(cfg.app_logo_path)
+st.markdown(cfg.custom_css, unsafe_allow_html=True)
+st.header(cfg.page_headers["strategy"])
+st.caption(cfg.page_captions["strategy"])
+
 results = st.session_state["results"]
 df = st.session_state["df"]  # Unfiltered
 
-CUERVO = "Jose Cuervo"
-GEN_Z_LEADERS = ["Casamigos", "Teremana"]
-_t = SOCIAL_BRIEF_TARGETS
+HERO = cfg.hero_brand
+GEN_Z_LEADERS = cfg.gen_z_leaders
+_t = cfg.kpi_targets
 ENG_PER_POST_TARGET = _t["engagements_per_post"]
 
-cuervo_df = df[df["brand"] == CUERVO]
+hero_df = df[df["brand"] == HERO]
 leader_df = df[df["brand"].isin(GEN_Z_LEADERS)]
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -69,28 +62,28 @@ with tab_scorecard:
     st.subheader("Social Brief KPI Scorecard")
     st.caption("Current performance vs 2026 Social Brief targets")
 
-    cuervo_ig = cuervo_df[cuervo_df["platform"] == "Instagram"]
-    avg_eng_per_post = cuervo_df["total_engagement"].mean() if len(cuervo_df) else 0
+    hero_ig = hero_df[hero_df["platform"] == "Instagram"]
+    avg_eng_per_post = hero_df["total_engagement"].mean() if len(hero_df) else 0
     avg_eng_per_post = 0 if pd.isna(avg_eng_per_post) else avg_eng_per_post
-    reel_ratio = len(cuervo_ig[cuervo_ig["post_type"] == "Reel"]) / max(len(cuervo_ig), 1) * 100
-    carousel_ratio = len(cuervo_ig[cuervo_ig["post_type"] == "Carousel"]) / max(len(cuervo_ig), 1) * 100
+    reel_ratio = len(hero_ig[hero_ig["post_type"] == "Reel"]) / max(len(hero_ig), 1) * 100
+    carousel_ratio = len(hero_ig[hero_ig["post_type"] == "Carousel"]) / max(len(hero_ig), 1) * 100
 
     # Save & share rates
-    total_eng = cuervo_df["total_engagement"].sum() or 1
-    save_rate = (cuervo_df["saves"].sum() / total_eng * 100) if "saves" in cuervo_df.columns else 0
-    share_rate = (cuervo_df["shares"].sum() / total_eng * 100) if "shares" in cuervo_df.columns else 0
+    total_eng = hero_df["total_engagement"].sum() or 1
+    save_rate = (hero_df["saves"].sum() / total_eng * 100) if "saves" in hero_df.columns else 0
+    share_rate = (hero_df["shares"].sum() / total_eng * 100) if "shares" in hero_df.columns else 0
 
     # Creator content %
-    creator_posts = cuervo_df[cuervo_df["has_creator_collab"].astype(str).str.lower() == "yes"] if "has_creator_collab" in cuervo_df.columns else pd.DataFrame()
-    creator_pct = len(creator_posts) / max(len(cuervo_df), 1) * 100
+    creator_posts = hero_df[hero_df["has_creator_collab"].astype(str).str.lower() == "yes"] if "has_creator_collab" in hero_df.columns else pd.DataFrame()
+    creator_pct = len(creator_posts) / max(len(hero_df), 1) * 100
     creator_avg_eng = creator_posts["total_engagement"].mean() if len(creator_posts) else 0
     creator_avg_eng = 0 if pd.isna(creator_avg_eng) else creator_avg_eng
 
-    freq = results["frequency"].get(CUERVO, {})
+    freq = results["frequency"].get(HERO, {})
     ig_ppm = freq.get("Instagram", {}).get("posts_per_week", 0) * 4.33  # Convert to monthly
     tt_ppw = freq.get("TikTok", {}).get("posts_per_week", 0)
 
-    # Scorecard table (targets from SOCIAL_BRIEF_TARGETS in config.py)
+    # Scorecard table (targets from kpi_targets in client config)
     _ig_ppm = _t["ig_posts_per_month"]
     _tt_ppw = _t["tt_posts_per_week"]
     scorecard_data = [
@@ -156,8 +149,8 @@ with tab_scorecard:
     dynamic_types = ["Reel", "Video"]
     static_types = ["Static Image", "Carousel"]
 
-    dyn_posts = cuervo_df[cuervo_df["post_type"].isin(dynamic_types)]
-    stat_posts = cuervo_df[cuervo_df["post_type"].isin(static_types)]
+    dyn_posts = hero_df[hero_df["post_type"].isin(dynamic_types)]
+    stat_posts = hero_df[hero_df["post_type"].isin(static_types)]
     total_ds = len(dyn_posts) + len(stat_posts) or 1
     dyn_pct = len(dyn_posts) / total_ds * 100
     stat_pct = len(stat_posts) / total_ds * 100
@@ -179,7 +172,7 @@ with tab_scorecard:
 
     # Cross-brand comparison
     all_brand_ds = []
-    for brand in BRAND_ORDER:
+    for brand in cfg.brand_order:
         bdf = df[df["brand"] == brand]
         if len(bdf) == 0:
             continue
@@ -203,7 +196,7 @@ with tab_scorecard:
         st.plotly_chart(fig_ds, use_container_width=True)
 
     st.info(f"**Dynamic content {'outperforms' if dyn_eng > stat_eng else 'underperforms vs'} static** by "
-            f"{abs(dyn_eng - stat_eng):,.0f} avg engagements. Cuervo's dynamic mix is {dyn_pct:.0f}% — "
+            f"{abs(dyn_eng - stat_eng):,.0f} avg engagements. {HERO}'s dynamic mix is {dyn_pct:.0f}% — "
             f"{'meeting' if dyn_pct >= 50 else 'below'} the 50%+ target.")
 
     st.markdown("---")
@@ -219,16 +212,16 @@ with tab_scorecard:
         "nola", "new orleans", "workshop", "activation", "festival",
         "hanky panky", "vertical team", "mexico on film", "brought the party",
     ]
-    creator_posts = cuervo_df[cuervo_df["has_creator_collab"] == "Yes"] if "has_creator_collab" in cuervo_df.columns else pd.DataFrame()
+    creator_posts = hero_df[hero_df["has_creator_collab"] == "Yes"] if "has_creator_collab" in hero_df.columns else pd.DataFrame()
     # Event posts that aren't already counted as creator collabs
-    non_creator_mask = ~cuervo_df.index.isin(creator_posts.index) if len(creator_posts) > 0 else pd.Series(True, index=cuervo_df.index)
-    theme_match = cuervo_df["content_theme"].isin(event_themes)
-    caption_col = cuervo_df["caption_text"].fillna("").str.lower() if "caption_text" in cuervo_df.columns else cuervo_df.get("caption", pd.Series("", index=cuervo_df.index)).fillna("").str.lower()
+    non_creator_mask = ~hero_df.index.isin(creator_posts.index) if len(creator_posts) > 0 else pd.Series(True, index=hero_df.index)
+    theme_match = hero_df["content_theme"].isin(event_themes)
+    caption_col = hero_df["caption_text"].fillna("").str.lower() if "caption_text" in hero_df.columns else hero_df.get("caption", pd.Series("", index=hero_df.index)).fillna("").str.lower()
     caption_match = caption_col.apply(lambda t: any(s in t for s in event_caption_signals))
-    event_posts = cuervo_df[(theme_match | caption_match) & non_creator_mask]
-    brand_posts_count = len(cuervo_df) - len(creator_posts) - len(event_posts)
+    event_posts = hero_df[(theme_match | caption_match) & non_creator_mask]
+    brand_posts_count = len(hero_df) - len(creator_posts) - len(event_posts)
 
-    src_total = max(len(cuervo_df), 1)
+    src_total = max(len(hero_df), 1)
     src_data = pd.DataFrame([
         {"Source": "Owned / Sponsored Events", "Actual %": round(len(event_posts) / src_total * 100, 1), "Target %": 50},
         {"Source": "Creator / Influencer / UGC", "Actual %": round(len(creator_posts) / src_total * 100, 1), "Target %": 30},
@@ -272,10 +265,10 @@ with tab_scorecard:
 
     # ── Best Performing Theme ──────────────────────────────────────────
     st.subheader("Best Performing Content Theme")
-    st.caption("Which content theme drives the highest engagement for Cuervo")
+    st.caption(f"Which content theme drives the highest engagement for {HERO}")
 
-    theme_perf = results["themes"].get(CUERVO, {}).get("theme_performance", {})
-    best_theme_name = results["themes"].get(CUERVO, {}).get("best_performing_theme", "N/A")
+    theme_perf = results["themes"].get(HERO, {}).get("theme_performance", {})
+    best_theme_name = results["themes"].get(HERO, {}).get("best_performing_theme", "N/A")
 
     if theme_perf and best_theme_name != "N/A":
         best_theme_data = theme_perf.get(best_theme_name, {})
@@ -298,7 +291,7 @@ with tab_scorecard:
         if theme_rows:
             theme_chart_df = pd.DataFrame(theme_rows).sort_values("Avg Eng", ascending=True)
             fig_bt = px.bar(theme_chart_df, x="Avg Eng", y="Theme", orientation="h",
-                            color_discrete_sequence=[BRAND_COLORS[CUERVO]],
+                            color_discrete_sequence=[cfg.brand_colors.get(HERO, cfg.primary_color)],
                             labels={"Avg Eng": "Avg Engagements", "Theme": ""},
                             template=CHART_TEMPLATE, text_auto=",.0f",
                             hover_data={"Posts": True})
@@ -311,7 +304,7 @@ with tab_scorecard:
         st.info(f"**Best theme: {best_theme_name}** at {best_eng:,.0f} avg engagements — lean into this for upcoming content. "
                 f"Themes above the {ENG_PER_POST_TARGET} eng target are proven winners worth scaling.")
     else:
-        st.info("No content theme performance data available for Cuervo.")
+        st.info(f"No content theme performance data available for {HERO}.")
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -325,18 +318,18 @@ with tab_frameworks:
     st.caption("2 pillars from the 2026 Social Strategy — SKU-aligned content territories")
 
     pillar_data = []
-    for pillar_name, themes in POPLIFE_PILLAR_MAP.items():
-        matching = cuervo_df[cuervo_df["content_theme"].isin(themes)]
-        pct = len(matching) / max(len(cuervo_df), 1) * 100
+    for pillar_name, themes in cfg.pillar_map.items():
+        matching = hero_df[hero_df["content_theme"].isin(themes)]
+        pct = len(matching) / max(len(hero_df), 1) * 100
         avg_eng = matching["total_engagement"].mean() if len(matching) else 0
         avg_eng = 0 if pd.isna(avg_eng) else avg_eng
         pillar_data.append({
             "Pillar": pillar_name,
             "Actual %": round(pct, 1),
-            "Target %": POPLIFE_PILLAR_TARGETS[pillar_name],
+            "Target %": cfg.pillar_targets[pillar_name],
             "Avg Eng": round(avg_eng, 0),
             "Posts": len(matching),
-            "desc": POPLIFE_PILLAR_DESCRIPTIONS.get(pillar_name, ""),
+            "desc": cfg.pillar_descriptions.get(pillar_name, ""),
         })
 
     pillar_df = pd.DataFrame(pillar_data)
@@ -344,7 +337,7 @@ with tab_frameworks:
     # Pillar detail cards
     for _, row in pillar_df.iterrows():
         gap = row["Actual %"] - row["Target %"]
-        color = POPLIFE_PILLAR_COLORS[row["Pillar"]]
+        color = cfg.pillar_colors[row["Pillar"]]
         desc = row["desc"]
         st.markdown(f"""
         <div style="background:white; border-radius:10px; padding:18px 22px; margin-bottom:14px;
@@ -367,7 +360,7 @@ with tab_frameworks:
         st.markdown("**Pillar Distribution: Actual vs Target**")
         fig_pd = go.Figure()
         fig_pd.add_trace(go.Bar(x=pillar_df["Pillar"], y=pillar_df["Actual %"],
-                                name="Actual", marker_color=[POPLIFE_PILLAR_COLORS[p] for p in pillar_df["Pillar"]],
+                                name="Actual", marker_color=[cfg.pillar_colors[p] for p in pillar_df["Pillar"]],
                                 text=pillar_df["Actual %"], textposition="outside", texttemplate="%{text:.0f}%"))
         fig_pd.add_trace(go.Scatter(x=pillar_df["Pillar"], y=pillar_df["Target %"],
                                     name="Target", mode="markers+lines",
@@ -380,7 +373,7 @@ with tab_frameworks:
     with col_pd2:
         st.markdown("**Avg Engagements by Pillar**")
         fig_pe = px.bar(pillar_df, x="Pillar", y="Avg Eng",
-                        color="Pillar", color_discrete_map=POPLIFE_PILLAR_COLORS,
+                        color="Pillar", color_discrete_map=cfg.pillar_colors,
                         labels={"Avg Eng": "Avg Engagements", "Pillar": ""},
                         template=CHART_TEMPLATE, text_auto=",.0f")
         fig_pe.add_hline(y=ENG_PER_POST_TARGET, line_dash="dash", line_color="#333",
@@ -394,9 +387,9 @@ with tab_frameworks:
     st.subheader("SKU Strategy")
     st.caption("Each SKU has a distinct energy and occasion — content should match")
 
-    sku_cols = st.columns(len(SKU_STRATEGY))
+    sku_cols = st.columns(len(cfg.sku_strategy))
     sku_colors = {"Especial": "#F8C090", "Tradicional": "#C9A87E", "RTD": "#2ea3f2"}
-    for col, (sku, info) in zip(sku_cols, SKU_STRATEGY.items()):
+    for col, (sku, info) in zip(sku_cols, cfg.sku_strategy.items()):
         with col:
             c = sku_colors.get(sku, "#999")
             st.markdown(f"""
@@ -415,7 +408,7 @@ with tab_frameworks:
 
     engine_colors = ["#2ea3f2", "#F8C090", "#C9A87E", "#66BB6A"]
     eng_cols = st.columns(2)
-    for i, (engine, desc) in enumerate(EXECUTION_ENGINES.items()):
+    for i, (engine, desc) in enumerate(cfg.execution_engines.items()):
         with eng_cols[i % 2]:
             c = engine_colors[i]
             st.markdown(f"""
@@ -427,12 +420,12 @@ with tab_frameworks:
 
     st.markdown("---")
 
-    # ── The Cuervo Crew (Creator Archetypes) ────────────────────────────
-    st.subheader("The Cuervo Crew — Creator Archetypes")
+    # ── The Creator Crew (Creator Archetypes) ────────────────────────
+    st.subheader(f"The {HERO} Crew — Creator Archetypes")
     st.caption("Creators embedded in the brand — not hired talent. iPhone-first. Social-native.")
 
-    arch_cols = st.columns(min(len(CREATOR_ARCHETYPES), 5))
-    for i, (archetype, fit) in enumerate(CREATOR_ARCHETYPES.items()):
+    arch_cols = st.columns(min(len(cfg.creator_archetypes), 5))
+    for i, (archetype, fit) in enumerate(cfg.creator_archetypes.items()):
         with arch_cols[i % len(arch_cols)]:
             st.markdown(f"""
             <div style="background:white; border-radius:10px; padding:14px; text-align:center;
@@ -447,13 +440,13 @@ with tab_frameworks:
     st.subheader("Content Mix Funnel — Entertain / Educate / Connect / Convince")
     st.caption("Grab attention first (Entertain 50%), then guide to action (Convince 10%)")
 
-    cuervo_mix_data = []
+    hero_mix_data = []
     for cat in ["Entertain", "Educate", "Connect", "Convince"]:
-        cat_themes = CONTENT_MIX_MAP[cat]
-        matching = cuervo_df[cuervo_df["content_theme"].isin(cat_themes)]
-        pct = len(matching) / max(len(cuervo_df), 1) * 100
-        target = CONTENT_MIX_TARGETS[cat]
-        cuervo_mix_data.append({
+        cat_themes = cfg.content_mix_map[cat]
+        matching = hero_df[hero_df["content_theme"].isin(cat_themes)]
+        pct = len(matching) / max(len(hero_df), 1) * 100
+        target = cfg.content_mix_targets[cat]
+        hero_mix_data.append({
             "Category": cat,
             "Actual %": round(pct, 1),
             "Target %": target,
@@ -461,14 +454,14 @@ with tab_frameworks:
             "Posts": len(matching),
         })
 
-    mix_df = pd.DataFrame(cuervo_mix_data)
+    mix_df = pd.DataFrame(hero_mix_data)
 
     col_mix1, col_mix2 = st.columns(2)
     with col_mix1:
-        st.markdown("**Cuervo Content Mix: Actual vs Poplife Target**")
+        st.markdown(f"**{HERO} Content Mix: Actual vs Poplife Target**")
         fig_mix = go.Figure()
         fig_mix.add_trace(go.Bar(x=mix_df["Category"], y=mix_df["Actual %"],
-                                 name="Actual", marker_color=[CONTENT_MIX_COLORS[c] for c in mix_df["Category"]],
+                                 name="Actual", marker_color=[cfg.content_mix_colors[c] for c in mix_df["Category"]],
                                  text=mix_df["Actual %"], textposition="outside", texttemplate="%{text:.0f}%"))
         fig_mix.add_trace(go.Scatter(x=mix_df["Category"], y=mix_df["Target %"],
                                      name="Poplife Target", mode="markers+lines",
@@ -495,9 +488,9 @@ with tab_frameworks:
 
     # ── Gen Z Engagement Drivers ───────────────────────────────────────
     st.subheader("Gen Z Engagement Drivers")
-    st.caption("Cuervo vs Gen Z leaders on 6 key dimensions")
+    st.caption(f"{HERO} vs Gen Z leaders on 6 key dimensions")
 
-    compare_brands = [CUERVO] + GEN_Z_LEADERS
+    compare_brands = [HERO] + GEN_Z_LEADERS
 
     def compute_genz_scores(brand):
         bdf = df[df["brand"] == brand]
@@ -521,7 +514,7 @@ with tab_frameworks:
 
     genz_df = pd.DataFrame(genz_rows)
     fig_radar = px.bar(genz_df, x="Value", y="Driver", color="Brand", orientation="h",
-                       barmode="group", color_discrete_map=BRAND_COLORS,
+                       barmode="group", color_discrete_map=cfg.brand_colors,
                        labels={"Value": "%", "Driver": ""},
                        template=CHART_TEMPLATE, text_auto=".1f")
     fig_radar.update_layout(height=480, font=CHART_FONT,
@@ -529,22 +522,22 @@ with tab_frameworks:
     st.plotly_chart(fig_radar, use_container_width=True)
 
     # So What
-    cuervo_scores = compute_genz_scores(CUERVO)
+    hero_scores = compute_genz_scores(HERO)
     leader_avg_scores = [sum(compute_genz_scores(b)[i] for b in GEN_Z_LEADERS) / len(GEN_Z_LEADERS) for i in range(6)]
-    biggest_gap_idx = max(range(6), key=lambda i: leader_avg_scores[i] - cuervo_scores[i])
-    biggest_lead_idx = max(range(6), key=lambda i: cuervo_scores[i] - leader_avg_scores[i])
+    biggest_gap_idx = max(range(6), key=lambda i: leader_avg_scores[i] - hero_scores[i])
+    biggest_lead_idx = max(range(6), key=lambda i: hero_scores[i] - leader_avg_scores[i])
     st.info(f"**Biggest gap vs leaders:** {dims[biggest_gap_idx]} "
-            f"(Cuervo {cuervo_scores[biggest_gap_idx]:.0f}% vs leaders {leader_avg_scores[biggest_gap_idx]:.0f}%). "
+            f"({HERO} {hero_scores[biggest_gap_idx]:.0f}% vs leaders {leader_avg_scores[biggest_gap_idx]:.0f}%). "
             f"**Strongest area:** {dims[biggest_lead_idx]} "
-            f"(Cuervo {cuervo_scores[biggest_lead_idx]:.0f}% vs leaders {leader_avg_scores[biggest_lead_idx]:.0f}%).")
+            f"({HERO} {hero_scores[biggest_lead_idx]:.0f}% vs leaders {leader_avg_scores[biggest_lead_idx]:.0f}%).")
 
     st.markdown("---")
 
     # ── Voice Principles ────────────────────────────────────────────────
     st.subheader("Tone of Voice — The Life of the Party")
-    st.caption("Cuervo's social voice: lively, approachable, human-forward, extroverted")
+    st.caption(f"{HERO}'s social voice: lively, approachable, human-forward, extroverted")
 
-    for principle, detail in VOICE_PRINCIPLES:
+    for principle, detail in cfg.voice_principles:
         st.markdown(f"""
         <div style="background:white; border-radius:8px; padding:12px 18px; margin-bottom:8px;
                     border-left:4px solid #F8C090; border:1px solid #E0D8D0;">
@@ -559,7 +552,7 @@ with tab_frameworks:
     st.caption("Platform roles, priority levels, and cadence targets")
 
     plat_rows = []
-    for plat, info in PLATFORM_ROLES.items():
+    for plat, info in cfg.platform_roles.items():
         plat_rows.append({"Platform": plat, "Role": info["role"], "Priority": info["priority"], "Cadence": info["cadence"]})
     plat_df = pd.DataFrame(plat_rows)
 
@@ -575,9 +568,9 @@ with tab_frameworks:
 
     # IG Format Mix
     st.markdown("**Instagram Format Mix**")
-    fmt_cols = st.columns(len(IG_FORMAT_MIX))
+    fmt_cols = st.columns(len(cfg.ig_format_mix))
     fmt_colors = ["#2ea3f2", "#F8C090", "#C9A87E", "#66BB6A"]
-    for i, (fmt, info) in enumerate(IG_FORMAT_MIX.items()):
+    for i, (fmt, info) in enumerate(cfg.ig_format_mix.items()):
         with fmt_cols[i]:
             c = fmt_colors[i]
             st.markdown(f"""
@@ -594,7 +587,6 @@ with tab_frameworks:
 # ══════════════════════════════════════════════════════════════════════
 
 with tab_platform:
-    from config import PLATFORM_ROLES, IG_FORMAT_MIX, POPLIFE_CADENCE_TARGETS
 
     # ── Section 1: Platform Roles at a Glance ──────────────────────────
     st.subheader("Platform Roles at a Glance")
@@ -605,7 +597,7 @@ with tab_platform:
     _secondary_color = "#888888"
 
     _rows_html = ""
-    for i, (plat, info) in enumerate(PLATFORM_ROLES.items()):
+    for i, (plat, info) in enumerate(cfg.platform_roles.items()):
         is_primary = info["priority"] == "Primary"
         name_style = f"font-weight:700; color:{_primary_color}" if is_primary else f"color:{_secondary_color}"
         row_bg = "#ffffff" if i % 2 == 0 else _row_bg
@@ -633,8 +625,8 @@ with tab_platform:
     # ── Section 2: Instagram Deep Dive ──────────────────────────────────
     st.subheader("Instagram Deep Dive")
 
-    cuervo_ig = cuervo_df[cuervo_df["platform"] == "Instagram"]
-    ig_total = len(cuervo_ig)
+    hero_ig = hero_df[hero_df["platform"] == "Instagram"]
+    ig_total = len(hero_ig)
 
     if ig_total == 0:
         st.info("No Instagram data available yet.")
@@ -643,7 +635,7 @@ with tab_platform:
         st.markdown("##### Format Mix: Actual vs Target")
 
         # Compute actual format distribution
-        _type_counts = cuervo_ig["post_type"].value_counts()
+        _type_counts = hero_ig["post_type"].value_counts()
         _format_map = {
             "Reels": _type_counts.get("Reel", 0) + _type_counts.get("Video", 0),
             "Carousels": _type_counts.get("Carousel", 0),
@@ -659,7 +651,7 @@ with tab_platform:
         _actual_pcts = {k: (v / ig_total * 100) for k, v in _format_map.items() if v > 0}
 
         _fmt_data = []
-        for fmt, target_info in IG_FORMAT_MIX.items():
+        for fmt, target_info in cfg.ig_format_mix.items():
             _fmt_data.append({"Format": fmt, "Type": "Target", "Pct": target_info["pct"],
                               "Role": target_info["role"]})
             _fmt_data.append({"Format": fmt, "Type": "Actual", "Pct": _actual_pcts.get(fmt, 0),
@@ -684,7 +676,7 @@ with tab_platform:
             xaxis_title="% of Posts", yaxis_title="",
             legend_title="", height=300,
             yaxis=dict(categoryorder="array",
-                       categoryarray=list(reversed(list(IG_FORMAT_MIX.keys()) + (["Static Image"] if "Static Image" in _actual_pcts else [])))),
+                       categoryarray=list(reversed(list(cfg.ig_format_mix.keys()) + (["Static Image"] if "Static Image" in _actual_pcts else [])))),
             margin=dict(l=0, r=40, t=10, b=30),
         )
         st.plotly_chart(fig_fmt, use_container_width=True)
@@ -694,11 +686,11 @@ with tab_platform:
 
         with col_eng:
             st.markdown("##### Avg Engagements by Format")
-            _eng_by_type = cuervo_ig.groupby("post_type")["total_engagement"].mean().sort_values(ascending=False)
+            _eng_by_type = hero_ig.groupby("post_type")["total_engagement"].mean().sort_values(ascending=False)
             fig_eng = go.Figure()
             fig_eng.add_trace(go.Bar(
                 x=_eng_by_type.index, y=_eng_by_type.values,
-                marker_color=[BRAND_COLORS.get("Jose Cuervo", "#F8C090")] * len(_eng_by_type),
+                marker_color=[cfg.brand_colors.get(HERO, cfg.primary_color)] * len(_eng_by_type),
                 text=[f"{v:.0f}" for v in _eng_by_type.values],
                 textposition="outside",
             ))
@@ -715,13 +707,13 @@ with tab_platform:
         # ── Posting Cadence ─────────────────────────────────────────────
         with col_cadence:
             st.markdown("##### Monthly Posting Cadence")
-            cuervo_ig_dated = cuervo_ig.copy()
-            cuervo_ig_dated["post_date_parsed"] = pd.to_datetime(cuervo_ig_dated["post_date"], errors="coerce")
-            cuervo_ig_dated["month"] = cuervo_ig_dated["post_date_parsed"].dt.to_period("M")
-            _monthly = cuervo_ig_dated.groupby("month").size().reset_index(name="posts")
+            hero_ig_dated = hero_ig.copy()
+            hero_ig_dated["post_date_parsed"] = pd.to_datetime(hero_ig_dated["post_date"], errors="coerce")
+            hero_ig_dated["month"] = hero_ig_dated["post_date_parsed"].dt.to_period("M")
+            _monthly = hero_ig_dated.groupby("month").size().reset_index(name="posts")
             _monthly["month_str"] = _monthly["month"].astype(str)
 
-            ig_target = POPLIFE_CADENCE_TARGETS.get("Instagram", {})
+            ig_target = cfg.cadence_targets.get("Instagram", {})
             ig_low = ig_target.get("low", 12)
             ig_high = ig_target.get("high", 16)
 
@@ -756,7 +748,7 @@ with tab_platform:
 
         # ── Best Posting Times ──────────────────────────────────────────
         st.markdown("##### Best Posting Times")
-        _freq = results.get("frequency", {}).get(CUERVO, {}).get("Instagram", {})
+        _freq = results.get("frequency", {}).get(HERO, {}).get("Instagram", {})
         _best_days = _freq.get("best_days", [])
         _best_hours = _freq.get("best_hours", [])
 
@@ -788,8 +780,8 @@ with tab_platform:
         # ── Top Themes on IG ────────────────────────────────────────────
         with col_themes:
             st.markdown("**Top Themes (by Avg Eng)**")
-            if "content_theme" in cuervo_ig.columns:
-                _theme_eng = cuervo_ig.groupby("content_theme")["total_engagement"].mean().sort_values(ascending=False)
+            if "content_theme" in hero_ig.columns:
+                _theme_eng = hero_ig.groupby("content_theme")["total_engagement"].mean().sort_values(ascending=False)
                 for theme, eng in _theme_eng.head(5).items():
                     st.markdown(f"- {theme}: **{eng:.0f}**")
             else:
@@ -800,7 +792,7 @@ with tab_platform:
     # ── Section 3: Other Platforms ──────────────────────────────────────
     st.subheader("Other Platforms")
 
-    _other_platforms = {k: v for k, v in PLATFORM_ROLES.items() if k != "Instagram"}
+    _other_platforms = {k: v for k, v in cfg.platform_roles.items() if k != "Instagram"}
     _cols = st.columns(min(len(_other_platforms), 3))
 
     for i, (plat, info) in enumerate(_other_platforms.items()):
@@ -811,7 +803,7 @@ with tab_platform:
 
             # Check if we have data for this platform
             _plat_key = plat.split(" /")[0].split(" ")[0]  # "TikTok", "Facebook", etc.
-            _plat_posts = len(cuervo_df[cuervo_df["platform"] == _plat_key]) if _plat_key in cuervo_df["platform"].values else 0
+            _plat_posts = len(hero_df[hero_df["platform"] == _plat_key]) if _plat_key in hero_df["platform"].values else 0
 
             if _plat_posts > 0:
                 _status_html = f'<div style="color:#5CB85C;font-size:0.85rem;margin-top:8px;">{_plat_posts} posts tracked</div>'
@@ -840,9 +832,9 @@ with tab_platform:
 with tab_action:
 
     # ── 30-Day Action Plan ─────────────────────────────────────────────
-    st.subheader("30-Day Action Plan for Cuervo")
+    st.subheader(f"30-Day Action Plan for {HERO}")
 
-    cuervo_ppw = sum(results["frequency"].get(CUERVO, {}).get(p, {}).get("posts_per_week", 0)
+    hero_ppw = sum(results["frequency"].get(HERO, {}).get(p, {}).get("posts_per_week", 0)
                      for p in ["Instagram", "TikTok"])
     leader_avg_ppw = sum(
         results["frequency"].get(b, {}).get(p, {}).get("posts_per_week", 0)
@@ -852,15 +844,15 @@ with tab_action:
 
     top_themes_for_leaders = leader_df.groupby("content_theme")["total_engagement"].mean().nlargest(3)
 
-    cuervo_scores_local = compute_genz_scores(CUERVO)
-    video_pct = cuervo_scores_local[3]
+    hero_scores_local = compute_genz_scores(HERO)
+    video_pct = hero_scores_local[3]
 
     plan = [
         {
             "week": "Week 1",
             "focus": "Format Reset & Creator Pipeline",
             "actions": [
-                f"Ramp posting to {int(rec_ppw)}+ posts/week (currently {cuervo_ppw:.0f}/wk)",
+                f"Ramp posting to {int(rec_ppw)}+ posts/week (currently {hero_ppw:.0f}/wk)",
                 f"Shift IG mix to 60%+ Reels (currently {video_pct:.0f}% video)",
                 "Build creator shortlist: 5 micro-creators (10K-100K) in Lifestyle, Comedy, and Food niches",
                 "Audit current grid aesthetic — does it signal 'fun' at a glance?",
@@ -870,8 +862,8 @@ with tab_action:
             "week": "Week 2",
             "focus": "Content Pillar Launch",
             "actions": [
-                "Launch 'Cuervo in Culture' pillar: 2 Reels featuring meme/reactive cultural content (Especial + RTDs)",
-                "Launch 'Tradicional, Made Social' pillar: 1 Carousel with cocktail recipe using Tradicional",
+                f"Launch '{HERO} in Culture' pillar: 2 Reels featuring meme/reactive cultural content (Especial + RTDs)",
+                f"Launch 'Tradicional, Made Social' pillar: 1 Carousel with cocktail recipe using Tradicional",
                 "Test first meme-format Reel (POV/trending audio) — keep it native, not ad-like",
                 f"Test top-performing themes from leaders: {', '.join(top_themes_for_leaders.index[:2])}" if len(top_themes_for_leaders) >= 2 else "Identify and test high-performing themes from competitors",
             ],
@@ -910,8 +902,8 @@ with tab_action:
     st.caption("Quarterly cultural moments and content angles")
 
     cal_colors = {"Q1": "#2ea3f2", "Q2": "#F8C090", "Q3": "#66BB6A", "Q4": "#C9A87E"}
-    cal_cols = st.columns(len(CULTURAL_CALENDAR))
-    for col, (quarter, info) in zip(cal_cols, CULTURAL_CALENDAR.items()):
+    cal_cols = st.columns(len(cfg.cultural_calendar))
+    for col, (quarter, info) in zip(cal_cols, cfg.cultural_calendar.items()):
         with col:
             c = cal_colors.get(quarter, "#999")
             st.markdown(f"""
@@ -929,7 +921,7 @@ with tab_action:
     st.caption("Progressive scaling toward full strategy execution")
 
     ramp_rows = []
-    for month, targets in MONTHLY_RAMP.items():
+    for month, targets in cfg.monthly_ramp.items():
         ramp_rows.append({
             "Month": month,
             "Creator % of Total": targets["creator_pct"],
@@ -946,7 +938,7 @@ with tab_action:
     st.caption("Monthly A/B tests to optimize content strategy")
 
     test_rows = []
-    for month, info in TESTING_ROADMAP.items():
+    for month, info in cfg.testing_roadmap.items():
         test_rows.append({"Month": month, "Test Variable": info["variable"], "What We're Learning": info["learning"]})
     test_df = pd.DataFrame(test_rows)
     st.dataframe(test_df, use_container_width=True, hide_index=True)
@@ -964,35 +956,35 @@ with tab_action:
         if len(brand_counts):
             highest_poster = brand_counts.idxmax()
             highest_post_count = brand_counts.max()
-            cuervo_count = len(cuervo_df)
-            if highest_poster != CUERVO:
-                st.markdown(f"- {highest_poster} leads with **{highest_post_count}** posts vs Cuervo's **{cuervo_count}** — losing share of voice")
+            hero_count = len(hero_df)
+            if highest_poster != HERO:
+                st.markdown(f"- {highest_poster} leads with **{highest_post_count}** posts vs {HERO}'s **{hero_count}** — losing share of voice")
 
         brand_eng_all = df.groupby("brand")["total_engagement"].mean()
         if len(brand_eng_all):
             best_eng_brand = brand_eng_all.idxmax()
             best_eng_val = brand_eng_all.max()
-            if best_eng_brand != CUERVO:
+            if best_eng_brand != HERO:
                 st.markdown(f"- {best_eng_brand} dominates engagement at **{best_eng_val:,.0f} avg eng/post**")
 
         if results["creators"]:
-            collab_items = [(b, v.get("collab_pct", 0)) for b, v in results["creators"].items() if b != CUERVO]
+            collab_items = [(b, v.get("collab_pct", 0)) for b, v in results["creators"].items() if b != HERO]
             if collab_items:
                 highest_collab = max(collab_items, key=lambda x: x[1])
-                cuervo_collab = results["creators"].get(CUERVO, {}).get("collab_pct", 0)
-                if highest_collab[1] > cuervo_collab:
+                hero_collab = results["creators"].get(HERO, {}).get("collab_pct", 0)
+                if highest_collab[1] > hero_collab:
                     st.markdown(f"- {highest_collab[0]}'s creator collab rate ({highest_collab[1]:.0f}%) "
-                                f"dwarfs Cuervo's ({cuervo_collab:.0f}%)")
+                                f"dwarfs {HERO}'s ({hero_collab:.0f}%)")
 
     with col_o:
-        st.success("**Opportunities for Cuervo**")
-        cuervo_theme_eng = cuervo_df.groupby("content_theme")["total_engagement"].mean() if len(cuervo_df) else pd.Series(dtype=float)
-        cuervo_best_theme = cuervo_theme_eng.idxmax() if len(cuervo_theme_eng) else "N/A"
-        cuervo_best_eng = cuervo_theme_eng.max() if len(cuervo_theme_eng) else 0
-        if cuervo_best_theme != "N/A":
-            st.markdown(f"- Cuervo's **{cuervo_best_theme}** content is the top-performing theme at {cuervo_best_eng:,.0f} avg eng")
+        st.success(f"**Opportunities for {HERO}**")
+        hero_theme_eng = hero_df.groupby("content_theme")["total_engagement"].mean() if len(hero_df) else pd.Series(dtype=float)
+        hero_best_theme = hero_theme_eng.idxmax() if len(hero_theme_eng) else "N/A"
+        hero_best_eng = hero_theme_eng.max() if len(hero_theme_eng) else 0
+        if hero_best_theme != "N/A":
+            st.markdown(f"- {HERO}'s **{hero_best_theme}** content is the top-performing theme at {hero_best_eng:,.0f} avg eng")
 
-        reel_pct_opp = len(cuervo_df[cuervo_df["post_type"] == "Reel"]) / max(len(cuervo_df[cuervo_df["platform"] == "Instagram"]), 1) * 100
+        reel_pct_opp = len(hero_df[hero_df["post_type"] == "Reel"]) / max(len(hero_df[hero_df["platform"] == "Instagram"]), 1) * 100
         if reel_pct_opp < 60:
             st.markdown(f"- Instagram Reels at only **{reel_pct_opp:.0f}%** of IG content — room to grow to 60%+")
         st.markdown("- Brand heritage (250+ yrs) is a unique differentiator vs newer brands")
@@ -1025,10 +1017,10 @@ with tab_action:
     _has_autostrat_actions = has_autostrat_data(autostrat)
 
     if _has_autostrat_actions:
-        # Split: Cuervo-specific reports vs competitor reports
-        cuervo_strat = get_all_strategic_actions(autostrat, identifier_filter=CUERVO_HASHTAG_IDS)
+        # Split: hero-specific reports vs competitor reports
+        hero_strat = get_all_strategic_actions(autostrat, identifier_filter=cfg.hero_hashtag_ids)
         all_strat = get_all_strategic_actions(autostrat)
-        competitor_strat = [a for a in all_strat if a["source_identifier"] not in CUERVO_HASHTAG_IDS]
+        competitor_strat = [a for a in all_strat if a["source_identifier"] not in cfg.hero_hashtag_ids]
 
         # Helper: aggregate entries into categorized lists
         def _aggregate(entries):
@@ -1045,12 +1037,12 @@ with tab_action:
                     actions.append({"source": src, "text": a})
             return findings, opps, gaps, actions
 
-        # ── Section A: Cuervo Strategic Intelligence ──────────────────────
-        if cuervo_strat:
-            st.subheader("Cuervo Strategic Intelligence")
-            st.caption("From #JoseCuervo, #Cuervo, and Cuervo keyword reports")
+        # ── Section A: Hero Strategic Intelligence ──────────────────────
+        if hero_strat:
+            st.subheader(f"{HERO} Strategic Intelligence")
+            st.caption(f"From #{HERO.replace(' ', '')}, #{HERO.split()[-1]}, and {HERO} keyword reports")
 
-            c_findings, c_opps, c_gaps, c_actions = _aggregate(cuervo_strat)
+            c_findings, c_opps, c_gaps, c_actions = _aggregate(hero_strat)
 
             col_sa1, col_sa2 = st.columns(2)
             with col_sa1:
@@ -1072,8 +1064,8 @@ with tab_action:
                         for item in c_actions:
                             st.markdown(f"- {item['text']}")
 
-            total_cuervo = len(c_findings) + len(c_opps) + len(c_gaps) + len(c_actions)
-            st.info(f"**{total_cuervo} Cuervo-specific insights** from {len(cuervo_strat)} reports.")
+            total_hero = len(c_findings) + len(c_opps) + len(c_gaps) + len(c_actions)
+            st.info(f"**{total_hero} {HERO}-specific insights** from {len(hero_strat)} reports.")
 
         # ── Section B: Competitive Context ────────────────────────────────
         if competitor_strat:
@@ -1081,7 +1073,7 @@ with tab_action:
             total_comp = len(comp_findings) + len(comp_opps) + len(comp_gaps) + len(comp_actions)
 
             with st.expander(f"Competitive Context — {total_comp} insights from {len(competitor_strat)} competitor reports"):
-                st.caption("What competitors are doing — use this to identify gaps Cuervo can exploit")
+                st.caption(f"What competitors are doing — use this to identify gaps {HERO} can exploit")
 
                 col_cc1, col_cc2 = st.columns(2)
                 with col_cc1:

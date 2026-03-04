@@ -2,6 +2,7 @@
 Core Analysis Engine for Social Media Intelligence.
 Processes collected CSV data and produces all competitive metrics.
 """
+from __future__ import annotations
 
 import csv
 import re
@@ -9,7 +10,17 @@ from collections import Counter, defaultdict
 from datetime import datetime
 from typing import Any
 
-from templates import BRANDS, CONTENT_THEMES, TONE_OPTIONS
+from templates import CONTENT_THEMES, TONE_OPTIONS
+
+
+def _get_brands():
+    """Get brands list from active client config, falling back to templates."""
+    try:
+        from client_context import get_client
+        return get_client().brands
+    except Exception:
+        from templates import BRANDS
+        return BRANDS
 
 
 def _parse_int(val: str) -> int:
@@ -156,7 +167,8 @@ def analyze_posting_frequency(posts: list[dict]) -> dict[str, Any]:
         date_span_days = 30  # fallback
     weeks_in_span = max(date_span_days / 7, 1)
 
-    for brand in BRANDS:
+    brands = _get_brands()
+    for brand in brands:
         brand_posts = [p for p in posts if p["brand"] == brand]
         results[brand] = {}
 
@@ -222,7 +234,7 @@ def analyze_engagement(posts: list[dict], profiles: list[dict],
 
     results = {}
 
-    for brand in BRANDS:
+    for brand in _get_brands():
         brand_posts = [p for p in posts if p["brand"] == brand]
         results[brand] = {}
 
@@ -295,7 +307,7 @@ def analyze_captions(posts: list[dict]) -> dict[str, Any]:
     """Analyze caption patterns: length, tone, emoji usage, CTAs."""
     results = {}
 
-    for brand in BRANDS:
+    for brand in _get_brands():
         brand_posts = [p for p in posts if p["brand"] == brand]
         results[brand] = {}
 
@@ -357,7 +369,7 @@ def analyze_hashtags(posts: list[dict], hashtag_data: list[dict]) -> dict[str, A
     """Analyze hashtag strategies across brands."""
     results = {}
 
-    for brand in BRANDS:
+    for brand in _get_brands():
         brand_posts = [p for p in posts if p["brand"] == brand]
         brand_tags = [h for h in hashtag_data if h["brand"] == brand]
 
@@ -395,7 +407,7 @@ def analyze_content_themes(posts: list[dict]) -> dict[str, Any]:
     """Analyze content theme/pillar distribution and performance."""
     results = {}
 
-    for brand in BRANDS:
+    for brand in _get_brands():
         brand_posts = [p for p in posts if p["brand"] == brand]
 
         # Theme distribution
@@ -431,7 +443,7 @@ def analyze_creators(posts: list[dict], creator_data: list[dict]) -> dict[str, A
     """Analyze creator collaboration patterns."""
     results = {}
 
-    for brand in BRANDS:
+    for brand in _get_brands():
         brand_posts = [p for p in posts if p["brand"] == brand]
         brand_creators = [c for c in creator_data if c["brand"] == brand]
 
@@ -476,81 +488,92 @@ def analyze_creators(posts: list[dict], creator_data: list[dict]) -> dict[str, A
     return results
 
 
-def generate_cuervo_recommendations(
+def generate_hero_recommendations(
     frequency: dict,
     engagement: dict,
     captions: dict,
     hashtags: dict,
     themes: dict,
     creators: dict,
+    hero_brand: str | None = None,
+    brands: list[str] | None = None,
 ) -> list[dict]:
-    """Generate actionable recommendations for Jose Cuervo based on competitive analysis."""
+    """Generate actionable recommendations for the hero brand based on competitive analysis."""
     recs = []
-    cuervo = "Jose Cuervo"
+    if hero_brand is None:
+        try:
+            from client_context import get_client
+            hero_brand = get_client().hero_brand
+        except Exception:
+            hero_brand = "Jose Cuervo"
+    if brands is None:
+        brands = _get_brands()
+
+    hero = hero_brand
 
     # 1. Posting frequency comparison
-    competitors = [b for b in BRANDS if b != cuervo]
+    competitors = [b for b in brands if b != hero]
     for platform in ["Instagram", "TikTok"]:
-        cuervo_freq = frequency.get(cuervo, {}).get(platform, {}).get("posts_per_week", 0)
+        hero_freq = frequency.get(hero, {}).get(platform, {}).get("posts_per_week", 0)
         comp_freqs = [frequency.get(b, {}).get(platform, {}).get("posts_per_week", 0) for b in competitors]
         avg_comp = sum(comp_freqs) / len(comp_freqs) if comp_freqs else 0
 
-        if cuervo_freq < avg_comp * 0.8:
+        if hero_freq < avg_comp * 0.8:
             recs.append({
                 "category": "Posting Frequency",
                 "platform": platform,
                 "priority": "High",
-                "insight": f"Cuervo posts {cuervo_freq}x/week on {platform} vs. competitor avg of {round(avg_comp, 1)}x/week",
+                "insight": f"{hero} posts {hero_freq}x/week on {platform} vs. competitor avg of {round(avg_comp, 1)}x/week",
                 "recommendation": f"Increase {platform} posting frequency to at least {round(avg_comp, 1)}x/week to maintain visibility",
             })
 
     # 2. Content type gaps
     for platform in ["Instagram", "TikTok"]:
-        cuervo_types = frequency.get(cuervo, {}).get(platform, {}).get("by_content_type", {})
+        hero_types = frequency.get(hero, {}).get(platform, {}).get("by_content_type", {})
 
-        # Check which types competitors use that Cuervo doesn't
+        # Check which types competitors use that hero doesn't
         comp_types = set()
         for b in competitors:
             for t in frequency.get(b, {}).get(platform, {}).get("by_content_type", {}).keys():
                 comp_types.add(t)
 
-        missing_types = comp_types - set(cuervo_types.keys())
+        missing_types = comp_types - set(hero_types.keys())
         if missing_types:
             recs.append({
                 "category": "Content Diversification",
                 "platform": platform,
                 "priority": "Medium",
-                "insight": f"Cuervo is not using these content types on {platform}: {', '.join(missing_types)}",
+                "insight": f"{hero} is not using these content types on {platform}: {', '.join(missing_types)}",
                 "recommendation": f"Test {', '.join(missing_types)} content — competitors are finding success with these formats",
             })
 
     # 3. Engagement benchmarking (per 1K followers for fair comparison)
     for platform in ["Instagram", "TikTok"]:
-        cuervo_epk = engagement.get(cuervo, {}).get(platform, {}).get("engagement_per_1k_followers", 0)
+        hero_epk = engagement.get(hero, {}).get(platform, {}).get("engagement_per_1k_followers", 0)
         comp_epks = [engagement.get(b, {}).get(platform, {}).get("engagement_per_1k_followers", 0) for b in competitors]
         best_comp_epk = max(comp_epks) if comp_epks else 0
         best_comp_name = competitors[comp_epks.index(best_comp_epk)] if comp_epks and best_comp_epk > 0 else "Unknown"
 
-        if cuervo_epk < best_comp_epk * 0.7 and best_comp_epk > 0:
+        if hero_epk < best_comp_epk * 0.7 and best_comp_epk > 0:
             recs.append({
                 "category": "Engagement Gap",
                 "platform": platform,
                 "priority": "High",
-                "insight": f"Cuervo's avg eng/1K followers ({cuervo_epk}) trails {best_comp_name} ({best_comp_epk}) on {platform}",
+                "insight": f"{hero}'s avg eng/1K followers ({hero_epk}) trails {best_comp_name} ({best_comp_epk}) on {platform}",
                 "recommendation": f"Study {best_comp_name}'s top-performing content and adapt successful patterns",
             })
 
     # 5. Creator strategy
-    cuervo_collabs = creators.get(cuervo, {})
+    hero_collabs = creators.get(hero, {})
     comp_collab_rates = [creators.get(b, {}).get("collab_pct", 0) for b in competitors]
     avg_collab = sum(comp_collab_rates) / len(comp_collab_rates) if comp_collab_rates else 0
 
-    if cuervo_collabs.get("collab_pct", 0) < avg_collab * 0.5 and avg_collab > 0:
+    if hero_collabs.get("collab_pct", 0) < avg_collab * 0.5 and avg_collab > 0:
         recs.append({
             "category": "Creator Strategy",
             "platform": "Both",
             "priority": "High",
-            "insight": f"Cuervo collab rate ({cuervo_collabs.get('collab_pct', 0)}%) is well below competitor avg ({round(avg_collab, 1)}%)",
+            "insight": f"{hero} collab rate ({hero_collabs.get('collab_pct', 0)}%) is well below competitor avg ({round(avg_collab, 1)}%)",
             "recommendation": "Invest in creator partnerships — especially micro-creators (10K-100K followers) resonating with Gen Z",
         })
 
@@ -568,28 +591,28 @@ def generate_cuervo_recommendations(
             break  # One example is enough
 
     # 6. Hashtag strategy
-    cuervo_tags = hashtags.get(cuervo, {})
+    hero_tags = hashtags.get(hero, {})
     for b in competitors:
         comp_tags = hashtags.get(b, {})
-        if comp_tags.get("avg_hashtags_per_post", 0) > cuervo_tags.get("avg_hashtags_per_post", 0) * 1.5:
+        if comp_tags.get("avg_hashtags_per_post", 0) > hero_tags.get("avg_hashtags_per_post", 0) * 1.5:
             recs.append({
                 "category": "Hashtag Strategy",
                 "platform": "Both",
                 "priority": "Low",
-                "insight": f"{b} uses {comp_tags['avg_hashtags_per_post']} hashtags/post vs Cuervo's {cuervo_tags.get('avg_hashtags_per_post', 0)}",
+                "insight": f"{b} uses {comp_tags['avg_hashtags_per_post']} hashtags/post vs {hero}'s {hero_tags.get('avg_hashtags_per_post', 0)}",
                 "recommendation": "Test increasing hashtag count to improve discoverability",
             })
             break
 
     # 7. Caption / CTA insights
     for platform in ["Instagram", "TikTok"]:
-        cuervo_cap = captions.get(cuervo, {}).get(platform, {})
+        hero_cap = captions.get(hero, {}).get(platform, {})
         for b in competitors:
             comp_cap = captions.get(b, {}).get(platform, {})
             comp_eng = engagement.get(b, {}).get(platform, {}).get("engagement_per_1k_followers", 0)
-            cuervo_eng = engagement.get(cuervo, {}).get(platform, {}).get("engagement_per_1k_followers", 0)
+            hero_eng = engagement.get(hero, {}).get(platform, {}).get("engagement_per_1k_followers", 0)
 
-            if comp_eng > cuervo_eng and comp_cap.get("top_ctas"):
+            if comp_eng > hero_eng and comp_cap.get("top_ctas"):
                 top_cta = comp_cap["top_ctas"][0][0] if comp_cap["top_ctas"] else "None"
                 if top_cta != "None":
                     recs.append({
@@ -604,12 +627,12 @@ def generate_cuervo_recommendations(
     # 8. Timing optimization
     for platform in ["Instagram", "TikTok"]:
         best_hours_across = Counter()
-        for b in BRANDS:
+        for b in brands:
             bh = frequency.get(b, {}).get(platform, {}).get("best_hours", [])
             for hour, count in bh:
                 best_hours_across[hour] += count
 
-        cuervo_hours = frequency.get(cuervo, {}).get(platform, {}).get("by_hour", {})
+        hero_hours = frequency.get(hero, {}).get(platform, {}).get("by_hour", {})
         top_category_hours = best_hours_across.most_common(3)
 
         if top_category_hours:
@@ -644,7 +667,7 @@ def run_full_analysis(data_dir: str, benchmark: dict = None) -> dict[str, Any]:
     hashtag_analysis = analyze_hashtags(posts, hashtag_data)
     theme_analysis = analyze_content_themes(posts)
     creator_analysis = analyze_creators(posts, creator_data)
-    recommendations = generate_cuervo_recommendations(
+    recommendations = generate_hero_recommendations(
         frequency, engagement, caption_analysis,
         hashtag_analysis, theme_analysis, creator_analysis
     )

@@ -10,10 +10,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import streamlit as st
 
-from config import (
-    CUSTOM_CSS, POPLIFE_PEACH, POPLIFE_BLUE, POPLIFE_BG, POPLIFE_DARK,
-    BRAND_HASHTAGS, CUERVO_HASHTAG_IDS, CATEGORY_HASHTAGS,
-)
+from config import POPLIFE_PEACH, POPLIFE_BLUE, POPLIFE_BG, POPLIFE_DARK
 from autostrat_loader import (
     get_report, get_all_brand_mentions,
     get_brand_hashtag_reports, get_category_reports,
@@ -28,23 +25,26 @@ from autostrat_components import (
     platform_label,
 )
 
-st.logo("logo.png")
-st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+# ── Load data dynamically ─────────────────────────────────────────────
+autostrat = st.session_state.get("autostrat", {})
 
-st.title("Conversation Intel")
+from client_context import get_client
+cfg = get_client()
+
+st.logo(cfg.app_logo_path)
+st.markdown(cfg.custom_css, unsafe_allow_html=True)
+
+st.title(cfg.page_headers.get("conversation", "Conversation Intel"))
 st.caption(
     "Qualitative intelligence from brand hashtags, category research, "
     "and news -- Instagram & TikTok"
 )
 
-# ── Load data dynamically ─────────────────────────────────────────────
-autostrat = st.session_state.get("autostrat", {})
-
 brand_ht_map = get_brand_hashtag_reports(autostrat)
 category_reports = get_category_reports(autostrat)
 news_reports = autostrat.get("google_news", {})
 _all_mentions_raw = get_all_brand_mentions(autostrat)
-_allowed_ids = set(BRAND_HASHTAGS) | set(CATEGORY_HASHTAGS) | set(autostrat.get("google_news", {}).keys())
+_allowed_ids = set(cfg.brand_hashtags) | set(cfg.category_hashtags) | set(autostrat.get("google_news", {}).keys())
 all_mentions = [m for m in _all_mentions_raw if m.get("source_identifier") in _allowed_ids]
 
 has_brand_data = len(brand_ht_map) > 0
@@ -70,20 +70,29 @@ def _get_insights(report):
 
 
 def _get_opps_actions(report):
-    """Extract paired opportunities and strategic actions from hashtag_analysis.
+    """Extract paired opportunities and strategic actions from hashtag_analysis
+    or how_to_win territories (keyword reports).
     Arrays are parallel: opportunities[i] pairs with strategic_actions[i]."""
     if not report:
         return []
+    # Hashtag reports: hashtag_analysis.opportunities + strategic_actions
     ha = report.get("hashtag_analysis", {})
     opps = ha.get("opportunities", [])
     actions = ha.get("strategic_actions", [])
-    pairs = []
-    for i in range(max(len(opps), len(actions))):
-        pairs.append({
-            "opportunity": opps[i] if i < len(opps) else "",
-            "action": actions[i] if i < len(actions) else "",
-        })
-    return pairs
+    if opps or actions:
+        pairs = []
+        for i in range(max(len(opps), len(actions))):
+            pairs.append({
+                "opportunity": opps[i] if i < len(opps) else "",
+                "action": actions[i] if i < len(actions) else "",
+            })
+        return pairs
+    # Keyword reports: how_to_win.territories as opportunities
+    htw = report.get("how_to_win", {})
+    territories = htw.get("territories", [])
+    if territories:
+        return [{"opportunity": t, "action": ""} for t in territories]
+    return []
 
 
 def _render_opp_action_card(pair, accent="#2ea3f2"):
@@ -105,7 +114,7 @@ def _render_opp_action_card(pair, accent="#2ea3f2"):
 
 # ── Build ordered flat list of brand reports ──────────────────────────
 # (display_label, report_type, identifier, report)
-brand_display_order = list(BRAND_HASHTAGS.keys())
+brand_display_order = list(cfg.brand_hashtags.keys())
 active_brand_reports = []
 for ident in brand_display_order:
     if ident in brand_ht_map:
@@ -133,8 +142,8 @@ with tab_brands:
         render_section_label("Key Insights")
         for label, rt, ident, report in active_brand_reports:
             plat = platform_label(rt)
-            is_cuervo = ident in CUERVO_HASHTAG_IDS
-            with st.expander(f"{label} ({plat}) -- Key Insights", expanded=is_cuervo):
+            is_hero = ident in cfg.hero_hashtag_ids
+            with st.expander(f"{label} ({plat}) -- Key Insights", expanded=is_hero):
                 for insight in _get_insights(report):
                     st.markdown(f"- {insight}")
 
@@ -146,8 +155,8 @@ with tab_brands:
         for label, rt, ident, report in active_brand_reports:
             if report.get("audience_profile"):
                 plat = platform_label(rt)
-                is_cuervo = ident in CUERVO_HASHTAG_IDS
-                with st.expander(f"{label} ({plat}) -- Audience Profile", expanded=is_cuervo):
+                is_hero = ident in cfg.hero_hashtag_ids
+                with st.expander(f"{label} ({plat}) -- Audience Profile", expanded=is_hero):
                     ap = report["audience_profile"]
                     if ap.get("summary"):
                         st.markdown(f"*{ap['summary']}*")
@@ -161,21 +170,22 @@ with tab_brands:
             pairs = _get_opps_actions(report)
             if pairs:
                 plat = platform_label(rt)
-                is_cuervo = ident in CUERVO_HASHTAG_IDS
-                with st.expander(f"{label} ({plat}) -- Opportunities", expanded=is_cuervo):
+                is_hero = ident in cfg.hero_hashtag_ids
+                with st.expander(f"{label} ({plat}) -- Opportunities", expanded=is_hero):
                     for pair in pairs:
                         _render_opp_action_card(pair)
 
         st.markdown("---")
 
-        # ── How to Win Territories (Cuervo only) ─────────────
+        # ── How to Win Territories ─────────────────────────────
         render_section_label("How to Win Territories")
         for label, rt, ident, report in active_brand_reports:
-            if ident not in CUERVO_HASHTAG_IDS:
+            htw = report.get("how_to_win", {})
+            if not htw.get("territories") and not htw.get("summary"):
                 continue
             plat = platform_label(rt)
-            with st.expander(f"{label} ({plat}) — How to Win", expanded=True):
-                htw = report.get("how_to_win", {})
+            is_hero = ident in cfg.hero_hashtag_ids
+            with st.expander(f"{label} ({plat}) — How to Win", expanded=is_hero):
                 if htw.get("summary"):
                     st.caption(htw["summary"])
                 territories = htw.get("territories", [])
@@ -186,22 +196,24 @@ with tab_brands:
 
         st.markdown("---")
 
-        # ── What This Means for Cuervo ──────────────────────
-        render_section_label("What This Means for Cuervo")
+        # ── What This Means for {hero_brand} ──────────────────────
+        conv_narrative = cfg.narrative.get("conversation", {})
+        what_this_means_header = conv_narrative.get("what_this_means", f"What This Means for {cfg.hero_brand}")
+        render_section_label(what_this_means_header)
 
-        # Gather Cuervo territories (across platforms)
-        cuervo_terrs = []
-        for ident in CUERVO_HASHTAG_IDS:
+        # Gather hero brand territories (across platforms)
+        hero_terrs = []
+        for ident in cfg.hero_hashtag_ids:
             if ident in brand_ht_map:
                 for rt, label, report in brand_ht_map[ident]:
-                    cuervo_terrs.extend(
+                    hero_terrs.extend(
                         report.get("how_to_win", {}).get("territories", [])
                     )
 
         # Gather competitor territories
         comp_terr_map = {}
         for ident, entries in brand_ht_map.items():
-            if ident not in CUERVO_HASHTAG_IDS:
+            if ident not in cfg.hero_hashtag_ids:
                 for rt, label, report in entries:
                     plat = platform_label(rt)
                     key = f"{label} ({plat})"
@@ -212,24 +224,79 @@ with tab_brands:
         all_comp_terrs = set()
         for terrs in comp_terr_map.values():
             all_comp_terrs.update(terrs)
-        cuervo_unique = set(cuervo_terrs) - all_comp_terrs
-        comp_unique = all_comp_terrs - set(cuervo_terrs)
+        hero_unique = set(hero_terrs) - all_comp_terrs
+        comp_unique = all_comp_terrs - set(hero_terrs)
 
-        # ── Cuervo's Winning Territories ──
-        if cuervo_terrs:
+        # ── No hero data: reframe as "What to Steal" ──
+        if not hero_terrs and comp_terr_map:
+            steal_caption = conv_narrative.get(
+                "steal_caption",
+                f"Competitor strategies {cfg.hero_brand} can adapt and steal"
+            )
+            st.caption(steal_caption)
+            for brand_label, terrs in comp_terr_map.items():
+                if not terrs:
+                    continue
+                terr_items = "".join(
+                    f"<li style='margin-bottom:6px;'>{t}</li>" for t in terrs
+                )
+                st.markdown(f"""
+                <div style="background:white; border-radius:10px; padding:18px 20px;
+                            margin-bottom:14px; border:1px solid #E0D8D0;
+                            border-left:5px solid {POPLIFE_BLUE};">
+                    <h4 style="font-family:'Barlow Condensed',sans-serif; font-weight:700;
+                               color:{POPLIFE_BLUE}; margin:0 0 10px 0; font-size:1rem;">
+                        What to steal from {brand_label}</h4>
+                    <ul style="margin:0; padding-left:20px; color:#444; font-size:0.92rem;
+                               line-height:1.55;">{terr_items}</ul>
+                </div>
+                """, unsafe_allow_html=True)
+
+            # Also show competitor audience insights as steal signals
+            comp_desires = {}
+            for label_item, rt, ident, report in active_brand_reports:
+                desires = report.get("audience_profile", {}).get("desires", [])
+                if desires and ident not in cfg.hero_hashtag_ids:
+                    plat = platform_label(rt)
+                    comp_desires[f"{label_item} ({plat})"] = desires
+            if comp_desires:
+                st.markdown(f"""
+                <div style="background:#E8F5E9; border-radius:10px; padding:18px 20px;
+                            margin-top:14px; border:1px solid #C8E6C9;
+                            border-left:5px solid #5CB85C;">
+                    <h4 style="font-family:'Barlow Condensed',sans-serif; font-weight:700;
+                               color:#2E7D32; margin:0 0 10px 0; font-size:1rem;">
+                        Audience Desires {cfg.hero_brand} Can Tap Into</h4>
+                """, unsafe_allow_html=True)
+                for brand_label, desires in comp_desires.items():
+                    desire_items = "".join(
+                        f"<li style='margin-bottom:4px;'>{d}</li>" for d in desires[:3]
+                    )
+                    st.markdown(f"""
+                    <div style="margin-bottom:10px;">
+                        <strong style="color:#2E7D32; font-size:0.95rem;">{brand_label}</strong>
+                        <ul style="margin:4px 0 0 0; padding-left:20px; color:#444;
+                                   font-size:0.88rem; line-height:1.5;">{desire_items}</ul>
+                    </div>
+                    """, unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
+
+        # ── Hero Brand's Winning Territories ──
+        cuervo_leads_header = conv_narrative.get("cuervo_leads_header", f"Where {cfg.hero_brand} Leads")
+        if hero_terrs:
             items_html = "".join(
-                f"<li style='margin-bottom:6px;'>{t}</li>" for t in cuervo_terrs
+                f"<li style='margin-bottom:6px;'>{t}</li>" for t in hero_terrs
             )
             unique_note = ""
-            if cuervo_unique:
+            if hero_unique:
                 unique_items = "".join(
-                    f"<li style='margin-bottom:4px;'>{t}</li>" for t in cuervo_unique
+                    f"<li style='margin-bottom:4px;'>{t}</li>" for t in hero_unique
                 )
                 unique_note = (
                     f"<div style='margin-top:12px; padding-top:10px; border-top:1px solid #E0D8D0;'>"
                     f"<span style='background:#C8E6C9; color:#2E7D32; padding:2px 8px; "
                     f"border-radius:10px; font-size:0.8rem; font-weight:600; "
-                    f"margin-right:6px;'>Unique to Cuervo</span>"
+                    f"margin-right:6px;'>Unique to {cfg.hero_brand}</span>"
                     f" Territories no competitor is claiming:"
                     f"<ul style='margin:6px 0 0 0; padding-left:20px; color:#2E7D32; "
                     f"font-size:0.88rem;'>{unique_items}</ul></div>"
@@ -240,7 +307,7 @@ with tab_brands:
                         border-left:5px solid #5CB85C;">
                 <h4 style="font-family:'Barlow Condensed',sans-serif; font-weight:700;
                            color:#5CB85C; margin:0 0 10px 0; font-size:1rem;">
-                    Where Cuervo Leads</h4>
+                    {cuervo_leads_header}</h4>
                 <ul style="margin:0; padding-left:20px; color:#444; font-size:0.92rem;
                            line-height:1.55;">{items_html}</ul>
                 {unique_note}
@@ -248,6 +315,7 @@ with tab_brands:
             """, unsafe_allow_html=True)
 
         # ── Where Competitors Are Winning ──
+        competitors_winning_header = conv_narrative.get("competitors_winning_header", "Where Competitors Are Winning")
         if comp_terr_map:
             cards_html = ""
             for brand_label, terrs in comp_terr_map.items():
@@ -271,8 +339,8 @@ with tab_brands:
                     f"<div style='margin-top:12px; padding-top:10px; border-top:1px solid #E0D8D0;'>"
                     f"<span style='background:#FFCDD2; color:#C62828; padding:2px 8px; "
                     f"border-radius:10px; font-size:0.8rem; font-weight:600;'>"
-                    f"Not in Cuervo's playbook</span> "
-                    f"Territories competitors own that Cuervo does not:"
+                    f"Not in {cfg.hero_brand}'s playbook</span> "
+                    f"Territories competitors own that {cfg.hero_brand} does not:"
                     f"<ul style='margin:6px 0 0 0; padding-left:20px; color:#C62828; "
                     f"font-size:0.88rem;'>{threat_items}</ul></div>"
                 )
@@ -282,7 +350,7 @@ with tab_brands:
                         border-left:5px solid #D9534F;">
                 <h4 style="font-family:'Barlow Condensed',sans-serif; font-weight:700;
                            color:#D9534F; margin:0 0 10px 0; font-size:1rem;">
-                    Where Competitors Are Winning</h4>
+                    {competitors_winning_header}</h4>
                 {cards_html}
             </div>
             """, unsafe_allow_html=True)
@@ -307,6 +375,10 @@ with tab_brands:
                     f"<ul style='margin:4px 0 0 0; padding-left:20px; color:#444; "
                     f"font-size:0.88rem; line-height:1.5;'>{obj_items}</ul></div>"
                 )
+            friction_caption = conv_narrative.get(
+                "audience_friction_caption",
+                "Shared friction points signal category-wide opportunities."
+            )
             st.markdown(f"""
             <div style="background:white; border-radius:10px; padding:18px 20px;
                         margin-bottom:14px; border:1px solid #E0D8D0;
@@ -316,31 +388,31 @@ with tab_brands:
                     Common Audience Friction</h4>
                 <p style="color:#777; font-size:0.85rem; margin:0 0 12px 0;">
                     Objections and pushback themes across all brand hashtag audiences --
-                    shared friction points signal category-wide opportunities.</p>
+                    {friction_caption}</p>
                 {obj_html}
             </div>
             """, unsafe_allow_html=True)
 
-        # ── Cuervo's Strategic Summary ──
-        # Find the first Cuervo report for summary + desires
-        _cuervo_report = None
-        for ident in CUERVO_HASHTAG_IDS:
+        # ── Hero Brand's Strategic Summary ──
+        # Find the first hero brand report for summary + desires
+        _hero_report = None
+        for ident in cfg.hero_hashtag_ids:
             if ident in brand_ht_map:
-                _cuervo_report = brand_ht_map[ident][0][2]  # first report
+                _hero_report = brand_ht_map[ident][0][2]  # first report
                 break
 
-        if _cuervo_report:
-            summary = _cuervo_report.get("how_to_win", {}).get("summary", "")
-            cuervo_desires = _cuervo_report.get("audience_profile", {}).get("desires", [])
-            if summary or cuervo_desires:
+        if _hero_report:
+            summary = _hero_report.get("how_to_win", {}).get("summary", "")
+            hero_desires = _hero_report.get("audience_profile", {}).get("desires", [])
+            if summary or hero_desires:
                 desires_html = ""
-                if cuervo_desires:
+                if hero_desires:
                     d_items = "".join(
-                        f"<li style='margin-bottom:4px;'>{d}</li>" for d in cuervo_desires
+                        f"<li style='margin-bottom:4px;'>{d}</li>" for d in hero_desires
                     )
                     desires_html = (
                         f"<div style='margin-top:10px;'>"
-                        f"<strong style='font-size:0.9rem;'>What the Cuervo hashtag audience wants:</strong>"
+                        f"<strong style='font-size:0.9rem;'>What the {cfg.hero_brand} hashtag audience wants:</strong>"
                         f"<ul style='margin:4px 0 0 0; padding-left:20px; color:#444; "
                         f"font-size:0.88rem; line-height:1.5;'>{d_items}</ul></div>"
                     )
@@ -348,19 +420,20 @@ with tab_brands:
                     f"<p style='color:#444; font-size:0.92rem; line-height:1.55; "
                     f"margin:0;'>{summary}</p>" if summary else ""
                 )
+                path_forward_header = conv_narrative.get("path_forward_header", f"{cfg.hero_brand}'s Path Forward")
                 st.markdown(f"""
                 <div style="background:linear-gradient(135deg, #FDEBD6 0%, #FFF8F0 100%);
                             border-radius:10px; padding:18px 20px; margin-bottom:14px;
                             border-left:5px solid {POPLIFE_PEACH};">
                     <h4 style="font-family:'Barlow Condensed',sans-serif; font-weight:700;
                                color:{POPLIFE_DARK}; margin:0 0 10px 0; font-size:1rem;">
-                        Cuervo's Path Forward</h4>
+                        {path_forward_header}</h4>
                     {summary_html}
                     {desires_html}
                 </div>
                 """, unsafe_allow_html=True)
 
-        if not cuervo_terrs and not comp_terr_map and not brand_objections:
+        if not hero_terrs and not comp_terr_map and not brand_objections:
             st.caption("Add more hashtag reports to unlock cross-brand comparison.")
 
         # ── Brand Mentions (moved from Page 2) ────────────────
@@ -423,36 +496,37 @@ with tab_category:
                     if htw.get("territories"):
                         render_territory_cards(htw["territories"])
 
-        # ── Cuervo's Play: bridge brand + category ─────────────
-        _cuervo_rpt = None
-        for ident in CUERVO_HASHTAG_IDS:
+        # ── Hero Brand's Play: bridge brand + category ─────────────
+        _hero_rpt = None
+        for ident in cfg.hero_hashtag_ids:
             if ident in brand_ht_map:
-                _cuervo_rpt = brand_ht_map[ident][0][2]
+                _hero_rpt = brand_ht_map[ident][0][2]
                 break
 
-        if _cuervo_rpt and category_reports:
+        if _hero_rpt and category_reports:
             st.markdown("---")
-            render_section_label("Cuervo's Play")
+            cuervos_play_header = conv_narrative.get("cuervos_play", f"{cfg.hero_brand}'s Play")
+            render_section_label(cuervos_play_header)
 
             cat_rpt = category_reports[0][3]
             cat_lbl = category_reports[0][2]
 
             bridge_parts = []
 
-            cuervo_needs = _cuervo_rpt.get("audience_profile", {}).get("needs", [])
+            hero_needs = _hero_rpt.get("audience_profile", {}).get("needs", [])
             cat_needs = cat_rpt.get("audience_profile", {}).get("needs", [])
-            if cuervo_needs and cat_needs:
+            if hero_needs and cat_needs:
                 bridge_parts.append(
-                    "<strong>Brand audience needs:</strong> " + cuervo_needs[0]
+                    "<strong>Brand audience needs:</strong> " + hero_needs[0]
                 )
                 bridge_parts.append(
                     "<strong>Category audience needs:</strong> " + cat_needs[0]
                 )
 
-            cuervo_t = set(_cuervo_rpt.get("how_to_win", {}).get("territories", []))
+            hero_t = set(_hero_rpt.get("how_to_win", {}).get("territories", []))
             cat_t = set(cat_rpt.get("how_to_win", {}).get("territories", []))
-            overlap = cuervo_t & cat_t
-            cat_only = cat_t - cuervo_t
+            overlap = hero_t & cat_t
+            cat_only = cat_t - hero_t
 
             if overlap:
                 bridge_parts.append(
@@ -466,16 +540,21 @@ with tab_category:
                 )
 
             if bridge_parts:
+                bridge_title = conv_narrative.get(
+                    "bridge_template", "Bridging {hero_brand} to {cat_label}"
+                ).format(hero_brand=cfg.hero_brand, cat_label=cat_lbl)
                 render_narrative_card(
-                    f"Bridging #JoseCuervo to {cat_lbl}",
+                    bridge_title,
                     "<br><br>".join(bridge_parts),
                     accent_color=POPLIFE_PEACH,
                 )
             else:
-                st.caption(
-                    f"Import both #JoseCuervo and {cat_lbl} reports to see "
-                    "how Cuervo can bridge brand and category territory."
-                )
+                import_hint = conv_narrative.get(
+                    "import_hint_template",
+                    "Import both {hero_brand} and {cat_label} reports to see "
+                    "how {hero_brand} can bridge brand and category territory."
+                ).format(hero_brand=cfg.hero_brand, cat_label=cat_lbl)
+                st.caption(import_hint)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -489,7 +568,7 @@ with tab_news:
         )
     else:
         st.markdown(
-            "What the news is saying about tequila brands -- sentiment, narratives, "
+            f"What the news is saying about {cfg.industry} brands -- sentiment, narratives, "
             "and strategic implications from Google News intelligence."
         )
 

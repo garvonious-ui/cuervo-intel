@@ -11,26 +11,29 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-from config import BRAND_COLORS, CHART_TEMPLATE, CHART_FONT, BRAND_ORDER, CUSTOM_CSS, SOCIAL_BRIEF_TARGETS
-
-st.logo("logo.png")
-st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
-st.header("Competitive Landscape")
-st.caption("What competitors are doing — sidebar filters apply here.")
+from config import CHART_TEMPLATE, CHART_FONT
+from client_context import get_client
 
 if "results" not in st.session_state:
     st.warning("Go to the home page first to load data.")
     st.stop()
 
+cfg = get_client()
+
+st.logo(cfg.app_logo_path)
+st.markdown(cfg.custom_css, unsafe_allow_html=True)
+st.header(cfg.page_headers.get("competitive", "Competitive Landscape"))
+st.caption(cfg.page_captions.get("competitive", "What competitors are doing — sidebar filters apply here."))
+
 results = st.session_state["results"]
 df = st.session_state["filtered_df"]
 full_df = st.session_state["df"]
 sel_brands = st.session_state["sel_brands"]
-order = [b for b in BRAND_ORDER if b in sel_brands]
+order = [b for b in cfg.brand_order if b in sel_brands]
 
-CUERVO = "Jose Cuervo"
-ENG_PER_POST_TARGET = SOCIAL_BRIEF_TARGETS["engagements_per_post"]
-ENG_PER_1K_TARGET = SOCIAL_BRIEF_TARGETS["eng_per_1k_followers"]
+HERO = cfg.hero_brand
+ENG_PER_POST_TARGET = cfg.kpi_targets["engagements_per_post"]
+ENG_PER_1K_TARGET = cfg.kpi_targets["eng_per_1k_followers"]
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 tab_overview, tab_gaps = st.tabs([
@@ -91,8 +94,8 @@ with tab_overview:
 
     comp_tbl = pd.DataFrame(rows)
 
-    def highlight_cuervo(row):
-        return ["background-color: #FDEBD6" if row["Brand"] == CUERVO else "" for _ in row]
+    def highlight_hero(row):
+        return ["background-color: #FDEBD6" if row["Brand"] == HERO else "" for _ in row]
 
     def color_epk(val):
         if isinstance(val, (int, float)):
@@ -111,7 +114,7 @@ with tab_overview:
 
     styled_tbl = (
         comp_tbl.style
-        .apply(highlight_cuervo, axis=1)
+        .apply(highlight_hero, axis=1)
         .map(color_epk, subset=["Eng/1K Fol"])
         .format(fmt)
     )
@@ -137,11 +140,11 @@ with tab_overview:
             f"Top theme: {best_theme} | Reel mix: {reel_pct:.0f}%"
         )
 
-    cuervo_avg_eng = brand_engs.get(CUERVO, 0)
-    cuervo_rank = list(brand_engs.index).index(CUERVO) + 1 if CUERVO in brand_engs.index else len(brand_engs)
-    st.info(f"**Cuervo ranks #{cuervo_rank}** out of {len(brand_engs)} brands at {cuervo_avg_eng:,.0f} avg engagements. "
-            f"The top brand leads by {top3.iloc[0] - cuervo_avg_eng:,.0f}." if len(top3) and cuervo_avg_eng < top3.iloc[0] else
-            f"**Cuervo leads** at {cuervo_avg_eng:,.0f} avg engagements.")
+    hero_avg_eng = brand_engs.get(HERO, 0)
+    hero_rank = list(brand_engs.index).index(HERO) + 1 if HERO in brand_engs.index else len(brand_engs)
+    st.info(f"**{HERO} ranks #{hero_rank}** out of {len(brand_engs)} brands at {hero_avg_eng:,.0f} avg engagements. "
+            f"The top brand leads by {top3.iloc[0] - hero_avg_eng:,.0f}." if len(top3) and hero_avg_eng < top3.iloc[0] else
+            f"**{HERO} leads** at {hero_avg_eng:,.0f} avg engagements.")
 
     st.markdown("---")
 
@@ -159,7 +162,7 @@ with tab_overview:
     epk_data = pd.DataFrame(epk_rows)
 
     fig_epk = px.bar(epk_data, x="brand", y="eng_per_1k",
-                     color="brand", color_discrete_map=BRAND_COLORS,
+                     color="brand", color_discrete_map=cfg.brand_colors,
                      category_orders={"brand": order},
                      labels={"eng_per_1k": "Eng / 1K Followers", "brand": ""},
                      template=CHART_TEMPLATE)
@@ -221,7 +224,7 @@ with tab_overview:
         avg_top10_eng = sum(r["Engagements"] for r in top10_rows) / len(top10_rows)
         st.info(f"**{top10_brand}'s top 10** average {avg_top10_eng:,.0f} engagements on {top10_plat}. "
                 f"Best-performing format: **{best_type_name}**. "
-                f"{'Study their approach for Cuervo adaptation.' if top10_brand != CUERVO else 'Keep doubling down on what works.'}")
+                f"{'Study their approach for ' + HERO + ' adaptation.' if top10_brand != HERO else 'Keep doubling down on what works.'}")
     else:
         st.info(f"No {top10_plat} post data available for {top10_brand}.")
 
@@ -232,37 +235,37 @@ with tab_overview:
 
 with tab_gaps:
 
-    cuervo_df = full_df[full_df["brand"] == CUERVO]
-    comp_df = full_df[full_df["brand"] != CUERVO]
+    hero_df = full_df[full_df["brand"] == HERO]
+    comp_df = full_df[full_df["brand"] != HERO]
 
     # ── Content Gap Analysis ───────────────────────────────────────────
-    st.subheader("Content Gap Analysis: Cuervo vs Category")
+    st.subheader(f"Content Gap Analysis: {HERO} vs Category")
     st.caption("Where competitors invest more content — and whether those themes drive higher engagement")
 
     all_themes = sorted(full_df["content_theme"].dropna().unique())
-    cuervo_total = len(cuervo_df) or 1
+    hero_total = len(hero_df) or 1
     comp_total = len(comp_df) or 1
 
     gap_rows = []
     for theme in all_themes:
-        c_pct = len(cuervo_df[cuervo_df["content_theme"] == theme]) / cuervo_total * 100
+        c_pct = len(hero_df[hero_df["content_theme"] == theme]) / hero_total * 100
         cat_pct = len(comp_df[comp_df["content_theme"] == theme]) / comp_total * 100
-        c_eng = cuervo_df[cuervo_df["content_theme"] == theme]["total_engagement"].mean()
+        c_eng = hero_df[hero_df["content_theme"] == theme]["total_engagement"].mean()
         cat_eng = comp_df[comp_df["content_theme"] == theme]["total_engagement"].mean()
         gap_rows.append({
             "theme": theme,
-            "Cuervo %": round(c_pct, 1),
+            f"{HERO} %": round(c_pct, 1),
             "Category %": round(cat_pct, 1),
             "gap": round(cat_pct - c_pct, 1),
-            "Cuervo Avg Eng": round(c_eng, 0) if pd.notna(c_eng) else 0,
+            f"{HERO} Avg Eng": round(c_eng, 0) if pd.notna(c_eng) else 0,
             "Cat Avg Eng": round(cat_eng, 0) if pd.notna(cat_eng) else 0,
         })
 
     gap_df = pd.DataFrame(gap_rows).sort_values("gap", ascending=False)
 
     fig_gap = go.Figure()
-    fig_gap.add_trace(go.Bar(x=gap_df["theme"], y=gap_df["Cuervo %"],
-                             name="Cuervo", marker_color=BRAND_COLORS[CUERVO]))
+    fig_gap.add_trace(go.Bar(x=gap_df["theme"], y=gap_df[f"{HERO} %"],
+                             name=HERO, marker_color=cfg.brand_colors[HERO]))
     fig_gap.add_trace(go.Bar(x=gap_df["theme"], y=gap_df["Category %"],
                              name="Category Avg", marker_color="#A3C4D9"))
     fig_gap.update_layout(barmode="group", template=CHART_TEMPLATE, font=CHART_FONT,
@@ -275,7 +278,7 @@ with tab_gaps:
     if len(top_gaps):
         st.markdown("**Biggest content gaps (themes competitors use more):**")
         for _, row in top_gaps.iterrows():
-            st.markdown(f"- **{row['theme']}**: Category at {row['Category %']}% vs Cuervo {row['Cuervo %']}% "
+            st.markdown(f"- **{row['theme']}**: Category at {row['Category %']}% vs {HERO} {row[f'{HERO} %']}% "
                         f"(+{row['gap']}% gap) — Category avg eng: {row['Cat Avg Eng']:,.0f}")
 
     st.markdown("---")
@@ -329,7 +332,7 @@ with tab_gaps:
             top_fmt = best_fmt_overall.index[0]
             top_fmt_eng = best_fmt_overall.iloc[0]
             st.info(f"**{top_fmt}** drives the highest avg engagement across brands at {top_fmt_eng:,.0f}. "
-                    f"Ensure Cuervo's content mix prioritizes this format.")
+                    f"Ensure {HERO}'s content mix prioritizes this format.")
     else:
         st.info("No engagement-by-format data available.")
 
@@ -358,15 +361,15 @@ with tab_gaps:
 
     # ── "What to Steal" Cards ──────────────────────────────────────────
     st.subheader("What to Steal")
-    st.caption("Specific tactics from brands outperforming Cuervo")
+    st.caption(f"Specific tactics from brands outperforming {HERO}")
 
-    cuervo_avg_eng_val = full_df[full_df["brand"] == CUERVO]["total_engagement"].mean()
-    cuervo_avg_eng_val = 0 if pd.isna(cuervo_avg_eng_val) else cuervo_avg_eng_val
+    hero_avg_eng_val = full_df[full_df["brand"] == HERO]["total_engagement"].mean()
+    hero_avg_eng_val = 0 if pd.isna(hero_avg_eng_val) else hero_avg_eng_val
 
     all_brand_avgs = full_df.groupby("brand")["total_engagement"].mean().dropna()
     all_brand_avgs = all_brand_avgs[all_brand_avgs > 0]
-    beating_brands = all_brand_avgs[all_brand_avgs > cuervo_avg_eng_val].index.tolist() if CUERVO in full_df["brand"].values else []
-    beating_brands = [b for b in beating_brands if b != CUERVO]
+    beating_brands = all_brand_avgs[all_brand_avgs > hero_avg_eng_val].index.tolist() if HERO in full_df["brand"].values else []
+    beating_brands = [b for b in beating_brands if b != HERO]
 
     if beating_brands:
         steal_cols = st.columns(min(len(beating_brands), 3))
@@ -381,15 +384,15 @@ with tab_gaps:
                 st.markdown(f"""
                 <div style="background: white; border-radius: 10px; padding: 16px;
                             margin-bottom: 12px; border: 1px solid #E0D8D0;
-                            border-top: 3px solid {BRAND_COLORS.get(brand, '#888')};">
+                            border-top: 3px solid {cfg.brand_colors.get(brand, '#888')};">
                     <h4 style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
                                color: #333; margin: 0 0 8px 0;">{brand}</h4>
                     <p style="font-size: 0.9rem; color: #555; margin: 0;">
-                        <strong>{brand_avg:,.0f} avg eng</strong> (+{brand_avg - cuervo_avg_eng_val:,.0f} vs Cuervo)<br>
+                        <strong>{brand_avg:,.0f} avg eng</strong> (+{brand_avg - hero_avg_eng_val:,.0f} vs {HERO})<br>
                         Top theme: <strong>{best_theme_s}</strong> ({best_theme_eng:,.0f} avg eng)<br>
                         Reel mix: <strong>{reel_pct:.0f}%</strong>
                     </p>
                 </div>
                 """, unsafe_allow_html=True)
     else:
-        st.success("Cuervo is outperforming all competitors — keep it up!")
+        st.success(f"{HERO} is outperforming all competitors — keep it up!")

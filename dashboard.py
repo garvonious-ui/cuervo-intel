@@ -14,7 +14,35 @@ from openpyxl.chart.label import DataLabelList
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
-from templates import BRANDS
+def _get_brands():
+    """Get brands list from active client config, falling back to templates."""
+    try:
+        from client_context import get_client
+        return get_client().brands
+    except Exception:
+        from templates import BRANDS
+        return BRANDS
+
+
+def _get_hero_brand():
+    """Get the hero brand name from active client config."""
+    try:
+        from client_context import get_client
+        return get_client().hero_brand
+    except Exception:
+        return "Jose Cuervo"
+
+
+def _get_highlight_fill_color():
+    """Get the highlight fill color from active client config."""
+    try:
+        from client_context import get_client
+        color = get_client().highlight_fill_color
+        if color:
+            return color.lstrip("#")
+    except Exception:
+        pass
+    return "FFF2CC"
 
 
 # ─── STYLE CONSTANTS ──────────────────────────────────────────────────
@@ -85,7 +113,7 @@ def create_executive_summary(wb: Workbook, results: dict):
     ws.merge_cells("A1:H1")
     ws["A1"] = "COMPETITIVE SOCIAL MEDIA INTELLIGENCE REPORT"
     ws["A1"].font = Font(name="Calibri", bold=True, size=18, color="1B2A4A")
-    ws["A2"] = f"Jose Cuervo vs. Competitors | Generated {datetime.now().strftime('%B %d, %Y')}"
+    ws["A2"] = f"{_get_hero_brand()} vs. Competitors | Generated {datetime.now().strftime('%B %d, %Y')}"
     ws["A2"].font = Font(name="Calibri", size=12, color="666666", italic=True)
     ws.merge_cells("A2:H2")
 
@@ -119,8 +147,8 @@ def create_executive_summary(wb: Workbook, results: dict):
     style_header_row(ws, row, len(headers))
     row += 1
 
-    for brand in BRANDS:
-        is_cuervo = brand == "Jose Cuervo"
+    for brand in _get_brands():
+        is_cuervo = brand == _get_hero_brand()
         ig = results["engagement"].get(brand, {}).get("Instagram", {})
         tt = results["engagement"].get(brand, {}).get("TikTok", {})
         ig_freq = results["frequency"].get(brand, {}).get("Instagram", {})
@@ -143,7 +171,7 @@ def create_executive_summary(wb: Workbook, results: dict):
     row += 2
 
     # Top recommendations
-    ws.cell(row=row, column=1, value="TOP PRIORITY RECOMMENDATIONS FOR CUERVO").font = SUBTITLE_FONT
+    ws.cell(row=row, column=1, value=f"TOP PRIORITY RECOMMENDATIONS FOR {_get_hero_brand().upper()}").font = SUBTITLE_FONT
     row += 1
 
     rec_headers = ["#", "Category", "Platform", "Priority", "Insight", "Recommended Action"]
@@ -198,8 +226,8 @@ def create_brand_comparison(wb: Workbook, results: dict):
     style_header_row(ws, row, len(ig_headers))
     row += 1
 
-    for brand in BRANDS:
-        is_cuervo = brand == "Jose Cuervo"
+    for brand in _get_brands():
+        is_cuervo = brand == _get_hero_brand()
         eng = results["engagement"].get(brand, {}).get("Instagram", {})
         freq = results["frequency"].get(brand, {}).get("Instagram", {})
         tags = results["hashtags"].get(brand, {})
@@ -243,8 +271,8 @@ def create_brand_comparison(wb: Workbook, results: dict):
     style_header_row(ws, row, len(tt_headers))
     row += 1
 
-    for brand in BRANDS:
-        is_cuervo = brand == "Jose Cuervo"
+    for brand in _get_brands():
+        is_cuervo = brand == _get_hero_brand()
         eng = results["engagement"].get(brand, {}).get("TikTok", {})
         freq = results["frequency"].get(brand, {}).get("TikTok", {})
         tags = results["hashtags"].get(brand, {})
@@ -293,8 +321,8 @@ def create_content_strategy(wb: Workbook, results: dict):
     style_header_row(ws, row, len(headers))
     row += 1
 
-    for brand in BRANDS:
-        is_cuervo = brand == "Jose Cuervo"
+    for brand in _get_brands():
+        is_cuervo = brand == _get_hero_brand()
         theme = results["themes"].get(brand, {})
         cap_ig = results["captions"].get(brand, {}).get("Instagram", {})
         cap_tt = results["captions"].get(brand, {}).get("TikTok", {})
@@ -340,8 +368,8 @@ def create_content_strategy(wb: Workbook, results: dict):
     style_header_row(ws, row, len(detail_headers))
     row += 1
 
-    for brand in BRANDS:
-        is_cuervo = brand == "Jose Cuervo"
+    for brand in _get_brands():
+        is_cuervo = brand == _get_hero_brand()
         theme_perf = results["themes"].get(brand, {}).get("theme_performance", {})
 
         # Sort by post count
@@ -369,8 +397,8 @@ def create_content_strategy(wb: Workbook, results: dict):
     style_header_row(ws, row, len(cap_headers))
     row += 1
 
-    for brand in BRANDS:
-        is_cuervo = brand == "Jose Cuervo"
+    for brand in _get_brands():
+        is_cuervo = brand == _get_hero_brand()
         for platform in ["Instagram", "TikTok"]:
             cap = results["captions"].get(brand, {}).get(platform, {})
             tones = cap.get("tone_distribution", {})
@@ -408,7 +436,7 @@ def create_engagement_benchmarks(wb: Workbook, results: dict):
 
         # Collect all content types across brands
         all_types = set()
-        for brand in BRANDS:
+        for brand in _get_brands():
             eng = results["engagement"].get(brand, {}).get(platform, {})
             all_types.update(eng.get("engagement_by_type", {}).keys())
         all_types = sorted(all_types)
@@ -422,8 +450,8 @@ def create_engagement_benchmarks(wb: Workbook, results: dict):
         # Chart data start
         chart_start_row = row
 
-        for brand in BRANDS:
-            is_cuervo = brand == "Jose Cuervo"
+        for brand in _get_brands():
+            is_cuervo = brand == _get_hero_brand()
             eng = results["engagement"].get(brand, {}).get(platform, {})
             by_type = eng.get("engagement_by_type", {})
 
@@ -438,7 +466,7 @@ def create_engagement_benchmarks(wb: Workbook, results: dict):
             row += 1
 
         # Add a bar chart
-        if all_types and len(BRANDS) > 0:
+        if all_types and len(_get_brands()) > 0:
             chart = BarChart()
             chart.type = "col"
             chart.title = f"{platform} Avg Engagements by Content Type"
@@ -451,9 +479,9 @@ def create_engagement_benchmarks(wb: Workbook, results: dict):
             # Overall ER column
             overall_col = len(headers)
             data = Reference(ws, min_col=overall_col, min_row=chart_start_row - 1,
-                             max_row=chart_start_row + len(BRANDS) - 1)
+                             max_row=chart_start_row + len(_get_brands()) - 1)
             cats = Reference(ws, min_col=1, min_row=chart_start_row,
-                             max_row=chart_start_row + len(BRANDS) - 1)
+                             max_row=chart_start_row + len(_get_brands()) - 1)
             chart.add_data(data, titles_from_data=True)
             chart.set_categories(cats)
 
@@ -473,8 +501,8 @@ def create_engagement_benchmarks(wb: Workbook, results: dict):
     style_header_row(ws, row, len(collab_headers))
     row += 1
 
-    for brand in BRANDS:
-        is_cuervo = brand == "Jose Cuervo"
+    for brand in _get_brands():
+        is_cuervo = brand == _get_hero_brand()
         cr = results["creators"].get(brand, {})
         values = [
             brand,
@@ -515,8 +543,8 @@ def create_hashtag_analysis(wb: Workbook, results: dict):
     style_header_row(ws, row, len(headers))
     row += 1
 
-    for brand in BRANDS:
-        is_cuervo = brand == "Jose Cuervo"
+    for brand in _get_brands():
+        is_cuervo = brand == _get_hero_brand()
         tags = results["hashtags"].get(brand, {})
         values = [
             brand,
@@ -536,8 +564,8 @@ def create_hashtag_analysis(wb: Workbook, results: dict):
     ws.cell(row=row, column=1, value="TOP 15 HASHTAGS PER BRAND").font = SUBTITLE_FONT
     row += 1
 
-    for brand in BRANDS:
-        is_cuervo = brand == "Jose Cuervo"
+    for brand in _get_brands():
+        is_cuervo = brand == _get_hero_brand()
         ws.cell(row=row, column=1, value=brand).font = SUBHEADER_FONT
         if is_cuervo:
             ws.cell(row=row, column=1).fill = CUERVO_FILL
@@ -572,8 +600,8 @@ def create_top_posts(wb: Workbook, results: dict):
 
     row = 3
 
-    for brand in BRANDS:
-        is_cuervo = brand == "Jose Cuervo"
+    for brand in _get_brands():
+        is_cuervo = brand == _get_hero_brand()
         ws.cell(row=row, column=1, value=brand.upper()).font = SUBTITLE_FONT
         if is_cuervo:
             ws.cell(row=row, column=1).fill = CUERVO_FILL
@@ -647,8 +675,8 @@ def create_posting_schedule(wb: Workbook, results: dict):
         style_header_row(ws, row, len(headers))
         row += 1
 
-        for brand in BRANDS:
-            is_cuervo = brand == "Jose Cuervo"
+        for brand in _get_brands():
+            is_cuervo = brand == _get_hero_brand()
             freq = results["frequency"].get(brand, {}).get(platform, {})
             by_day = freq.get("by_day", {})
 
@@ -677,8 +705,8 @@ def create_posting_schedule(wb: Workbook, results: dict):
         style_header_row(ws, row, len(hour_headers))
         row += 1
 
-        for brand in BRANDS:
-            is_cuervo = brand == "Jose Cuervo"
+        for brand in _get_brands():
+            is_cuervo = brand == _get_hero_brand()
             freq = results["frequency"].get(brand, {}).get(platform, {})
             best_hours = freq.get("best_hours", [])
 

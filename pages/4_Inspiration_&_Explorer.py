@@ -15,10 +15,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-from config import (
-    BRAND_COLORS, CHART_TEMPLATE, CHART_FONT, BRAND_ORDER, CUSTOM_CSS,
-    REFERENCE_BRAND_LABELS,
-)
+from config import CHART_TEMPLATE, CHART_FONT
 from autostrat_loader import (
     has_autostrat_data, get_report, get_reference_profiles,
     get_all_audience_profiles, PROFILE_TYPES,
@@ -29,13 +26,16 @@ from autostrat_components import (
     render_sponsorship_card, render_statistics_section,
 )
 
-st.logo("logo.png")
-st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
-st.header("Inspiration & Explorer")
-
 if "results" not in st.session_state:
     st.warning("Go to the home page first to load data.")
     st.stop()
+
+from client_context import get_client
+cfg = get_client()
+
+st.logo(cfg.app_logo_path)
+st.markdown(cfg.custom_css, unsafe_allow_html=True)
+st.header(cfg.page_headers.get("inspiration", "Inspiration & Explorer"))
 
 results = st.session_state["results"]
 df = st.session_state["filtered_df"].copy()
@@ -75,7 +75,7 @@ with tab_inspo:
             st.info(f"No {ref_platform} reference brand reports available.")
         else:
             ref_options = {
-                REFERENCE_BRAND_LABELS.get(v["identifier"], v["identifier"].replace("_", " ").title()): k
+                cfg.reference_brand_labels.get(v["identifier"], v["identifier"].replace("_", " ").title()): k
                 for k, v in available_refs.items()
             }
             selected_ref_label = st.selectbox("Select reference brand",
@@ -83,7 +83,7 @@ with tab_inspo:
             ref_key = ref_options[selected_ref_label]
             ref_data = available_refs[ref_key]
             report_r = ref_data["report"]
-            display_name = REFERENCE_BRAND_LABELS.get(ref_data["identifier"],
+            display_name = cfg.reference_brand_labels.get(ref_data["identifier"],
                                                        ref_data["identifier"].replace("_", " ").title())
 
             # ── Snapshot KPIs ──────────────────────────────────────────
@@ -115,30 +115,33 @@ with tab_inspo:
                     st.markdown(f"*{means_clean}*")
                 st.markdown("---")
 
-            # ── "What Cuervo Can Steal" ────────────────────────────────
-            render_section_label("What Cuervo Can Steal")
-            st.caption(f"Strategic patterns from {display_name} translated to Cuervo's tequila world")
+            # ── "What {hero_brand} Can Steal" ────────────────────────────
+            steal_header = cfg.narrative.get("inspiration", {}).get(
+                "steal_header_template", "What {hero_brand} Can Steal"
+            ).format(hero_brand=cfg.hero_brand)
+            render_section_label(steal_header)
+            st.caption(f"Strategic patterns from {display_name} translated to {cfg.hero_brand}'s {cfg.industry} world")
 
             steal_points = []
 
-            # Translate what_hits into a Cuervo-relevant content principle
+            # Translate what_hits into a hero-brand-relevant content principle
             if cs.get("what_hits"):
                 hits_text = cs["what_hits"].replace("\n", " ").strip()
                 steal_points.append(
                     f"**Content principle (from {display_name}):** Their top content uses "
                     f"*{hits_text[:150]}{'...' if len(hits_text) > 150 else ''}* — "
-                    f"**Cuervo adaptation:** Apply the same energy to new product drops "
+                    f"**{cfg.hero_brand} adaptation:** Apply the same energy to new product drops "
                     f"(Playamar, seasonal margarita kits), cocktail reveals, and cultural moments."
                 )
 
-            # Translate common themes into actionable Cuervo playbook items
+            # Translate common themes into actionable playbook items
             if cs.get("common_themes"):
                 clean_themes = [t.replace("\n", " ").strip() for t in cs["common_themes"][:2]]
                 for theme in clean_themes:
                     # Extract the strategic principle, not the literal content
                     steal_points.append(
                         f"**Theme to adapt:** *\"{theme[:120]}{'...' if len(theme) > 120 else ''}\"* → "
-                        f"Cuervo can mirror this with tequila heritage storytelling, "
+                        f"{cfg.hero_brand} can mirror this with {cfg.industry} heritage storytelling, "
                         f"cocktail culture moments, and community-driven content."
                     )
 
@@ -148,8 +151,8 @@ with tab_inspo:
                 steal_points.append(
                     f"**Engagement tactic (from {display_name}):** *{ea_text[:150]}"
                     f"{'...' if len(ea_text) > 150 else ''}* — "
-                    f"**Cuervo adaptation:** Apply these engagement triggers to "
-                    f"cocktail culture, tequila heritage moments, and community activations."
+                    f"**{cfg.hero_brand} adaptation:** Apply these engagement triggers to "
+                    f"cocktail culture, {cfg.industry} heritage moments, and community activations."
                 )
 
             pa = report_r.get("posting_analysis", {})
@@ -158,8 +161,8 @@ with tab_inspo:
                 steal_points.append(
                     f"**Posting rhythm (from {display_name}):** *{pa_text[:150]}"
                     f"{'...' if len(pa_text) > 150 else ''}* — "
-                    f"**Cuervo adaptation:** Mirror this cadence rhythm "
-                    f"synced to tequila calendar moments (Margarita Day, Cinco de Mayo, "
+                    f"**{cfg.hero_brand} adaptation:** Mirror this cadence rhythm "
+                    f"synced to {cfg.industry} calendar moments (Margarita Day, Cinco de Mayo, "
                     f"summer kickoff, holiday entertaining)."
                 )
 
@@ -174,20 +177,23 @@ with tab_inspo:
                 st.info(f"Import more {display_name} report data for specific tactical recommendations.")
             st.markdown("---")
 
-            # ── Audience Comparison: Cuervo vs Reference ───────────────
+            # ── Audience Comparison: Hero Brand vs Reference ───────────────
             ap_ref = report_r.get("audience_profile", {})
             has_ref_nopd = any(ap_ref.get(k) for k in ["needs", "objections", "desires", "pain_points"])
 
-            # Find Cuervo audience profile from hashtag reports
+            # Find hero brand audience profile from hashtag reports
             cuervo_profiles = get_all_audience_profiles(autostrat, exclude_reference=True)
             cuervo_ap = None
             for p in cuervo_profiles:
-                if "cuervo" in p["identifier"].lower():
+                if cfg.hero_brand.lower().split()[0] in p["identifier"].lower():
                     cuervo_ap = p["audience_profile"]
                     break
 
             if has_ref_nopd and cuervo_ap:
-                render_section_label(f"Audience Comparison: Cuervo vs {display_name}")
+                comparison_header = cfg.narrative.get("inspiration", {}).get(
+                    "audience_comparison_template", "Audience Comparison: {hero_brand} vs {display_name}"
+                ).format(hero_brand=cfg.hero_brand, display_name=display_name)
+                render_section_label(comparison_header)
                 for dimension in ["needs", "objections", "desires", "pain_points"]:
                     from autostrat_components import NOPD_STYLES
                     style = NOPD_STYLES[dimension]
@@ -199,7 +205,7 @@ with tab_inspo:
 
                     col_c, col_r = st.columns(2)
                     with col_c:
-                        st.markdown("**Cuervo**")
+                        st.markdown(f"**{cfg.hero_brand}**")
                         for item in cuervo_ap.get(dimension, []):
                             st.markdown(f"- {item}")
                         if not cuervo_ap.get(dimension):
@@ -214,9 +220,9 @@ with tab_inspo:
             elif has_ref_nopd:
                 render_section_label(f"{display_name} Audience Profile (Reference)")
                 st.caption(
-                    f"This is {display_name}'s audience — not tequila drinkers. "
+                    f"This is {display_name}'s audience — not {cfg.industry} drinkers. "
                     f"Study their engagement patterns and emotional drivers, "
-                    f"then look for parallels in Cuervo's Gen Z audience."
+                    f"then look for parallels in {cfg.hero_brand}'s Gen Z audience."
                 )
                 if ap_ref.get("summary"):
                     summary_clean = ap_ref["summary"].replace("\n", " ").strip()
@@ -359,7 +365,7 @@ with tab_explorer:
 
     st.dataframe(
         show_df.style.apply(
-            lambda row: ["background-color: #FDEBD6" if row.get("brand") == "Jose Cuervo" else "" for _ in row],
+            lambda row: [f"background-color: {cfg.highlight_fill_color}" if row.get("brand") == cfg.hero_brand else "" for _ in row],
             axis=1,
         ),
         use_container_width=True,
@@ -397,13 +403,13 @@ with tab_explorer:
         csv_buf = io.BytesIO()
         filt.to_csv(csv_buf, index=False)
         st.download_button("Download filtered data (CSV)", csv_buf.getvalue(),
-                           file_name="cuervo_filtered_data.csv", mime="text/csv")
+                           file_name=f"{cfg.client_id}_filtered_data.csv", mime="text/csv")
 
     with ex2:
         from dashboard import generate_dashboard
-        xlsx_path = os.path.join(tempfile.gettempdir(), "cuervo_report_explorer.xlsx")
+        xlsx_path = os.path.join(tempfile.gettempdir(), f"{cfg.client_id}_report_explorer.xlsx")
         generate_dashboard(results, xlsx_path)
         with open(xlsx_path, "rb") as f:
             st.download_button("Download Excel Report", f.read(),
-                               file_name="cuervo_intelligence_report.xlsx",
+                               file_name=cfg.excel_filename,
                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")

@@ -18,8 +18,24 @@ import re
 import subprocess
 
 BASE_DIR = os.path.dirname(__file__)
-AUTOSTRAT_DIR = os.path.join(BASE_DIR, "data", "autostrat")
-PDF_DIR = os.path.join(AUTOSTRAT_DIR, "pdfs")
+_DEFAULT_AUTOSTRAT_DIR = os.path.join(BASE_DIR, "data", "cuervo", "autostrat")
+
+
+def _get_autostrat_dir() -> str:
+    """Get autostrat directory from active client config, falling back to default."""
+    try:
+        from client_context import get_client
+        d = get_client().autostrat_dir
+        if d:
+            return d
+    except Exception:
+        pass
+    return _DEFAULT_AUTOSTRAT_DIR
+
+
+# Backward compat aliases (used at module level)
+AUTOSTRAT_DIR = _DEFAULT_AUTOSTRAT_DIR
+PDF_DIR = os.path.join(_DEFAULT_AUTOSTRAT_DIR, "pdfs")
 
 # Map title line to report type directory
 REPORT_TYPE_MAP = {
@@ -2037,7 +2053,8 @@ def parse_and_save_pdf(pdf_path: str) -> str:
 
     # Create safe filename from identifier
     safe_name = re.sub(r'[^\w\-]', '_', identifier.lower()).strip('_')
-    output_dir = os.path.join(AUTOSTRAT_DIR, report_type_dir)
+    autostrat_dir = _get_autostrat_dir()
+    output_dir = os.path.join(autostrat_dir, report_type_dir)
     os.makedirs(output_dir, exist_ok=True)
     output_path = os.path.join(output_dir, f"{safe_name}.json")
 
@@ -2053,7 +2070,7 @@ def parse_all_pdfs(pdf_dir: str = None) -> list[dict]:
     Returns list of {pdf: str, output: str, report_type: str, identifier: str, error: str|None}.
     """
     if pdf_dir is None:
-        pdf_dir = PDF_DIR
+        pdf_dir = os.path.join(_get_autostrat_dir(), "pdfs")
 
     if not os.path.isdir(pdf_dir):
         return []
@@ -2067,7 +2084,7 @@ def parse_all_pdfs(pdf_dir: str = None) -> list[dict]:
         try:
             report_type_dir, identifier, report = parse_pdf(pdf_path)
             safe_name = re.sub(r'[^\w\-]', '_', identifier.lower()).strip('_')
-            output_dir = os.path.join(AUTOSTRAT_DIR, report_type_dir)
+            output_dir = os.path.join(_get_autostrat_dir(), report_type_dir)
             os.makedirs(output_dir, exist_ok=True)
             output_path = os.path.join(output_dir, f"{safe_name}.json")
 

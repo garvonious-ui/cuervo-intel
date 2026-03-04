@@ -18,8 +18,45 @@ from typing import Optional
 
 # ─── BRAND NAME MAPPING ──────────────────────────────────────────────
 # Maps Sprout Social profile names/handles to our canonical brand names.
+# Loaded from client config when available, with fallback to legacy mapping.
 
-BRAND_MAP = {
+def _get_brand_map():
+    """Get brand map from active client config, falling back to legacy."""
+    try:
+        from client_context import get_client
+        bm = get_client().brand_map
+        if bm:
+            return bm
+    except Exception:
+        pass
+    return _LEGACY_BRAND_MAP
+
+
+def _get_fallback_followers():
+    """Get fallback follower counts from active client config."""
+    try:
+        from client_context import get_client
+        ff = get_client().fallback_followers
+        if ff:
+            return ff
+    except Exception:
+        pass
+    return _LEGACY_FALLBACK_FOLLOWERS
+
+
+def _get_creator_program_signals():
+    """Get creator program signal keywords from active client config."""
+    try:
+        from client_context import get_client
+        signals = get_client().creator_program_signals
+        if signals:
+            return signals
+    except Exception:
+        pass
+    return ["cuervopartner", "cuervocollective", "@cuervocollective"]
+
+
+_LEGACY_BRAND_MAP = {
     "josecuervotequila": "Jose Cuervo",
     "josecuervo": "Jose Cuervo",
     "jose cuervo": "Jose Cuervo",
@@ -71,6 +108,17 @@ BRAND_MAP = {
     "eljimador": "El Jimador",
     "el jimador": "El Jimador",
     "el jimador tequila": "El Jimador",
+}
+
+BRAND_MAP = _LEGACY_BRAND_MAP  # backward compat alias
+
+_LEGACY_FALLBACK_FOLLOWERS = {
+    "1800 Tequila": 108_000,
+    "Don Julio": 460_000,
+    "El Jimador": 43_400,
+    "Hornitos": 36_100,
+    "Lunazul": 12_200,
+    "Milagro": 23_700,
 }
 
 # ─── COLUMN NAME MAPPING ─────────────────────────────────────────────
@@ -125,11 +173,12 @@ def _find_column(df_columns: list[str], field: str) -> Optional[str]:
 
 def _resolve_brand(raw_name: str) -> str:
     """Resolve a Sprout profile name to our canonical brand name."""
+    brand_map = _get_brand_map()
     cleaned = raw_name.strip().lower().replace("@", "").replace("_", "")
-    if cleaned in BRAND_MAP:
-        return BRAND_MAP[cleaned]
+    if cleaned in brand_map:
+        return brand_map[cleaned]
     # Partial match
-    for key, brand in BRAND_MAP.items():
+    for key, brand in brand_map.items():
         if key in cleaned or cleaned in key:
             return brand
     return raw_name
@@ -332,8 +381,8 @@ def detect_creator_collab(caption: str, brand_handle: str = "") -> tuple[bool, s
     brand_clean = brand_handle.replace("@", "").lower()
     other_mentions = [m for m in mentions if m.replace("@", "").lower() != brand_clean]
     text = caption.lower()
-    # Cuervo-specific creator program tags — always counts as creator content
-    creator_program_signals = ["cuervopartner", "cuervocollective", "@cuervocollective"]
+    # Client-specific creator program tags — always counts as creator content
+    creator_program_signals = _get_creator_program_signals()
     if any(s in text for s in creator_program_signals):
         handle = other_mentions[0] if other_mentions else ""
         return True, handle
@@ -762,29 +811,21 @@ def import_sprout_directory(sprout_dir: str, output_dir: str) -> tuple[list[str]
         files.append(posts_path)
 
     # Fallback follower counts for brands missing from Sprout aggregate data.
-    # These are manually sourced Instagram follower counts (Feb 2026).
-    _FALLBACK_FOLLOWERS = {
-        "1800 Tequila": 108_000,
-        "Don Julio": 460_000,
-        "El Jimador": 43_400,
-        "Hornitos": 36_100,
-        "Lunazul": 12_200,
-        "Milagro": 23_700,
-    }
+    fallback_followers = _get_fallback_followers()
 
     # Fill in missing brand+platform combos with fallback followers
     existing_keys = {(p["brand"], p["platform"]) for p in all_profiles}
     # Also add from post data — any brand with posts but no profile
     post_brands = {(p["brand"], p["platform"]) for p in all_posts}
     for brand, platform in post_brands:
-        if (brand, platform) not in existing_keys and brand in _FALLBACK_FOLLOWERS:
+        if (brand, platform) not in existing_keys and brand in fallback_followers:
             # Compute aggregate ER from post data for this brand
             brand_posts = [p for p in all_posts
                            if p["brand"] == brand and p["platform"] == platform]
             total_eng = sum(p["likes"] + p["comments"] + p["shares"] + p["saves"]
                             for p in brand_posts)
             num_posts = len(brand_posts)
-            fb_followers = _FALLBACK_FOLLOWERS[brand]
+            fb_followers = fallback_followers[brand]
             agg_er = ((total_eng / num_posts) / fb_followers * 100
                       if num_posts > 0 and fb_followers > 0 else 0.0)
             all_profiles.append({
