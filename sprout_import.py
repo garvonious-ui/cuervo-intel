@@ -186,9 +186,13 @@ THEME_KEYWORDS = {
         "tell me without telling", "iykyk", "literally", "ngl", "no cap",
         "fr fr", "it's giving", "core", "lol", "lmao",
     ],
-    "Partner": [
+    "Collective": [
         "cuervopartner", "cuervocollective", "cuervo collective",
         "cuervo partner", "#cuervopartner", "#cuervocollective",
+    ],
+    "Partner": [
+        "ufc", "nascar", "love island", "cheapcaribbean", "cheap caribbean",
+        "nfl", "mlb", "nba", "super bowl", "formula 1", "f1",
     ],
     "Creator Collab": [
         "collab", "featuring", "feat.", "ft.", " x @", "with @",
