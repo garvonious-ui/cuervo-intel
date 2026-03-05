@@ -41,8 +41,9 @@ REFERENCE_BRAND_LABELS = {
 # Keys match JSON filenames in data/devils_reserve/autostrat/
 
 BRAND_HASHTAGS = {
-    # Hero brand keyword report
+    # Hero brand reports
     "devils_reserve": "devils reserve (keyword)",
+    "devilsreserve": "#devilsreserve (hashtag)",
     # Competitor keyword reports (from autostrat PDFs)
     "fireball_whisky": "fireball whisky (keyword)",
     "jagermeister": "jagermeister (keyword)",
@@ -50,7 +51,7 @@ BRAND_HASHTAGS = {
     "cazadores_tequila": "cazadores tequila (keyword)",
 }
 
-HERO_HASHTAG_IDS = {"devils_reserve"}
+HERO_HASHTAG_IDS = {"devils_reserve", "devilsreserve"}
 
 CATEGORY_HASHTAGS = {}  # Will be populated with category conversations
 
