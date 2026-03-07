@@ -94,6 +94,9 @@ class ClientConfig:
     # ── Narrative Copy (per-page text blocks) ──
     narrative: dict[str, Any] = field(default_factory=dict)
 
+    # ── Feature Flags ──
+    themes_ready: bool = True   # False = hide content theme / source mix sections until manual tagging is done
+
     # ── Data Paths (resolved at load time by client_context.py) ──
     data_dir: str = ""
     sprout_dir: str = ""

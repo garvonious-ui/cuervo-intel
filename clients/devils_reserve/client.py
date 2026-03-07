@@ -121,6 +121,7 @@ def get_config() -> ClientConfig:
         hero_brand="Devils Reserve",
         agency_name="Poplife",
         industry="tequila",
+        themes_ready=False,  # Hide theme/content-source sections until manual post tagging is complete
 
         # Brands
         brands=BRANDS,

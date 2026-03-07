@@ -120,6 +120,18 @@ with tab_overview:
     )
     st.dataframe(styled_tbl, use_container_width=True, hide_index=True, height=320)
 
+    # ── Micro-brand footnote on Eng/1K ────────────────────────────────
+    _micro_brands = comp_tbl[comp_tbl["Followers"] < 10_000]
+    if not _micro_brands.empty:
+        _names = ", ".join(_micro_brands["Brand"].tolist())
+        st.caption(
+            f"**Note on Eng/1K Followers:** {_names} ha{'s' if len(_micro_brands) == 1 else 've'} "
+            f"fewer than 10K followers. Micro-brands naturally produce higher per-follower "
+            f"engagement rates because small, engaged communities interact at a higher ratio "
+            f"than large audiences. This metric is mathematically valid but not a direct "
+            f"apples-to-apples comparison against brands with 100K+ followers."
+        )
+
     st.markdown("---")
 
     # ── "Who's Winning & Why" ──────────────────────────────────────────
@@ -175,6 +187,13 @@ with tab_overview:
                       annotation_text=f"Category avg {cat_avg_epk:.2f}",
                       annotation_position="bottom right")
     st.plotly_chart(fig_epk, use_container_width=True)
+
+    if not _micro_brands.empty:
+        st.caption(
+            f"**Note:** {_names}'s high Eng/1K rate reflects the engagement efficiency "
+            f"typical of micro-brands (<10K followers), not necessarily higher raw engagement. "
+            f"See the table above for absolute engagement numbers."
+        )
 
     st.markdown("---")
 
@@ -239,49 +258,54 @@ with tab_gaps:
     comp_df = full_df[full_df["brand"] != HERO]
 
     # ── Content Gap Analysis ───────────────────────────────────────────
-    st.subheader(f"Content Gap Analysis: {HERO} vs Category")
-    st.caption("Where competitors invest more content — and whether those themes drive higher engagement")
+    if cfg.themes_ready:
+        st.subheader(f"Content Gap Analysis: {HERO} vs Category")
+        st.caption("Where competitors invest more content — and whether those themes drive higher engagement")
 
-    all_themes = sorted(full_df["content_theme"].dropna().unique())
-    hero_total = len(hero_df) or 1
-    comp_total = len(comp_df) or 1
+        all_themes = sorted(full_df["content_theme"].dropna().unique())
+        hero_total = len(hero_df) or 1
+        comp_total = len(comp_df) or 1
 
-    gap_rows = []
-    for theme in all_themes:
-        c_pct = len(hero_df[hero_df["content_theme"] == theme]) / hero_total * 100
-        cat_pct = len(comp_df[comp_df["content_theme"] == theme]) / comp_total * 100
-        c_eng = hero_df[hero_df["content_theme"] == theme]["total_engagement"].mean()
-        cat_eng = comp_df[comp_df["content_theme"] == theme]["total_engagement"].mean()
-        gap_rows.append({
-            "theme": theme,
-            f"{HERO} %": round(c_pct, 1),
-            "Category %": round(cat_pct, 1),
-            "gap": round(cat_pct - c_pct, 1),
-            f"{HERO} Avg Eng": round(c_eng, 0) if pd.notna(c_eng) else 0,
-            "Cat Avg Eng": round(cat_eng, 0) if pd.notna(cat_eng) else 0,
-        })
+        gap_rows = []
+        for theme in all_themes:
+            c_pct = len(hero_df[hero_df["content_theme"] == theme]) / hero_total * 100
+            cat_pct = len(comp_df[comp_df["content_theme"] == theme]) / comp_total * 100
+            c_eng = hero_df[hero_df["content_theme"] == theme]["total_engagement"].mean()
+            cat_eng = comp_df[comp_df["content_theme"] == theme]["total_engagement"].mean()
+            gap_rows.append({
+                "theme": theme,
+                f"{HERO} %": round(c_pct, 1),
+                "Category %": round(cat_pct, 1),
+                "gap": round(cat_pct - c_pct, 1),
+                f"{HERO} Avg Eng": round(c_eng, 0) if pd.notna(c_eng) else 0,
+                "Cat Avg Eng": round(cat_eng, 0) if pd.notna(cat_eng) else 0,
+            })
 
-    gap_df = pd.DataFrame(gap_rows).sort_values("gap", ascending=False)
+        gap_df = pd.DataFrame(gap_rows).sort_values("gap", ascending=False)
 
-    fig_gap = go.Figure()
-    fig_gap.add_trace(go.Bar(x=gap_df["theme"], y=gap_df[f"{HERO} %"],
-                             name=HERO, marker_color=cfg.brand_colors[HERO]))
-    fig_gap.add_trace(go.Bar(x=gap_df["theme"], y=gap_df["Category %"],
-                             name="Category Avg", marker_color="#A3C4D9"))
-    fig_gap.update_layout(barmode="group", template=CHART_TEMPLATE, font=CHART_FONT,
-                          height=420, xaxis_tickangle=-35, yaxis_title="% of Content",
-                          legend=dict(orientation="h", y=1.1))
-    st.plotly_chart(fig_gap, use_container_width=True)
+        fig_gap = go.Figure()
+        fig_gap.add_trace(go.Bar(x=gap_df["theme"], y=gap_df[f"{HERO} %"],
+                                 name=HERO, marker_color=cfg.brand_colors[HERO]))
+        fig_gap.add_trace(go.Bar(x=gap_df["theme"], y=gap_df["Category %"],
+                                 name="Category Avg", marker_color="#A3C4D9"))
+        fig_gap.update_layout(barmode="group", template=CHART_TEMPLATE, font=CHART_FONT,
+                              height=420, xaxis_tickangle=-35, yaxis_title="% of Content",
+                              legend=dict(orientation="h", y=1.1))
+        st.plotly_chart(fig_gap, use_container_width=True)
 
-    # So What — biggest gaps
-    top_gaps = gap_df[gap_df["gap"] > 0].head(3)
-    if len(top_gaps):
-        st.markdown("**Biggest content gaps (themes competitors use more):**")
-        for _, row in top_gaps.iterrows():
-            st.markdown(f"- **{row['theme']}**: Category at {row['Category %']}% vs {HERO} {row[f'{HERO} %']}% "
-                        f"(+{row['gap']}% gap) — Category avg eng: {row['Cat Avg Eng']:,.0f}")
+        # So What — biggest gaps
+        top_gaps = gap_df[gap_df["gap"] > 0].head(3)
+        if len(top_gaps):
+            st.markdown("**Biggest content gaps (themes competitors use more):**")
+            for _, row in top_gaps.iterrows():
+                st.markdown(f"- **{row['theme']}**: Category at {row['Category %']}% vs {HERO} {row[f'{HERO} %']}% "
+                            f"(+{row['gap']}% gap) — Category avg eng: {row['Cat Avg Eng']:,.0f}")
 
-    st.markdown("---")
+        st.markdown("---")
+    else:
+        st.info(f"**Content gap analysis hidden** — post-level theme tagging is not yet complete for {HERO}. "
+                f"This section will appear once all posts have been manually reviewed and tagged.")
+        st.markdown("---")
 
     # ── Format Strategy Comparison ─────────────────────────────────────
     st.subheader("Format Strategy Comparison")
@@ -360,39 +384,40 @@ with tab_gaps:
     st.markdown("---")
 
     # ── "What to Steal" Cards ──────────────────────────────────────────
-    st.subheader("What to Steal")
-    st.caption(f"Specific tactics from brands outperforming {HERO}")
+    if cfg.themes_ready:
+        st.subheader("What to Steal")
+        st.caption(f"Specific tactics from brands outperforming {HERO}")
 
-    hero_avg_eng_val = full_df[full_df["brand"] == HERO]["total_engagement"].mean()
-    hero_avg_eng_val = 0 if pd.isna(hero_avg_eng_val) else hero_avg_eng_val
+        hero_avg_eng_val = full_df[full_df["brand"] == HERO]["total_engagement"].mean()
+        hero_avg_eng_val = 0 if pd.isna(hero_avg_eng_val) else hero_avg_eng_val
 
-    all_brand_avgs = full_df.groupby("brand")["total_engagement"].mean().dropna()
-    all_brand_avgs = all_brand_avgs[all_brand_avgs > 0]
-    beating_brands = all_brand_avgs[all_brand_avgs > hero_avg_eng_val].index.tolist() if HERO in full_df["brand"].values else []
-    beating_brands = [b for b in beating_brands if b != HERO]
+        all_brand_avgs = full_df.groupby("brand")["total_engagement"].mean().dropna()
+        all_brand_avgs = all_brand_avgs[all_brand_avgs > 0]
+        beating_brands = all_brand_avgs[all_brand_avgs > hero_avg_eng_val].index.tolist() if HERO in full_df["brand"].values else []
+        beating_brands = [b for b in beating_brands if b != HERO]
 
-    if beating_brands:
-        steal_cols = st.columns(min(len(beating_brands), 3))
-        for i, brand in enumerate(beating_brands[:6]):
-            bdf = full_df[full_df["brand"] == brand]
-            brand_avg = bdf["total_engagement"].mean()
-            top_theme_s = bdf.groupby("content_theme")["total_engagement"].mean()
-            best_theme_s = top_theme_s.idxmax() if len(top_theme_s) else "N/A"
-            best_theme_eng = top_theme_s.max() if len(top_theme_s) else 0
-            reel_pct = len(bdf[bdf["post_type"] == "Reel"]) / max(len(bdf), 1) * 100
-            with steal_cols[i % len(steal_cols)]:
-                st.markdown(f"""
-                <div style="background: white; border-radius: 10px; padding: 16px;
-                            margin-bottom: 12px; border: 1px solid #E0D8D0;
-                            border-top: 3px solid {cfg.brand_colors.get(brand, '#888')};">
-                    <h4 style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
-                               color: #333; margin: 0 0 8px 0;">{brand}</h4>
-                    <p style="font-size: 0.9rem; color: #555; margin: 0;">
-                        <strong>{brand_avg:,.0f} avg eng</strong> (+{brand_avg - hero_avg_eng_val:,.0f} vs {HERO})<br>
-                        Top theme: <strong>{best_theme_s}</strong> ({best_theme_eng:,.0f} avg eng)<br>
-                        Reel mix: <strong>{reel_pct:.0f}%</strong>
-                    </p>
-                </div>
-                """, unsafe_allow_html=True)
-    else:
-        st.success(f"{HERO} is outperforming all competitors — keep it up!")
+        if beating_brands:
+            steal_cols = st.columns(min(len(beating_brands), 3))
+            for i, brand in enumerate(beating_brands[:6]):
+                bdf = full_df[full_df["brand"] == brand]
+                brand_avg = bdf["total_engagement"].mean()
+                top_theme_s = bdf.groupby("content_theme")["total_engagement"].mean()
+                best_theme_s = top_theme_s.idxmax() if len(top_theme_s) else "N/A"
+                best_theme_eng = top_theme_s.max() if len(top_theme_s) else 0
+                reel_pct = len(bdf[bdf["post_type"] == "Reel"]) / max(len(bdf), 1) * 100
+                with steal_cols[i % len(steal_cols)]:
+                    st.markdown(f"""
+                    <div style="background: white; border-radius: 10px; padding: 16px;
+                                margin-bottom: 12px; border: 1px solid #E0D8D0;
+                                border-top: 3px solid {cfg.brand_colors.get(brand, '#888')};">
+                        <h4 style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+                                   color: #333; margin: 0 0 8px 0;">{brand}</h4>
+                        <p style="font-size: 0.9rem; color: #555; margin: 0;">
+                            <strong>{brand_avg:,.0f} avg eng</strong> (+{brand_avg - hero_avg_eng_val:,.0f} vs {HERO})<br>
+                            Top theme: <strong>{best_theme_s}</strong> ({best_theme_eng:,.0f} avg eng)<br>
+                            Reel mix: <strong>{reel_pct:.0f}%</strong>
+                        </p>
+                    </div>
+                    """, unsafe_allow_html=True)
+        else:
+            st.success(f"{HERO} is outperforming all competitors — keep it up!")
