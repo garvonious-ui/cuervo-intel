@@ -101,21 +101,21 @@
   "creator_archetypes": [
     {
       "archetype": "The Herbal Historian",
-      "description": "",
-      "appeal": "",
-      "examples": []
+      "description": "They build product credibility and educate on brand history and proper consumption.",
+      "appeal": "Trusted for their knowledge; they satisfy curiosity and deepen appreciation beyond party culture.",
+      "examples": ["Detailed educators sharing Jagermeister's origins, ingredients, and traditional uses with facts and heritage focus."]
     },
     {
       "archetype": "The Party Instigator",
-      "description": "",
-      "appeal": "",
-      "examples": []
+      "description": "They validate Jagermeister as the drink choice for celebration and moments of joy.",
+      "appeal": "Followed for hype, aspirational fun, and community feel of shared wild experiences.",
+      "examples": ["Energetic lifestyle creators amplifying Jagermeister's role in nightlife, events, and social fun moments."]
     },
     {
       "archetype": "The Cocktail Innovator",
-      "description": "They build product credibility and educate on brand history and\n\nThey validate Jägermeister as the drink choice for celebration\n\nThey reposition Jägermeister beyond shots to sophisticated,\n\nproper consumption.\n\nand moments of joy.\n\ntasteful drink options.",
-      "appeal": "",
-      "examples": []
+      "description": "They reposition Jagermeister beyond shots to sophisticated, tasteful drink options.",
+      "appeal": "Trusted for expertise and inspiration to elevate drinking experience at home or bars.",
+      "examples": ["Mixologists and bartenders showcasing creative Jagermeister cocktails, recipes, and alternative consumption."]
     }
   ],
   "how_to_win": {

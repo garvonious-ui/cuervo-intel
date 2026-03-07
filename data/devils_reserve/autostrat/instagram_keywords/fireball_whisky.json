@@ -106,21 +106,21 @@
   "creator_archetypes": [
     {
       "archetype": "The Local Promoter",
-      "description": "",
-      "appeal": "",
-      "examples": []
+      "description": "Drive awareness and availability through store-centric calls to action.",
+      "appeal": "Follows trust these creators for insider tips on where to grab Fireball nearby and local deals.",
+      "examples": ["Stores and venues spotlight Fireball as a party-enhancing, must-have cinnamon whisky stocked locally."]
     },
     {
       "archetype": "The Enthusiast Storyteller",
-      "description": "",
-      "appeal": "",
-      "examples": []
+      "description": "Adds authentic product judgments and fun personality to community discourse.",
+      "appeal": "Their candid style and humor make them a trusted and entertaining source, relatable to average drinkers.",
+      "examples": ["Shares personal tasting experiences, humor, and candid reviews with relatable, conversational tone."]
     },
     {
       "archetype": "The Product Educator",
-      "description": "Drive awareness and availability through store-centric calls to\n\nAdds authentic product judgments and fun personality to community\n\nProvides context on Fireball’s origins, variants, and product\n\naction.\n\ndiscourse.\n\nrange, educating consumers.",
-      "appeal": "",
-      "examples": []
+      "description": "Provides context on Fireball’s origins, variants, and product range, educating consumers.",
+      "appeal": "Audience relies on them for clear, concise info to better understand Fireball and its varieties.",
+      "examples": ["Posts facts, product history, flavor profiles, and new flavor launches with informative, straightforward style."]
     }
   ],
   "how_to_win": {

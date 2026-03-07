@@ -101,21 +101,21 @@
   "creator_archetypes": [
     {
       "archetype": "The Party Connector",
-      "description": "",
-      "appeal": "",
-      "examples": []
+      "description": "They boost product visibility by linking Pink Whitney to fun gatherings, nightlife, and bar culture.",
+      "appeal": "Followers trust them for authentic event intel and crave the communal vibe they project.",
+      "examples": ["Energetic promoters celebrating Pink Whitney at social events, bars, and local venues with lively invites and drink specials."]
     },
     {
       "archetype": "The Mixology Maven",
-      "description": "They boost product visibility by linking Pink Whitney to fun\n\nThey educate and inspire use cases, expanding Pink Whitney’s\n\nThey humanize the brand, reinforcing emotional connection and\n\ngatherings, nightlife, and bar culture.\n\nappeal beyond straight shots to mixology enthusiasts.\n\nrepeat usage through enthusiastic peer endorsement.",
-      "appeal": "",
-      "examples": []
+      "description": "They educate and inspire use cases, expanding Pink Whitney’s appeal beyond straight shots to mixology enthusiasts.",
+      "appeal": "Followers seek novel drink ideas backed by credible recipe experiments and bartender expertise.",
+      "examples": ["Creators sharing cocktail recipes, unique drink combos, and inventive uses for Pink Whitney with experimental or playful tone."]
     },
     {
       "archetype": "The Enthusiastic Fan",
-      "description": "",
-      "appeal": "",
-      "examples": []
+      "description": "They humanize the brand, reinforcing emotional connection and repeat usage through enthusiastic peer endorsement.",
+      "appeal": "Their candid, relatable content resonates as peer validation that Pink Whitney is fun and trendy.",
+      "examples": ["Passionate consumers expressing genuine affection for Pink Whitney through lifestyle posts, music references, and humorous takes."]
     }
   ],
   "how_to_win": {

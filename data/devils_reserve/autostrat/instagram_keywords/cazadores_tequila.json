@@ -107,21 +107,21 @@
   "creator_archetypes": [
     {
       "archetype": "The Experiential Storyteller",
-      "description": "",
-      "appeal": "",
-      "examples": []
+      "description": "Inspires desire and occasion-based consumption with authentic brand experiences.",
+      "appeal": "They evoke social connection and aspirational fun, making followers feel part of memorable moments.",
+      "examples": ["Shares vibrant lifestyle moments featuring Cazadores cocktails, events, and celebrations with friends."]
     },
     {
       "archetype": "The Skillful Mixologist",
-      "description": "",
-      "appeal": "",
-      "examples": []
+      "description": "Educates and empowers the audience to explore tequila in diverse, sophisticated ways.",
+      "appeal": "Followers trust them for expertise and practical tips to elevate their own drinking rituals.",
+      "examples": ["Offers detailed cocktail recipes and creative tequila uses emphasizing craftsmanship and versatility."]
     },
     {
       "archetype": "The Retail Promoter",
-      "description": "Inspires desire and occasion-based consumption with authentic\n\nEducates and empowers the audience to explore tequila in diverse,\n\nDrives purchase intent by highlighting price promotions and\n\nbrand experiences.\n\nsophisticated ways.\n\nproduct presence in stores.",
-      "appeal": "",
-      "examples": []
+      "description": "Drives purchase intent by highlighting price promotions and product presence in stores.",
+      "appeal": "Followers rely on them for timely offers and easy access to favorite tequila options.",
+      "examples": ["Focuses on availability, deals, and direct sales of Cazadores products with straightforward calls to action."]
     }
   ],
   "how_to_win": {

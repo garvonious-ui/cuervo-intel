@@ -102,21 +102,21 @@
   "creator_archetypes": [
     {
       "archetype": "The Irreverent Provocateur",
-      "description": "",
-      "appeal": "",
-      "examples": []
+      "description": "Igniting excitement and rebellious identity around the tequila brand.",
+      "appeal": "Followers crave bold, mischievous escapes and authentic party energy they can join.",
+      "examples": ["Playful, edgy creators delivering spicy, devil-themed content with humor and attitude to energize and entertain."]
     },
     {
       "archetype": "The Engaged Social Host",
-      "description": "",
-      "appeal": "",
-      "examples": []
+      "description": "Facilitating real-world and virtual touchpoints for consumers to connect with the tequila.",
+      "appeal": "They offer insider access to exclusive experiences and cocktail inspiration, trusted by partygoers.",
+      "examples": ["Bartenders and venues highlighting cocktails, events, and promos to invite social interaction and brand trial."]
     },
     {
       "archetype": "The Brand Advocate Storyteller",
-      "description": "Igniting excitement and rebellious identity around the tequila\n\nFacilitating real-world and virtual touchpoints for consumers to\n\nBuilding brand prestige and educating consumers on product\n\nbrand.\n\nconnect with the tequila.\n\nuniqueness and availability.",
-      "appeal": "",
-      "examples": []
+      "description": "Building brand prestige and educating consumers on product uniqueness and availability.",
+      "appeal": "Followers look for authentic insights and aspirational lifestyle cues linked to the tequila.",
+      "examples": ["Official or semi-official accounts narrating product attributes, launch stories, and experiential lifestyle aesthetics."]
     }
   ],
   "how_to_win": {
