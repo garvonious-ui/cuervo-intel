@@ -342,34 +342,38 @@ with tab_content:
     st.markdown("---")
 
     # ── Theme Performance ──────────────────────────────────────────────
-    st.subheader("Content Theme Performance")
-    st.caption(_perf.get("theme_caption", f"Which themes drive the highest engagement for {HERO}"))
+    if cfg.themes_ready:
+        st.subheader("Content Theme Performance")
+        st.caption(_perf.get("theme_caption", f"Which themes drive the highest engagement for {HERO}"))
 
-    if len(hero_df) and hero_df["content_theme"].notna().any():
-        theme_eng = (hero_df.groupby("content_theme")
-                     .agg(avg_eng=("total_engagement", "mean"), count=("total_engagement", "size"))
-                     .reset_index()
-                     .sort_values("avg_eng", ascending=False))
-        theme_eng["avg_eng"] = theme_eng["avg_eng"].round(0)
+        if len(hero_df) and hero_df["content_theme"].notna().any():
+            theme_eng = (hero_df.groupby("content_theme")
+                         .agg(avg_eng=("total_engagement", "mean"), count=("total_engagement", "size"))
+                         .reset_index()
+                         .sort_values("avg_eng", ascending=False))
+            theme_eng["avg_eng"] = theme_eng["avg_eng"].round(0)
 
-        fig_theme = px.bar(theme_eng, x="content_theme", y="avg_eng",
-                           color_discrete_sequence=[cfg.brand_colors[HERO]],
-                           labels={"avg_eng": "Avg Engagements", "content_theme": ""},
-                           template=CHART_TEMPLATE, text_auto=",.0f",
-                           hover_data={"count": True})
-        fig_theme.add_hline(y=ENG_PER_POST_TARGET, line_dash="dash", line_color="#333",
-                            annotation_text=f"{ENG_PER_POST_TARGET} eng/post target", annotation_position="top right")
-        fig_theme.update_layout(font=CHART_FONT, height=400, showlegend=False,
-                                xaxis_tickangle=-35)
-        st.plotly_chart(fig_theme, use_container_width=True)
+            fig_theme = px.bar(theme_eng, x="content_theme", y="avg_eng",
+                               color_discrete_sequence=[cfg.brand_colors[HERO]],
+                               labels={"avg_eng": "Avg Engagements", "content_theme": ""},
+                               template=CHART_TEMPLATE, text_auto=",.0f",
+                               hover_data={"count": True})
+            fig_theme.add_hline(y=ENG_PER_POST_TARGET, line_dash="dash", line_color="#333",
+                                annotation_text=f"{ENG_PER_POST_TARGET} eng/post target", annotation_position="top right")
+            fig_theme.update_layout(font=CHART_FONT, height=400, showlegend=False,
+                                    xaxis_tickangle=-35)
+            st.plotly_chart(fig_theme, use_container_width=True)
 
-        # So What
-        top_theme = theme_eng.iloc[0]
-        bottom_theme = theme_eng.iloc[-1] if len(theme_eng) > 1 else top_theme
-        themes_above_target = theme_eng[theme_eng["avg_eng"] >= ENG_PER_POST_TARGET]
-        st.info(f"**Top theme:** {top_theme['content_theme']} at {top_theme['avg_eng']:,.0f} avg engagements ({top_theme['count']} posts). "
-                f"{len(themes_above_target)} of {len(theme_eng)} themes meet the {ENG_PER_POST_TARGET} eng/post target. "
-                f"**Lowest:** {bottom_theme['content_theme']} at {bottom_theme['avg_eng']:,.0f}.")
+            # So What
+            top_theme = theme_eng.iloc[0]
+            bottom_theme = theme_eng.iloc[-1] if len(theme_eng) > 1 else top_theme
+            themes_above_target = theme_eng[theme_eng["avg_eng"] >= ENG_PER_POST_TARGET]
+            st.info(f"**Top theme:** {top_theme['content_theme']} at {top_theme['avg_eng']:,.0f} avg engagements ({top_theme['count']} posts). "
+                    f"{len(themes_above_target)} of {len(theme_eng)} themes meet the {ENG_PER_POST_TARGET} eng/post target. "
+                    f"**Lowest:** {bottom_theme['content_theme']} at {bottom_theme['avg_eng']:,.0f}.")
+    else:
+        st.info(f"**Content theme analysis hidden** — post-level theme tagging is not yet complete for {HERO}. "
+                f"This section will appear once all posts have been manually reviewed and tagged.")
 
     st.markdown("---")
 

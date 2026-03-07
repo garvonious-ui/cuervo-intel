@@ -18,6 +18,7 @@ Supports multiple clients via `?client=` URL parameter. No param shows an intern
 - **Competitive set**: 5 brands (Fireball, Pink Whitney, Jagermeister, Cazadores)
 - **Strategy pillars**: Event Energy (45%), Creator & Influencer (30%), Flavor Forward (25%)
 - **Data**: Sprout Social CSV exports (Nov 2025 – Feb 2026) + 4 competitor keyword autostrat PDFs
+- **themes_ready: False** — Content theme sections (theme performance, content source mix, content gap analysis, "What to Steal" cards) are hidden until all DR posts have been manually reviewed and tagged with correct content themes. Set `themes_ready=True` in `clients/devils_reserve/client.py` once tagging is complete.
 
 ## Architecture
 
@@ -104,6 +105,7 @@ cfg = get_client()
 - **Assets**: `logo_path`, `favicon_path`, `app_logo_path`
 - **Copy**: `page_title`, `home_title`, `home_subtitle_template`, `page_headers`, `page_captions`, `nav_table`, `excel_filename`, `highlight_fill_color`
 - **Narrative**: `narrative` (nested dict: `narrative["page_key"]["section_key"]`)
+- **Feature flags**: `themes_ready` (bool, default True — set False to hide theme/content-source sections until manual post tagging is done)
 - **Data paths**: `data_dir`, `sprout_dir`, `autostrat_dir`, `sprout_output_dir` (resolved at load time)
 
 ## Page Structure

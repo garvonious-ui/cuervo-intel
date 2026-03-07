@@ -199,112 +199,117 @@ with tab_scorecard:
             f"{abs(dyn_eng - stat_eng):,.0f} avg engagements. {HERO}'s dynamic mix is {dyn_pct:.0f}% — "
             f"{'meeting' if dyn_pct >= 50 else 'below'} the 50%+ target.")
 
-    st.markdown("---")
+    if cfg.themes_ready:
+        st.markdown("---")
 
-    # ── Content Source Mix ─────────────────────────────────────────────
-    st.subheader("Content Source Mix — Creator / Brand / Events")
-    st.caption("Target: 50% Owned / Sponsored Live Events, 30% Creator / Influencer / UGC, 20% Brand-Owned")
+        # ── Content Source Mix ─────────────────────────────────────────────
+        st.subheader("Content Source Mix — Creator / Brand / Events")
+        st.caption("Target: 50% Owned / Sponsored Live Events, 30% Creator / Influencer / UGC, 20% Brand-Owned")
 
-    # Owned / Sponsored Events = event activations, cultural moments, sponsored events
-    event_themes = ["Event/Activation", "Cultural Moment/Holiday"]
-    event_caption_signals = [
-        "ufc", "akamba", "tales_of_the_cocktail", "tales of the cocktail",
-        "nola", "new orleans", "workshop", "activation", "festival",
-        "hanky panky", "vertical team", "mexico on film", "brought the party",
-    ]
-    creator_posts = hero_df[hero_df["has_creator_collab"] == "Yes"] if "has_creator_collab" in hero_df.columns else pd.DataFrame()
-    # Event posts that aren't already counted as creator collabs
-    non_creator_mask = ~hero_df.index.isin(creator_posts.index) if len(creator_posts) > 0 else pd.Series(True, index=hero_df.index)
-    theme_match = hero_df["content_theme"].isin(event_themes)
-    caption_col = hero_df["caption_text"].fillna("").str.lower() if "caption_text" in hero_df.columns else hero_df.get("caption", pd.Series("", index=hero_df.index)).fillna("").str.lower()
-    caption_match = caption_col.apply(lambda t: any(s in t for s in event_caption_signals))
-    event_posts = hero_df[(theme_match | caption_match) & non_creator_mask]
-    brand_posts_count = len(hero_df) - len(creator_posts) - len(event_posts)
+        # Owned / Sponsored Events = event activations, cultural moments, sponsored events
+        event_themes = ["Event/Activation", "Cultural Moment/Holiday"]
+        event_caption_signals = [
+            "ufc", "akamba", "tales_of_the_cocktail", "tales of the cocktail",
+            "nola", "new orleans", "workshop", "activation", "festival",
+            "hanky panky", "vertical team", "mexico on film", "brought the party",
+        ]
+        creator_posts = hero_df[hero_df["has_creator_collab"] == "Yes"] if "has_creator_collab" in hero_df.columns else pd.DataFrame()
+        # Event posts that aren't already counted as creator collabs
+        non_creator_mask = ~hero_df.index.isin(creator_posts.index) if len(creator_posts) > 0 else pd.Series(True, index=hero_df.index)
+        theme_match = hero_df["content_theme"].isin(event_themes)
+        caption_col = hero_df["caption_text"].fillna("").str.lower() if "caption_text" in hero_df.columns else hero_df.get("caption", pd.Series("", index=hero_df.index)).fillna("").str.lower()
+        caption_match = caption_col.apply(lambda t: any(s in t for s in event_caption_signals))
+        event_posts = hero_df[(theme_match | caption_match) & non_creator_mask]
+        brand_posts_count = len(hero_df) - len(creator_posts) - len(event_posts)
 
-    src_total = max(len(hero_df), 1)
-    src_data = pd.DataFrame([
-        {"Source": "Owned / Sponsored Events", "Actual %": round(len(event_posts) / src_total * 100, 1), "Target %": 50},
-        {"Source": "Creator / Influencer / UGC", "Actual %": round(len(creator_posts) / src_total * 100, 1), "Target %": 30},
-        {"Source": "Brand-Owned", "Actual %": round(brand_posts_count / src_total * 100, 1), "Target %": 20},
-    ])
+        src_total = max(len(hero_df), 1)
+        src_data = pd.DataFrame([
+            {"Source": "Owned / Sponsored Events", "Actual %": round(len(event_posts) / src_total * 100, 1), "Target %": 50},
+            {"Source": "Creator / Influencer / UGC", "Actual %": round(len(creator_posts) / src_total * 100, 1), "Target %": 30},
+            {"Source": "Brand-Owned", "Actual %": round(brand_posts_count / src_total * 100, 1), "Target %": 20},
+        ])
 
-    src_colors = {"Creator / Influencer / UGC": "#2ea3f2", "Owned / Sponsored Events": "#D4956A", "Brand-Owned": "#C9A87E"}
+        src_colors = {"Creator / Influencer / UGC": "#2ea3f2", "Owned / Sponsored Events": "#D4956A", "Brand-Owned": "#C9A87E"}
 
-    col_src1, col_src2 = st.columns(2)
-    with col_src1:
-        st.markdown("**Content Source: Actual vs Poplife Target**")
-        fig_src = go.Figure()
-        fig_src.add_trace(go.Bar(x=src_data["Source"], y=src_data["Actual %"],
-                                 name="Actual", marker_color=[src_colors[s] for s in src_data["Source"]],
-                                 text=src_data["Actual %"], textposition="outside", texttemplate="%{text:.0f}%"))
-        fig_src.add_trace(go.Scatter(x=src_data["Source"], y=src_data["Target %"],
-                                     name="Poplife Target", mode="markers+lines",
-                                     marker=dict(size=12, color="#333333", symbol="diamond"),
-                                     line=dict(color="#333333", width=2, dash="dash")))
-        fig_src.update_layout(template=CHART_TEMPLATE, font=CHART_FONT, height=380,
-                              yaxis_title="% of Content", legend=dict(orientation="h", y=-0.15))
-        st.plotly_chart(fig_src, use_container_width=True)
+        col_src1, col_src2 = st.columns(2)
+        with col_src1:
+            st.markdown("**Content Source: Actual vs Poplife Target**")
+            fig_src = go.Figure()
+            fig_src.add_trace(go.Bar(x=src_data["Source"], y=src_data["Actual %"],
+                                     name="Actual", marker_color=[src_colors[s] for s in src_data["Source"]],
+                                     text=src_data["Actual %"], textposition="outside", texttemplate="%{text:.0f}%"))
+            fig_src.add_trace(go.Scatter(x=src_data["Source"], y=src_data["Target %"],
+                                         name="Poplife Target", mode="markers+lines",
+                                         marker=dict(size=12, color="#333333", symbol="diamond"),
+                                         line=dict(color="#333333", width=2, dash="dash")))
+            fig_src.update_layout(template=CHART_TEMPLATE, font=CHART_FONT, height=380,
+                                  yaxis_title="% of Content", legend=dict(orientation="h", y=-0.15))
+            st.plotly_chart(fig_src, use_container_width=True)
 
-    with col_src2:
-        st.markdown("**Content Source Scorecard**")
-        for _, row in src_data.iterrows():
-            gap = row["Actual %"] - row["Target %"]
-            direction = "ON TRACK" if abs(gap) < 10 else ("MORE" if gap < 0 else "LESS")
-            if direction == "ON TRACK":
-                st.success(f"**{row['Source']}**: {row['Actual %']:.0f}% actual / {row['Target %']}% target ({gap:+.0f}%)")
-            elif direction == "MORE":
-                st.error(f"**{row['Source']}**: {row['Actual %']:.0f}% actual / {row['Target %']}% target ({gap:+.0f}%) — Need MORE")
-            else:
-                st.warning(f"**{row['Source']}**: {row['Actual %']:.0f}% actual / {row['Target %']}% target ({gap:+.0f}%) — Need LESS")
-        st.markdown("")
-        st.info("**Content Engine**: Owned / Sponsored Live Events anchor the feed (50%). "
-                "Creator & influencer partnerships drive 1.7x more engagement (30%). "
-                "Brand-owned content fills the remaining 20%.")
+        with col_src2:
+            st.markdown("**Content Source Scorecard**")
+            for _, row in src_data.iterrows():
+                gap = row["Actual %"] - row["Target %"]
+                direction = "ON TRACK" if abs(gap) < 10 else ("MORE" if gap < 0 else "LESS")
+                if direction == "ON TRACK":
+                    st.success(f"**{row['Source']}**: {row['Actual %']:.0f}% actual / {row['Target %']}% target ({gap:+.0f}%)")
+                elif direction == "MORE":
+                    st.error(f"**{row['Source']}**: {row['Actual %']:.0f}% actual / {row['Target %']}% target ({gap:+.0f}%) — Need MORE")
+                else:
+                    st.warning(f"**{row['Source']}**: {row['Actual %']:.0f}% actual / {row['Target %']}% target ({gap:+.0f}%) — Need LESS")
+            st.markdown("")
+            st.info("**Content Engine**: Owned / Sponsored Live Events anchor the feed (50%). "
+                    "Creator & influencer partnerships drive 1.7x more engagement (30%). "
+                    "Brand-owned content fills the remaining 20%.")
 
-    st.markdown("---")
+        st.markdown("---")
 
-    # ── Best Performing Theme ──────────────────────────────────────────
-    st.subheader("Best Performing Content Theme")
-    st.caption(f"Which content theme drives the highest engagement for {HERO}")
+        # ── Best Performing Theme ──────────────────────────────────────────
+        st.subheader("Best Performing Content Theme")
+        st.caption(f"Which content theme drives the highest engagement for {HERO}")
 
-    theme_perf = results["themes"].get(HERO, {}).get("theme_performance", {})
-    best_theme_name = results["themes"].get(HERO, {}).get("best_performing_theme", "N/A")
+        theme_perf = results["themes"].get(HERO, {}).get("theme_performance", {})
+        best_theme_name = results["themes"].get(HERO, {}).get("best_performing_theme", "N/A")
 
-    if theme_perf and best_theme_name != "N/A":
-        best_theme_data = theme_perf.get(best_theme_name, {})
-        best_eng = best_theme_data.get("avg_engagements", 0)
-        best_count = best_theme_data.get("count", 0)
+        if theme_perf and best_theme_name != "N/A":
+            best_theme_data = theme_perf.get(best_theme_name, {})
+            best_eng = best_theme_data.get("avg_engagements", 0)
+            best_count = best_theme_data.get("count", 0)
 
-        # Metric card
-        bt_col1, bt_col2, bt_col3 = st.columns(3)
-        with bt_col1:
-            st.metric("Best Theme", best_theme_name)
-        with bt_col2:
-            st.metric("Avg Engagements", f"{best_eng:,.0f}",
-                      delta=f"{best_eng - ENG_PER_POST_TARGET:+,.0f} vs {ENG_PER_POST_TARGET} target")
-        with bt_col3:
-            st.metric("Posts", f"{best_count}")
+            # Metric card
+            bt_col1, bt_col2, bt_col3 = st.columns(3)
+            with bt_col1:
+                st.metric("Best Theme", best_theme_name)
+            with bt_col2:
+                st.metric("Avg Engagements", f"{best_eng:,.0f}",
+                          delta=f"{best_eng - ENG_PER_POST_TARGET:+,.0f} vs {ENG_PER_POST_TARGET} target")
+            with bt_col3:
+                st.metric("Posts", f"{best_count}")
 
-        # Mini bar chart of all themes by engagements
-        theme_rows = [{"Theme": t, "Avg Eng": round(v["avg_engagements"], 0), "Posts": v["count"]}
-                      for t, v in theme_perf.items() if v.get("avg_engagements", 0) > 0]
-        if theme_rows:
-            theme_chart_df = pd.DataFrame(theme_rows).sort_values("Avg Eng", ascending=True)
-            fig_bt = px.bar(theme_chart_df, x="Avg Eng", y="Theme", orientation="h",
-                            color_discrete_sequence=[cfg.brand_colors.get(HERO, cfg.primary_color)],
-                            labels={"Avg Eng": "Avg Engagements", "Theme": ""},
-                            template=CHART_TEMPLATE, text_auto=",.0f",
-                            hover_data={"Posts": True})
-            fig_bt.add_vline(x=ENG_PER_POST_TARGET, line_dash="dash", line_color="#333",
-                             annotation_text=f"{ENG_PER_POST_TARGET} eng target")
-            fig_bt.update_layout(font=CHART_FONT, height=max(280, len(theme_rows) * 35),
-                                 showlegend=False)
-            st.plotly_chart(fig_bt, use_container_width=True)
+            # Mini bar chart of all themes by engagements
+            theme_rows = [{"Theme": t, "Avg Eng": round(v["avg_engagements"], 0), "Posts": v["count"]}
+                          for t, v in theme_perf.items() if v.get("avg_engagements", 0) > 0]
+            if theme_rows:
+                theme_chart_df = pd.DataFrame(theme_rows).sort_values("Avg Eng", ascending=True)
+                fig_bt = px.bar(theme_chart_df, x="Avg Eng", y="Theme", orientation="h",
+                                color_discrete_sequence=[cfg.brand_colors.get(HERO, cfg.primary_color)],
+                                labels={"Avg Eng": "Avg Engagements", "Theme": ""},
+                                template=CHART_TEMPLATE, text_auto=",.0f",
+                                hover_data={"Posts": True})
+                fig_bt.add_vline(x=ENG_PER_POST_TARGET, line_dash="dash", line_color="#333",
+                                 annotation_text=f"{ENG_PER_POST_TARGET} eng target")
+                fig_bt.update_layout(font=CHART_FONT, height=max(280, len(theme_rows) * 35),
+                                     showlegend=False)
+                st.plotly_chart(fig_bt, use_container_width=True)
 
-        st.info(f"**Best theme: {best_theme_name}** at {best_eng:,.0f} avg engagements — lean into this for upcoming content. "
-                f"Themes above the {ENG_PER_POST_TARGET} eng target are proven winners worth scaling.")
+            st.info(f"**Best theme: {best_theme_name}** at {best_eng:,.0f} avg engagements — lean into this for upcoming content. "
+                    f"Themes above the {ENG_PER_POST_TARGET} eng target are proven winners worth scaling.")
+        else:
+            st.info(f"No content theme performance data available for {HERO}.")
     else:
-        st.info(f"No content theme performance data available for {HERO}.")
+        st.markdown("---")
+        st.info(f"**Content source mix & theme analysis hidden** — post-level theme tagging is not yet complete for {HERO}. "
+                f"These sections will appear once all posts have been manually reviewed and tagged.")
 
 
 # ══════════════════════════════════════════════════════════════════════
