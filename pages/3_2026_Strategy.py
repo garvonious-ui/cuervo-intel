@@ -426,18 +426,31 @@ with tab_frameworks:
     st.markdown("---")
 
     # ── The Creator Crew (Creator Archetypes) ────────────────────────
-    st.subheader(f"The {HERO} Crew — Creator Archetypes")
+    _crew_header = cfg.narrative.get("strategy", {}).get("crew_header", f"The {HERO} Crew — Creator Archetypes")
+    st.subheader(_crew_header)
     st.caption("Creators embedded in the brand — not hired talent. iPhone-first. Social-native.")
 
-    arch_cols = st.columns(min(len(cfg.creator_archetypes), 5))
-    for i, (archetype, fit) in enumerate(cfg.creator_archetypes.items()):
-        with arch_cols[i % len(arch_cols)]:
-            st.markdown(f"""
-            <div style="background:white; border-radius:10px; padding:14px; text-align:center;
-                        border:1px solid #E0D8D0; min-height:100px;">
-                <p style="font-weight:700; color:#333; margin:0 0 6px 0; font-size:0.9rem;">{archetype}</p>
-                <p style="color:#666; font-size:0.82rem; margin:0;">{fit}</p>
-            </div>""", unsafe_allow_html=True)
+    # Prefer autostrat-derived archetypes (richer: description, appeal, examples)
+    _autostrat_tmp = st.session_state.get("autostrat", {})
+    _autostrat_archetypes = get_all_creator_archetypes(_autostrat_tmp) if has_autostrat_data(_autostrat_tmp) else []
+
+    if _autostrat_archetypes:
+        _arch_cols = st.columns(min(len(_autostrat_archetypes[:6]), 3))
+        for i, arch in enumerate(_autostrat_archetypes[:6]):
+            with _arch_cols[i % len(_arch_cols)]:
+                render_creator_archetype(arch)
+        st.caption(f"*From autostrat.ai analysis — {len(_autostrat_archetypes)} archetypes identified*")
+    else:
+        # Fallback to brief-defined archetypes
+        arch_cols = st.columns(min(len(cfg.creator_archetypes), 5))
+        for i, (archetype, fit) in enumerate(cfg.creator_archetypes.items()):
+            with arch_cols[i % len(arch_cols)]:
+                st.markdown(f"""
+                <div style="background:white; border-radius:10px; padding:14px; text-align:center;
+                            border:1px solid #E0D8D0; min-height:100px;">
+                    <p style="font-weight:700; color:#333; margin:0 0 6px 0; font-size:0.9rem;">{archetype}</p>
+                    <p style="color:#666; font-size:0.82rem; margin:0;">{fit}</p>
+                </div>""", unsafe_allow_html=True)
 
     st.markdown("---")
 
@@ -550,41 +563,6 @@ with tab_frameworks:
             <span style="color:#888; margin-left:12px;">{detail}</span>
         </div>""", unsafe_allow_html=True)
 
-    st.markdown("---")
-
-    # ── Platform Playbook ───────────────────────────────────────────────
-    st.subheader("Platform Playbook")
-    st.caption("Platform roles, priority levels, and cadence targets")
-
-    plat_rows = []
-    for plat, info in cfg.platform_roles.items():
-        plat_rows.append({"Platform": plat, "Role": info["role"], "Priority": info["priority"], "Cadence": info["cadence"]})
-    plat_df = pd.DataFrame(plat_rows)
-
-    def color_priority(val):
-        if val == "Primary":
-            return "background-color: #C8E6C9; color: #2E7D32; font-weight: bold"
-        return "background-color: #E0E0E0; color: #555"
-
-    st.dataframe(
-        plat_df.style.map(color_priority, subset=["Priority"]),
-        use_container_width=True, hide_index=True, height=260,
-    )
-
-    # IG Format Mix
-    st.markdown("**Instagram Format Mix**")
-    fmt_cols = st.columns(len(cfg.ig_format_mix))
-    fmt_colors = ["#2ea3f2", "#F8C090", "#C9A87E", "#66BB6A"]
-    for i, (fmt, info) in enumerate(cfg.ig_format_mix.items()):
-        with fmt_cols[i]:
-            c = fmt_colors[i]
-            st.markdown(f"""
-            <div style="text-align:center; background:white; border-radius:8px; padding:12px;
-                        border-top:3px solid {c}; border:1px solid #E0D8D0;">
-                <p style="font-size:1.4rem; font-weight:700; color:{c}; margin:0;">{info['pct']}%</p>
-                <p style="font-weight:600; margin:2px 0; color:#333;">{fmt}</p>
-                <p style="color:#888; font-size:0.8rem; margin:0;">{info['role']}</p>
-            </div>""", unsafe_allow_html=True)
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -624,6 +602,22 @@ with tab_platform:
         f'</tr></thead><tbody>{_rows_html}</tbody></table>'
     )
     st.markdown(_table_html, unsafe_allow_html=True)
+
+    # ── Instagram Format Mix ─────────────────────────────────────────
+    st.markdown("")
+    st.markdown("**Instagram Format Mix**")
+    fmt_cols = st.columns(len(cfg.ig_format_mix))
+    fmt_colors = ["#2ea3f2", "#F8C090", "#C9A87E", "#66BB6A"]
+    for i, (fmt, info) in enumerate(cfg.ig_format_mix.items()):
+        with fmt_cols[i]:
+            c = fmt_colors[i]
+            st.markdown(f"""
+            <div style="text-align:center; background:white; border-radius:8px; padding:12px;
+                        border-top:3px solid {c}; border:1px solid #E0D8D0;">
+                <p style="font-size:1.4rem; font-weight:700; color:{c}; margin:0;">{info['pct']}%</p>
+                <p style="font-weight:600; margin:2px 0; color:#333;">{fmt}</p>
+                <p style="color:#888; font-size:0.8rem; margin:0;">{info['role']}</p>
+            </div>""", unsafe_allow_html=True)
 
     st.markdown("---")
 
@@ -867,8 +861,8 @@ with tab_action:
             "week": "Week 2",
             "focus": "Content Pillar Launch",
             "actions": [
-                f"Launch '{HERO} in Culture' pillar: 2 Reels featuring meme/reactive cultural content (Especial + RTDs)",
-                f"Launch 'Tradicional, Made Social' pillar: 1 Carousel with cocktail recipe using Tradicional",
+                f"Launch '{list(cfg.pillar_map.keys())[0]}' pillar: 2 Reels featuring meme/reactive cultural content" if cfg.pillar_map else "Launch primary content pillar: 2 Reels",
+                f"Launch '{list(cfg.pillar_map.keys())[1]}' pillar: 1 Carousel with product-forward storytelling" if len(cfg.pillar_map) > 1 else "Launch secondary content pillar: 1 Carousel",
                 "Test first meme-format Reel (POV/trending audio) — keep it native, not ad-like",
                 f"Test top-performing themes from leaders: {', '.join(top_themes_for_leaders.index[:2])}" if len(top_themes_for_leaders) >= 2 else "Identify and test high-performing themes from competitors",
             ],
@@ -992,113 +986,71 @@ with tab_action:
         reel_pct_opp = len(hero_df[hero_df["post_type"] == "Reel"]) / max(len(hero_df[hero_df["platform"] == "Instagram"]), 1) * 100
         if reel_pct_opp < 60:
             st.markdown(f"- Instagram Reels at only **{reel_pct_opp:.0f}%** of IG content — room to grow to 60%+")
-        st.markdown("- Brand heritage (250+ yrs) is a unique differentiator vs newer brands")
-        st.markdown("- RTD line (Playamar, Margarita cans) offers untapped content pillar")
-        st.markdown("- 'Fun signal' positioning aligns with Gen Z values — be the brand you bring")
+        for _opp in cfg.narrative.get("strategy", {}).get("opportunities", []):
+            st.markdown(f"- {_opp}")
 
     st.markdown("---")
 
-    # ── All Recommendations ────────────────────────────────────────────
-    st.subheader("All Recommendations")
+    # ── Strategic Actions (consolidated) ──────────────────────────────
+    st.subheader("Strategic Actions")
+    st.caption("Side-by-side: what the numbers say vs what the conversations say")
 
-    recs = results["recommendations"]
-    if recs:
-        for priority in ["High", "Medium", "Low"]:
-            pri_recs = [r for r in recs if r["priority"] == priority]
-            if pri_recs:
-                color = PRIORITY_COLORS[priority]
-                st.markdown(f"#### {priority} Priority ({len(pri_recs)})")
-                for r in pri_recs:
-                    with st.expander(f"[{r['platform']}] {r['category']}: {r['recommendation'][:80]}"):
-                        st.markdown(f"**Insight:** {r['insight']}")
-                        st.markdown(f"**Action:** {r['recommendation']}")
-    else:
-        st.info("No recommendations generated.")
-
-    st.markdown("---")
-
-    # ── Autostrat Strategic Actions ────────────────────────────────────
     autostrat = st.session_state.get("autostrat", {})
-    _has_autostrat_actions = has_autostrat_data(autostrat)
 
-    if _has_autostrat_actions:
-        # Split: hero-specific reports vs competitor reports
-        hero_strat = get_all_strategic_actions(autostrat, identifier_filter=cfg.hero_hashtag_ids)
-        all_strat = get_all_strategic_actions(autostrat)
-        competitor_strat = [a for a in all_strat if a["source_identifier"] not in cfg.hero_hashtag_ids]
-
-        # Helper: aggregate entries into categorized lists
-        def _aggregate(entries):
-            findings, opps, gaps, actions = [], [], [], []
-            for entry in entries:
-                src = entry["source_identifier"].replace("_", " ").title()
-                for f in entry.get("key_findings", []):
-                    findings.append({"source": src, "text": f})
-                for o in entry.get("opportunities", []):
-                    opps.append({"source": src, "text": o})
-                for g in entry.get("gaps_risks_unmet_needs", []):
-                    gaps.append({"source": src, "text": g})
-                for a in entry.get("strategic_actions", []):
+    # Helper: aggregate autostrat entries into flat action lists
+    def _aggregate_actions(entries):
+        actions = []
+        seen = set()
+        for entry in entries:
+            src = entry["source_identifier"].replace("_", " ").title()
+            for a in entry.get("strategic_actions", []):
+                key = a[:50]
+                if key not in seen:
                     actions.append({"source": src, "text": a})
-            return findings, opps, gaps, actions
+                    seen.add(key)
+            for o in entry.get("opportunities", []):
+                key = o[:50]
+                if key not in seen:
+                    actions.append({"source": src, "text": o})
+                    seen.add(key)
+        return actions
 
-        # ── Section A: Hero Strategic Intelligence ──────────────────────
-        if hero_strat:
-            st.subheader(f"{HERO} Strategic Intelligence")
-            st.caption(f"From #{HERO.replace(' ', '')}, #{HERO.split()[-1]}, and {HERO} keyword reports")
+    col_data_recs, col_convo_recs = st.columns(2)
 
-            c_findings, c_opps, c_gaps, c_actions = _aggregate(hero_strat)
+    with col_data_recs:
+        st.markdown("**From Performance Data**")
+        recs = results["recommendations"]
+        if recs:
+            for priority in ["High", "Medium", "Low"]:
+                pri_recs = [r for r in recs if r["priority"] == priority]
+                if pri_recs:
+                    color = PRIORITY_COLORS[priority]
+                    st.markdown(f"**{priority} Priority** ({len(pri_recs)})")
+                    for r in pri_recs:
+                        st.markdown(f"- [{r['platform']}] {r['recommendation']}")
+        else:
+            st.info("No data-driven recommendations generated.")
 
-            col_sa1, col_sa2 = st.columns(2)
-            with col_sa1:
-                if c_findings:
-                    with st.expander(f"Key Findings ({len(c_findings)})", expanded=True):
-                        for item in c_findings:
-                            st.markdown(f"- {item['text']}")
-                if c_opps:
-                    with st.expander(f"Opportunities ({len(c_opps)})"):
-                        for item in c_opps:
-                            st.markdown(f"- {item['text']}")
-            with col_sa2:
-                if c_gaps:
-                    with st.expander(f"Gaps, Risks & Unmet Needs ({len(c_gaps)})", expanded=True):
-                        for item in c_gaps:
-                            st.markdown(f"- {item['text']}")
-                if c_actions:
-                    with st.expander(f"Strategic Actions ({len(c_actions)})"):
-                        for item in c_actions:
-                            st.markdown(f"- {item['text']}")
+    with col_convo_recs:
+        st.markdown("**From Conversation Intelligence**")
+        if has_autostrat_data(autostrat):
+            all_strat = get_all_strategic_actions(autostrat)
+            hero_strat = [a for a in all_strat if a["source_identifier"] in cfg.hero_hashtag_ids]
+            comp_strat = [a for a in all_strat if a["source_identifier"] not in cfg.hero_hashtag_ids]
 
-            total_hero = len(c_findings) + len(c_opps) + len(c_gaps) + len(c_actions)
-            st.info(f"**{total_hero} {HERO}-specific insights** from {len(hero_strat)} reports.")
+            hero_actions = _aggregate_actions(hero_strat)
+            comp_actions = _aggregate_actions(comp_strat)
 
-        # ── Section B: Competitive Context ────────────────────────────────
-        if competitor_strat:
-            comp_findings, comp_opps, comp_gaps, comp_actions = _aggregate(competitor_strat)
-            total_comp = len(comp_findings) + len(comp_opps) + len(comp_gaps) + len(comp_actions)
-
-            with st.expander(f"Competitive Context — {total_comp} insights from {len(competitor_strat)} competitor reports"):
-                st.caption(f"What competitors are doing — use this to identify gaps {HERO} can exploit")
-
-                col_cc1, col_cc2 = st.columns(2)
-                with col_cc1:
-                    if comp_findings:
-                        st.markdown("**Key Findings**")
-                        for item in comp_findings[:8]:
-                            st.markdown(f"- **{item['source']}** — {item['text']}")
-                    if comp_opps:
-                        st.markdown("**Opportunities**")
-                        for item in comp_opps[:8]:
-                            st.markdown(f"- **{item['source']}** — {item['text']}")
-                with col_cc2:
-                    if comp_gaps:
-                        st.markdown("**Gaps & Risks**")
-                        for item in comp_gaps[:8]:
-                            st.markdown(f"- **{item['source']}** — {item['text']}")
-                    if comp_actions:
-                        st.markdown("**Strategic Actions**")
-                        for item in comp_actions[:8]:
-                            st.markdown(f"- **{item['source']}** — {item['text']}")
+            if hero_actions:
+                st.markdown(f"**{HERO} Insights** ({len(hero_actions)})")
+                for item in hero_actions[:8]:
+                    st.markdown(f"- {item['text']}")
+            if comp_actions:
+                with st.expander(f"Competitive Insights ({len(comp_actions)})"):
+                    for item in comp_actions[:8]:
+                        st.markdown(f"- **{item['source']}** — {item['text']}")
+        else:
+            st.info("Import autostrat reports to see conversation-driven insights.")
 
     st.markdown("---")
 
@@ -1107,7 +1059,28 @@ with tab_action:
 
     if _has_autostrat:
         st.subheader("Qualitative Strategic Intelligence")
-        st.caption("From autostrat.ai reports — audience insights, content trends, creator archetypes")
+        st.caption("From autostrat.ai reports — audience insights, content trends, partnership opportunities")
+
+        # ── Audience Profile (NOPD) ──────────────────────────────────────
+        _all_aud = get_all_audience_profiles(autostrat, exclude_reference=True)
+        # Filter to hero brand identifiers only
+        _hero_ids = cfg.hero_hashtag_ids
+        all_audience = [p for p in _all_aud if p["identifier"] in _hero_ids] if _hero_ids else _all_aud
+        if all_audience:
+            render_section_label("Audience Profile — Who We're Talking To")
+            # Merge NOPD across hero reports, deduplicating
+            merged_nopd = {"needs": [], "objections": [], "desires": [], "pain_points": []}
+            _seen = {"needs": set(), "objections": set(), "desires": set(), "pain_points": set()}
+            for profile in all_audience:
+                for dim in merged_nopd:
+                    for item in profile.get("audience_profile", {}).get(dim, []):
+                        key = item[:40] if isinstance(item, str) else str(item)[:40]
+                        if key not in _seen[dim]:
+                            merged_nopd[dim].append(item)
+                            _seen[dim].add(key)
+            render_nopd_cards(merged_nopd)
+            st.caption(f"*Synthesized from {len(all_audience)} {HERO} autostrat reports*")
+            st.markdown("---")
 
         # Winning Territories
         all_htw = get_all_how_to_win(autostrat, exclude_reference=True)
@@ -1131,16 +1104,6 @@ with tab_action:
                 with cols[i % 2]:
                     render_narrative_card(trend.get("trend", f"Trend {i+1}"),
                                          trend.get("description", ""), accent_color="#F8C090")
-            st.markdown("---")
-
-        # Creator Archetypes
-        all_archetypes = get_all_creator_archetypes(autostrat)
-        if all_archetypes:
-            render_section_label("Creator Archetypes to Target")
-            arch_cols = st.columns(min(len(all_archetypes), 3))
-            for i, arch in enumerate(all_archetypes[:6]):
-                with arch_cols[i % len(arch_cols)]:
-                    render_creator_archetype(arch)
             st.markdown("---")
 
         # Partnership Opportunities
