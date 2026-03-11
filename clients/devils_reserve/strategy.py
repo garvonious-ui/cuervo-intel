@@ -100,15 +100,15 @@ CONTENT_MIX_COLORS = {
 # Targets are growth-oriented for a brand in launch phase
 
 KPI_TARGETS = {
-    "engagements_per_post": 50,         # Small audience, realistic starting target
-    "eng_per_1k_followers": 15.0,       # Small accounts can have high relative ER
+    "engagements_per_post": 75,         # Event content (NASCAR, Spring Break) should push averages up
+    "eng_per_1k_followers": 25.0,       # Small accounts routinely hit 20-30+; 15 was too conservative
     "reel_ratio": 60,                   # Heavy on Reels for discovery
     "carousel_ratio": 20,              # Some carousels for engagement
     "ig_posts_per_month": (8, 12),     # Building cadence
-    "tt_posts_per_week": (3, 5),       # TikTok-first for discovery
-    "save_rate": 3.0,
-    "share_rate": 5.0,
-    "creator_engagements_per_post": 100,
+    "tt_posts_per_week": (5, 7),       # Need volume to break through at 21 followers
+    "save_rate": 2.0,                  # Realistic for Chaos-heavy mix (cocktail saves are 25% of content)
+    "share_rate": 3.0,                 # Memes drive shares but not every post
+    "creator_engagements_per_post": 150, # Creator content should 2-3x brand-owned
     "creator_pct_target_june": 30,     # Creator / influencer content share
 }
 
@@ -116,7 +116,7 @@ KPI_TARGETS = {
 
 CADENCE_TARGETS = {
     "Instagram": {"low": 8, "high": 12},
-    "TikTok": {"low": 12, "high": 20},
+    "TikTok": {"low": 20, "high": 28},
 }
 
 # ── IG Format Mix ─────────────────────────────────────────────────────
