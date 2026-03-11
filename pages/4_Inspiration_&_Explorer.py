@@ -136,7 +136,7 @@ with tab_inspo:
                 hits_text = cs["what_hits"].replace("\n", " ").strip()
                 steal_points.append(
                     f"**Content principle (from {display_name}):** Their top content uses "
-                    f"*{hits_text[:150]}{'...' if len(hits_text) > 150 else ''}* — "
+                    f"*{hits_text}* — "
                     f"**{cfg.hero_brand} adaptation:** {adapt_product}, cocktail reveals, and cultural moments."
                 )
 
@@ -145,7 +145,7 @@ with tab_inspo:
                 clean_themes = [t.replace("\n", " ").strip() for t in cs["common_themes"][:2]]
                 for theme in clean_themes:
                     steal_points.append(
-                        f"**Theme to adapt:** *\"{theme[:120]}{'...' if len(theme) > 120 else ''}\"* → "
+                        f"**Theme to adapt:** *\"{theme}\"* → "
                         f"{cfg.hero_brand} can {adapt_heritage} and community-driven content."
                     )
 
@@ -153,8 +153,7 @@ with tab_inspo:
             if ea.get("summary"):
                 ea_text = ea["summary"].replace("\n", " ").strip()
                 steal_points.append(
-                    f"**Engagement tactic (from {display_name}):** *{ea_text[:150]}"
-                    f"{'...' if len(ea_text) > 150 else ''}* — "
+                    f"**Engagement tactic (from {display_name}):** *{ea_text}* — "
                     f"**{cfg.hero_brand} adaptation:** {adapt_engagement} and community activations."
                 )
 
@@ -162,8 +161,7 @@ with tab_inspo:
             if pa.get("summary"):
                 pa_text = pa["summary"].replace("\n", " ").strip()
                 steal_points.append(
-                    f"**Posting rhythm (from {display_name}):** *{pa_text[:150]}"
-                    f"{'...' if len(pa_text) > 150 else ''}* — "
+                    f"**Posting rhythm (from {display_name}):** *{pa_text}* — "
                     f"**{cfg.hero_brand} adaptation:** {adapt_cadence}."
                 )
 
