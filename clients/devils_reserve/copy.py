@@ -81,10 +81,10 @@ NARRATIVE = {
     "inspiration": {
         "steal_header_template": "What {hero_brand} Can Steal",
         "adaptation_templates": {
-            "product_drops": "Apply the same energy to event activations and flavor-forward drops",
-            "heritage": "Mirror this with mischievous brand storytelling",
-            "engagement": "Apply these engagement triggers to event culture, nightlife moments",
-            "cadence": "Mirror this cadence rhythm synced to NASCAR and festival calendar",
+            "product_drops": "Apply the same energy to Devils Reserve event activations, NASCAR drops, and pineapple + jalapeño flavor moments",
+            "heritage": "mirror this with mischievous 'raise a little hell' brand storytelling, nightlife energy",
+            "engagement": "Apply these engagement triggers to event culture, party moments, and Barstool activations",
+            "cadence": "Mirror this cadence rhythm synced to NASCAR weekends, Spring Break, festival season, and Barstool drops",
         },
         "audience_comparison_template": "Audience Comparison: Devils Reserve vs {display_name}",
     },

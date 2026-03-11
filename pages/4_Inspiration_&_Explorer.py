@@ -124,25 +124,29 @@ with tab_inspo:
 
             steal_points = []
 
+            # Pull client-specific adaptation copy from config
+            adapt = cfg.narrative.get("inspiration", {}).get("adaptation_templates", {})
+            adapt_product = adapt.get("product_drops", "Apply the same energy to product drops and cultural moments")
+            adapt_heritage = adapt.get("heritage", f"Mirror this with {cfg.industry} heritage storytelling")
+            adapt_engagement = adapt.get("engagement", f"Apply these engagement triggers to {cfg.industry} moments")
+            adapt_cadence = adapt.get("cadence", f"Mirror this cadence rhythm synced to {cfg.industry} calendar moments")
+
             # Translate what_hits into a hero-brand-relevant content principle
             if cs.get("what_hits"):
                 hits_text = cs["what_hits"].replace("\n", " ").strip()
                 steal_points.append(
                     f"**Content principle (from {display_name}):** Their top content uses "
                     f"*{hits_text[:150]}{'...' if len(hits_text) > 150 else ''}* — "
-                    f"**{cfg.hero_brand} adaptation:** Apply the same energy to new product drops "
-                    f"(Playamar, seasonal margarita kits), cocktail reveals, and cultural moments."
+                    f"**{cfg.hero_brand} adaptation:** {adapt_product}, cocktail reveals, and cultural moments."
                 )
 
             # Translate common themes into actionable playbook items
             if cs.get("common_themes"):
                 clean_themes = [t.replace("\n", " ").strip() for t in cs["common_themes"][:2]]
                 for theme in clean_themes:
-                    # Extract the strategic principle, not the literal content
                     steal_points.append(
                         f"**Theme to adapt:** *\"{theme[:120]}{'...' if len(theme) > 120 else ''}\"* → "
-                        f"{cfg.hero_brand} can mirror this with {cfg.industry} heritage storytelling, "
-                        f"cocktail culture moments, and community-driven content."
+                        f"{cfg.hero_brand} can {adapt_heritage} and community-driven content."
                     )
 
             ea = report_r.get("engagement_analysis", {})
@@ -151,8 +155,7 @@ with tab_inspo:
                 steal_points.append(
                     f"**Engagement tactic (from {display_name}):** *{ea_text[:150]}"
                     f"{'...' if len(ea_text) > 150 else ''}* — "
-                    f"**{cfg.hero_brand} adaptation:** Apply these engagement triggers to "
-                    f"cocktail culture, {cfg.industry} heritage moments, and community activations."
+                    f"**{cfg.hero_brand} adaptation:** {adapt_engagement} and community activations."
                 )
 
             pa = report_r.get("posting_analysis", {})
@@ -161,9 +164,7 @@ with tab_inspo:
                 steal_points.append(
                     f"**Posting rhythm (from {display_name}):** *{pa_text[:150]}"
                     f"{'...' if len(pa_text) > 150 else ''}* — "
-                    f"**{cfg.hero_brand} adaptation:** Mirror this cadence rhythm "
-                    f"synced to {cfg.industry} calendar moments (Margarita Day, Cinco de Mayo, "
-                    f"summer kickoff, holiday entertaining)."
+                    f"**{cfg.hero_brand} adaptation:** {adapt_cadence}."
                 )
 
             avg_eng_val = snapshot.get("avg_engagements", snapshot.get("avg_engagement_rate", 0))
