@@ -241,16 +241,6 @@ with tab_inspo:
                         render_verbatim_quotes(hw["audience_verbatims"])
                 st.markdown("---")
 
-            # ── Sponsorship Intelligence ───────────────────────────────
-            suggestions = report_r.get("future_sponsorship_suggestions", [])
-            if suggestions:
-                render_section_label("Sponsorship Intelligence")
-                cols_s = st.columns(min(len(suggestions), 2))
-                for i, sug in enumerate(suggestions):
-                    with cols_s[i % len(cols_s)]:
-                        render_sponsorship_card(sug)
-                st.markdown("---")
-
             # ── Performance Statistics ────────────────────────────────
             stats = report_r.get("statistics", {})
             if stats and any(stats.get("all_posts", {}).values()):
