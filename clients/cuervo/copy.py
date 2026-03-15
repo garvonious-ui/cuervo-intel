@@ -80,10 +80,10 @@ NARRATIVE = {
     "inspiration": {
         "steal_header_template": "What {hero_brand} Can Steal",
         "adaptation_templates": {
-            "product_drops": "Apply the same energy to new product drops (Playamar, seasonal margarita kits)",
-            "heritage": "Mirror this with tequila heritage storytelling",
+            "product_drops": "Apply the same energy to new product drops (Playamar, seasonal margarita kits), cocktail reveals, and cultural moments",
+            "heritage": "mirror this with tequila heritage storytelling, cocktail culture moments",
             "engagement": "Apply these engagement triggers to cocktail culture, tequila heritage moments",
-            "cadence": "Mirror this cadence rhythm synced to tequila calendar moments",
+            "cadence": "Mirror this cadence rhythm synced to tequila calendar moments (Margarita Day, Cinco de Mayo, summer kickoff, holiday entertaining)",
         },
         "audience_comparison_template": "Audience Comparison: Cuervo vs {display_name}",
     },
