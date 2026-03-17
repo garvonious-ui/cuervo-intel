@@ -351,19 +351,19 @@ with tab_content:
 
         if has_pillars:
             st.subheader("Content Pillar Performance")
-            st.caption(f"Which pillars drive the highest engagement for {HERO}")
+            st.caption(f"Which pillars drive the highest engagement for {HERO} (median to reduce outlier skew)")
 
             _pillar_valid = hero_df[hero_df["content_pillar"].notna() & (hero_df["content_pillar"].astype(str).str.strip() != "")]
             pillar_eng = (_pillar_valid
                           .groupby("content_pillar")
-                          .agg(avg_eng=("total_engagement", "mean"), count=("total_engagement", "size"))
+                          .agg(avg_eng=("total_engagement", "median"), count=("total_engagement", "size"))
                           .reset_index()
                           .sort_values("avg_eng", ascending=False))
             pillar_eng["avg_eng"] = pillar_eng["avg_eng"].round(0)
 
             fig_pillar = px.bar(pillar_eng, x="content_pillar", y="avg_eng",
                                 color="content_pillar", color_discrete_map=cfg.pillar_colors,
-                                labels={"avg_eng": "Avg Engagements", "content_pillar": ""},
+                                labels={"avg_eng": "Median Engagements", "content_pillar": ""},
                                 template=CHART_TEMPLATE, text_auto=",.0f",
                                 hover_data={"count": True})
             fig_pillar.add_hline(y=ENG_PER_POST_TARGET, line_dash="dash", line_color="#333",
@@ -375,7 +375,7 @@ with tab_content:
             top_p = pillar_eng.iloc[0]
             bottom_p = pillar_eng.iloc[-1] if len(pillar_eng) > 1 else top_p
             pillars_above = pillar_eng[pillar_eng["avg_eng"] >= ENG_PER_POST_TARGET]
-            st.info(f"**Top pillar:** {top_p['content_pillar']} at {top_p['avg_eng']:,.0f} avg engagements ({top_p['count']} posts). "
+            st.info(f"**Top pillar:** {top_p['content_pillar']} at {top_p['avg_eng']:,.0f} median engagements ({top_p['count']} posts). "
                     f"{len(pillars_above)} of {len(pillar_eng)} pillars meet the {ENG_PER_POST_TARGET} eng/post target. "
                     f"**Lowest:** {bottom_p['content_pillar']} at {bottom_p['avg_eng']:,.0f}.")
         else:
