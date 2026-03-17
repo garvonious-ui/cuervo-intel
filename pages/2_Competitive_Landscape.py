@@ -279,59 +279,6 @@ with tab_overview:
 
 with tab_gaps:
 
-    hero_df = full_df[full_df["brand"] == HERO]
-    comp_df = full_df[full_df["brand"] != HERO]
-
-    # ── Content Gap Analysis ───────────────────────────────────────────
-    if cfg.themes_ready:
-        st.subheader(f"Content Gap Analysis: {HERO} vs Category")
-        st.caption("Where competitors invest more content — and whether those themes drive higher engagement")
-
-        all_themes = sorted(full_df["content_theme"].dropna().unique())
-        hero_total = len(hero_df) or 1
-        comp_total = len(comp_df) or 1
-
-        gap_rows = []
-        for theme in all_themes:
-            c_pct = len(hero_df[hero_df["content_theme"] == theme]) / hero_total * 100
-            cat_pct = len(comp_df[comp_df["content_theme"] == theme]) / comp_total * 100
-            c_eng = hero_df[hero_df["content_theme"] == theme]["total_engagement"].mean()
-            cat_eng = comp_df[comp_df["content_theme"] == theme]["total_engagement"].mean()
-            gap_rows.append({
-                "theme": theme,
-                f"{HERO} %": round(c_pct, 1),
-                "Category %": round(cat_pct, 1),
-                "gap": round(cat_pct - c_pct, 1),
-                f"{HERO} Avg Eng": round(c_eng, 0) if pd.notna(c_eng) else 0,
-                "Cat Avg Eng": round(cat_eng, 0) if pd.notna(cat_eng) else 0,
-            })
-
-        gap_df = pd.DataFrame(gap_rows).sort_values("gap", ascending=False)
-
-        fig_gap = go.Figure()
-        fig_gap.add_trace(go.Bar(x=gap_df["theme"], y=gap_df[f"{HERO} %"],
-                                 name=HERO, marker_color=cfg.brand_colors[HERO]))
-        fig_gap.add_trace(go.Bar(x=gap_df["theme"], y=gap_df["Category %"],
-                                 name="Category Avg", marker_color="#A3C4D9"))
-        fig_gap.update_layout(barmode="group", template=CHART_TEMPLATE, font=CHART_FONT,
-                              height=420, xaxis_tickangle=-35, yaxis_title="% of Content",
-                              legend=dict(orientation="h", y=1.1))
-        st.plotly_chart(fig_gap, use_container_width=True)
-
-        # So What — biggest gaps
-        top_gaps = gap_df[gap_df["gap"] > 0].head(3)
-        if len(top_gaps):
-            st.markdown("**Biggest content gaps (themes competitors use more):**")
-            for _, row in top_gaps.iterrows():
-                st.markdown(f"- **{row['theme']}**: Category at {row['Category %']}% vs {HERO} {row[f'{HERO} %']}% "
-                            f"(+{row['gap']}% gap) — Category avg eng: {row['Cat Avg Eng']:,.0f}")
-
-        st.markdown("---")
-    else:
-        st.info(f"**Content gap analysis hidden** — post-level theme tagging is not yet complete for {HERO}. "
-                f"This section will appear once all posts have been manually reviewed and tagged.")
-        st.markdown("---")
-
     # ── Format Strategy Comparison ─────────────────────────────────────
     st.subheader("Format Strategy Comparison")
 
