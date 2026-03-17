@@ -45,7 +45,14 @@ ENG_PER_POST_TARGET = _t["engagements_per_post"]
 
 hero_df_full = df[df["brand"] == HERO]  # Includes Edutain dupes — only for content mix funnel
 hero_df = hero_df_full[hero_df_full["_mix_weight"] >= 1.0] if "_mix_weight" in hero_df_full.columns else hero_df_full
+# Keep unfiltered copy for collaboration breakdown sections (which intentionally show Influencer data)
+hero_df_with_influencer = hero_df.copy()
+# Exclude Influencer posts from engagement metrics (they inflate due to higher reach)
+if "collaboration" in hero_df.columns:
+    hero_df = hero_df[hero_df["collaboration"].str.strip().str.lower() != "influencer"]
 leader_df = df[df["brand"].isin(GEN_Z_LEADERS)]
+if "collaboration" in leader_df.columns:
+    leader_df = leader_df[leader_df["collaboration"].str.strip().str.lower() != "influencer"]
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 tab_scorecard, tab_frameworks, tab_platform, tab_action = st.tabs([
@@ -175,6 +182,8 @@ with tab_scorecard:
     all_brand_ds = []
     for brand in cfg.brand_order:
         bdf = df[df["brand"] == brand]
+        if "collaboration" in bdf.columns:
+            bdf = bdf[bdf["collaboration"].str.strip().str.lower() != "influencer"]
         if len(bdf) == 0:
             continue
         b_dyn = bdf[bdf["post_type"].isin(dynamic_types)]
@@ -204,16 +213,16 @@ with tab_scorecard:
         st.markdown("---")
 
         # ── Collaboration Mix ──────────────────────────────────────────────
-        if "collaboration" in hero_df.columns and hero_df["collaboration"].notna().any():
+        if "collaboration" in hero_df_with_influencer.columns and hero_df_with_influencer["collaboration"].notna().any():
             st.subheader("Collaboration Mix")
             st.caption(f"Who is creating {HERO}'s content — based on manual post tagging")
 
-            collab_total = max(len(hero_df[hero_df["collaboration"].notna()]), 1)
+            collab_total = max(len(hero_df_with_influencer[hero_df_with_influencer["collaboration"].notna()]), 1)
             collab_colors = {"Cuervo": "#2ea3f2", "Partner": "#66BB6A", "Influencer": "#F8C090", "Collective": "#C9A87E"}
             src_rows = []
-            for collab_type in sorted(hero_df["collaboration"].dropna().unique()):
-                count = len(hero_df[hero_df["collaboration"] == collab_type])
-                avg_eng = hero_df[hero_df["collaboration"] == collab_type]["total_engagement"].mean()
+            for collab_type in sorted(hero_df_with_influencer["collaboration"].dropna().unique()):
+                count = len(hero_df_with_influencer[hero_df_with_influencer["collaboration"] == collab_type])
+                avg_eng = hero_df_with_influencer[hero_df_with_influencer["collaboration"] == collab_type]["total_engagement"].mean()
                 avg_eng = 0 if pd.isna(avg_eng) else avg_eng
                 src_rows.append({
                     "Source": collab_type,
@@ -500,14 +509,14 @@ with tab_frameworks:
     st.markdown("---")
 
     # ── Collaboration Type Breakdown ──────────────────────────────────
-    if "collaboration" in hero_df.columns and hero_df["collaboration"].notna().any():
+    if "collaboration" in hero_df_with_influencer.columns and hero_df_with_influencer["collaboration"].notna().any():
         st.subheader("Collaboration Type Breakdown")
         st.caption("Who's creating the content — brand-owned vs. partners, influencers, and collective")
 
         collab_data = []
-        for collab_type in hero_df["collaboration"].dropna().unique():
-            collab_posts = hero_df[hero_df["collaboration"] == collab_type]
-            collab_pct = len(collab_posts) / max(len(hero_df), 1) * 100
+        for collab_type in hero_df_with_influencer["collaboration"].dropna().unique():
+            collab_posts = hero_df_with_influencer[hero_df_with_influencer["collaboration"] == collab_type]
+            collab_pct = len(collab_posts) / max(len(hero_df_with_influencer), 1) * 100
             avg_eng = collab_posts["total_engagement"].mean() if len(collab_posts) else 0
             avg_eng = 0 if pd.isna(avg_eng) else avg_eng
             collab_data.append({
@@ -557,6 +566,8 @@ with tab_frameworks:
 
     def compute_genz_scores(brand):
         bdf = df[df["brand"] == brand]
+        if "collaboration" in bdf.columns:
+            bdf = bdf[bdf["collaboration"].str.strip().str.lower() != "influencer"]
         total = len(bdf) or 1
         ugc_pct = len(bdf[bdf["has_creator_collab"].astype(str).str.lower() == "yes"]) / total * 100 if "has_creator_collab" in bdf.columns else 0
         collab_pct = results["creators"].get(brand, {}).get("collab_pct", 0)
@@ -995,7 +1006,8 @@ with tab_action:
 
     with col_t:
         st.error("**Competitive Threats**")
-        brand_counts = df.groupby("brand").size()
+        _df_owned = df[df["collaboration"].str.strip().str.lower() != "influencer"] if "collaboration" in df.columns else df
+        brand_counts = _df_owned.groupby("brand").size()
         if len(brand_counts):
             highest_poster = brand_counts.idxmax()
             highest_post_count = brand_counts.max()
@@ -1003,7 +1015,7 @@ with tab_action:
             if highest_poster != HERO:
                 st.markdown(f"- {highest_poster} leads with **{highest_post_count}** posts vs {HERO}'s **{hero_count}** — losing share of voice")
 
-        brand_eng_all = df.groupby("brand")["total_engagement"].mean()
+        brand_eng_all = _df_owned.groupby("brand")["total_engagement"].mean()
         if len(brand_eng_all):
             best_eng_brand = brand_eng_all.idxmax()
             best_eng_val = brand_eng_all.max()

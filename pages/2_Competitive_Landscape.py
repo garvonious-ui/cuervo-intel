@@ -55,6 +55,9 @@ with tab_overview:
     rows = []
     for brand in order:
         plat_df = df[df["brand"] == brand]
+        # Exclude Influencer posts to match engagement methodology
+        if "collaboration" in plat_df.columns:
+            plat_df = plat_df[plat_df["collaboration"].str.strip().str.lower() != "influencer"]
         eng = results["engagement"].get(brand, {})
         freq_b = results["frequency"].get(brand, {})
         followers = sum(eng.get(p, {}).get("followers", 0) for p in ["Instagram", "TikTok"])
@@ -137,12 +140,13 @@ with tab_overview:
     # ── "Who's Winning & Why" ──────────────────────────────────────────
     st.subheader("Who's Winning & Why")
 
-    brand_engs = df.groupby("brand")["total_engagement"].mean().dropna()
+    _df_owned = df[df["collaboration"].str.strip().str.lower() != "influencer"] if "collaboration" in df.columns else df
+    brand_engs = _df_owned.groupby("brand")["total_engagement"].mean().dropna()
     brand_engs = brand_engs[brand_engs > 0].sort_values(ascending=False)
     top3 = brand_engs.head(3)
 
     for rank, (brand, avg_e) in enumerate(top3.items(), 1):
-        brand_df = df[df["brand"] == brand]
+        brand_df = _df_owned[_df_owned["brand"] == brand]
         top_theme = brand_df.groupby("content_theme")["total_engagement"].mean()
         best_theme = top_theme.idxmax() if len(top_theme) else "N/A"
         reel_pct = len(brand_df[brand_df["post_type"] == "Reel"]) / max(len(brand_df), 1) * 100
