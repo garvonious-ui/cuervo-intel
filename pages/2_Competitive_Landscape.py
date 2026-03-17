@@ -208,8 +208,25 @@ with tab_overview:
 
     if top10_data:
         top10_rows = []
+        # For the hero brand, look up manual columns from the main df
+        _hero_lookup = {}
+        _is_hero = top10_brand == HERO
+        _has_pillars = _is_hero and "content_pillar" in df.columns
+        if _is_hero:
+            for _, row in df[df["brand"] == HERO].iterrows():
+                url = row.get("post_url", "")
+                if url:
+                    _hero_lookup[url] = {
+                        "pillar": row.get("content_pillar", "") if pd.notna(row.get("content_pillar")) else "",
+                        "collab": row.get("collaboration", "") if pd.notna(row.get("collaboration")) else "",
+                        "funnel": row.get("content_mix_funnel", "") if pd.notna(row.get("content_mix_funnel")) else "",
+                    }
+
         for i, p in enumerate(top10_data, 1):
-            top10_rows.append({
+            post_url = p.get("url", p.get("post_url", ""))
+            hero_data = _hero_lookup.get(post_url, {})
+
+            row_data = {
                 "#": i,
                 "Caption": (p.get("caption_preview", "") or "")[:60] + ("..." if len(p.get("caption_preview", "")) > 60 else ""),
                 "Engagements": p.get("total_engagement", 0),
@@ -217,9 +234,17 @@ with tab_overview:
                 "Comments": p.get("comments", 0),
                 "Views": p.get("views", 0),
                 "Type": p.get("type", ""),
-                "Theme": p.get("theme", ""),
-                "Date": p.get("date", ""),
-            })
+            }
+
+            if _is_hero and _has_pillars:
+                row_data["Pillar"] = hero_data.get("pillar", p.get("theme", ""))
+                row_data["Collab"] = hero_data.get("collab", "")
+                row_data["Funnel"] = hero_data.get("funnel", "")
+            else:
+                row_data["Theme"] = p.get("theme", "")
+
+            row_data["Date"] = p.get("date", "")
+            top10_rows.append(row_data)
         top10_df = pd.DataFrame(top10_rows)
 
         def color_top10_eng(val):
