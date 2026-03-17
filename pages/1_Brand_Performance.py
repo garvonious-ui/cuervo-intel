@@ -42,6 +42,9 @@ df = st.session_state["df"]  # Unfiltered
 
 HERO = cfg.hero_brand
 hero_df = df[df["brand"] == HERO]
+# Filter out Edutain half-row duplicates (weight=0.5) to avoid inflating stats
+if "_mix_weight" in hero_df.columns:
+    hero_df = hero_df[hero_df["_mix_weight"] >= 1.0]
 hero_ig = hero_df[hero_df["platform"] == "Instagram"]
 hero_tt = hero_df[hero_df["platform"] == "TikTok"]
 
@@ -350,9 +353,7 @@ with tab_content:
             st.subheader("Content Pillar Performance")
             st.caption(f"Which pillars drive the highest engagement for {HERO}")
 
-            # Filter out duplicated Edutain half-rows (weight 0.5) to avoid inflating pillar stats
-            _pillar_src = hero_df[hero_df["_mix_weight"] >= 1.0] if "_mix_weight" in hero_df.columns else hero_df
-            _pillar_valid = _pillar_src[_pillar_src["content_pillar"].notna() & (_pillar_src["content_pillar"].astype(str).str.strip() != "")]
+            _pillar_valid = hero_df[hero_df["content_pillar"].notna() & (hero_df["content_pillar"].astype(str).str.strip() != "")]
             pillar_eng = (_pillar_valid
                           .groupby("content_pillar")
                           .agg(avg_eng=("total_engagement", "mean"), count=("total_engagement", "size"))

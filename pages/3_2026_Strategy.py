@@ -43,7 +43,8 @@ GEN_Z_LEADERS = cfg.gen_z_leaders
 _t = cfg.kpi_targets
 ENG_PER_POST_TARGET = _t["engagements_per_post"]
 
-hero_df = df[df["brand"] == HERO]
+hero_df_full = df[df["brand"] == HERO]  # Includes Edutain dupes — only for content mix funnel
+hero_df = hero_df_full[hero_df_full["_mix_weight"] >= 1.0] if "_mix_weight" in hero_df_full.columns else hero_df_full
 leader_df = df[df["brand"].isin(GEN_Z_LEADERS)]
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -207,14 +208,12 @@ with tab_scorecard:
             st.subheader("Collaboration Mix")
             st.caption(f"Who is creating {HERO}'s content — based on manual post tagging")
 
-            # Use only original rows (exclude Edutain half-row duplicates)
-            _collab_df = hero_df[hero_df["_mix_weight"] >= 1.0] if "_mix_weight" in hero_df.columns else hero_df
-            collab_total = max(len(_collab_df[_collab_df["collaboration"].notna()]), 1)
+            collab_total = max(len(hero_df[hero_df["collaboration"].notna()]), 1)
             collab_colors = {"Cuervo": "#2ea3f2", "Partner": "#66BB6A", "Influencer": "#F8C090", "Collective": "#C9A87E"}
             src_rows = []
-            for collab_type in sorted(_collab_df["collaboration"].dropna().unique()):
-                count = len(_collab_df[_collab_df["collaboration"] == collab_type])
-                avg_eng = _collab_df[_collab_df["collaboration"] == collab_type]["total_engagement"].mean()
+            for collab_type in sorted(hero_df["collaboration"].dropna().unique()):
+                count = len(hero_df[hero_df["collaboration"] == collab_type])
+                avg_eng = hero_df[hero_df["collaboration"] == collab_type]["total_engagement"].mean()
                 avg_eng = 0 if pd.isna(avg_eng) else avg_eng
                 src_rows.append({
                     "Source": collab_type,
@@ -444,20 +443,21 @@ with tab_frameworks:
     st.caption(f"Grab attention first ({_mix_cats[0]} {cfg.content_mix_targets[_mix_cats[0]]}%), then guide to action ({_mix_cats[-1]} {cfg.content_mix_targets[_mix_cats[-1]]}%)")
 
     hero_mix_data = []
-    # Use _mix_weight if present (Edutain split into 0.5 Educate + 0.5 Entertain)
-    has_weight = "_mix_weight" in hero_df.columns
-    total_weight = hero_df["_mix_weight"].sum() if has_weight else len(hero_df)
+    # Use hero_df_full (includes Edutain dupes with _mix_weight=0.5)
+    _mix_src = hero_df_full if "hero_df_full" in dir() else hero_df
+    has_weight = "_mix_weight" in _mix_src.columns
+    total_weight = _mix_src["_mix_weight"].sum() if has_weight else len(_mix_src)
     for cat in _mix_cats:
-        if "content_mix_funnel" in hero_df.columns:
-            matching = hero_df[hero_df["content_mix_funnel"] == cat]
+        if "content_mix_funnel" in _mix_src.columns:
+            matching = _mix_src[_mix_src["content_mix_funnel"] == cat]
             if has_weight:
                 pct = matching["_mix_weight"].sum() / max(total_weight, 1) * 100
             else:
-                pct = len(matching) / max(len(hero_df), 1) * 100
+                pct = len(matching) / max(len(_mix_src), 1) * 100
         else:
             cat_themes = cfg.content_mix_map[cat]
-            matching = hero_df[hero_df["content_theme"].isin(cat_themes)]
-            pct = len(matching) / max(len(hero_df), 1) * 100
+            matching = _mix_src[_mix_src["content_theme"].isin(cat_themes)]
+            pct = len(matching) / max(len(_mix_src), 1) * 100
         target = cfg.content_mix_targets.get(cat, 0)
         hero_mix_data.append({
             "Category": cat,
@@ -504,12 +504,10 @@ with tab_frameworks:
         st.subheader("Collaboration Type Breakdown")
         st.caption("Who's creating the content — brand-owned vs. partners, influencers, and collective")
 
-        # Use only original rows (exclude Edutain half-row duplicates)
-        _ct_df = hero_df[hero_df["_mix_weight"] >= 1.0] if "_mix_weight" in hero_df.columns else hero_df
         collab_data = []
-        for collab_type in _ct_df["collaboration"].dropna().unique():
-            collab_posts = _ct_df[_ct_df["collaboration"] == collab_type]
-            collab_pct = len(collab_posts) / max(len(_ct_df), 1) * 100
+        for collab_type in hero_df["collaboration"].dropna().unique():
+            collab_posts = hero_df[hero_df["collaboration"] == collab_type]
+            collab_pct = len(collab_posts) / max(len(hero_df), 1) * 100
             avg_eng = collab_posts["total_engagement"].mean() if len(collab_posts) else 0
             avg_eng = 0 if pd.isna(avg_eng) else avg_eng
             collab_data.append({
