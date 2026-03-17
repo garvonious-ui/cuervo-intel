@@ -5,29 +5,42 @@ All Poplife playbook frameworks, KPI targets, content mix definitions,
 cultural calendar, creator archetypes, and voice principles.
 """
 
-# ── Content Pillars (2026 Social Strategy) ───────────────────────────
+# ── Content Pillars (2026 Social Strategy — 4 pillars from Poplife deck) ─
 
 PILLAR_MAP = {
-    "Cuervo in Culture": [
-        "Meme/Humor", "Creator Collab", "Cultural Moment/Holiday",
-        "Event/Activation", "Giveaway/Promo", "Partner",
-        "User Repost", "Sports Tie-in", "Product/Lifestyle",
+    "The Front Row": [
+        "Event/Activation", "Sports Tie-in", "Partner",
     ],
-    "Tradicional, Made Social": [
-        "Brand Heritage / Culture", "Cocktail Highlights", "Behind the Scenes",
+    "The Ritual": [
+        "Product/Lifestyle", "Cocktail Highlights", "Cultural Moment/Holiday",
+    ],
+    "The Pulse": [
+        "Meme/Humor", "Creator Collab", "User Repost", "Giveaway/Promo",
+    ],
+    "The Craft": [
+        "Brand Heritage / Culture", "Behind the Scenes",
     ],
 }
 
-PILLAR_TARGETS = {"Cuervo in Culture": 80, "Tradicional, Made Social": 20}
+PILLAR_TARGETS = {
+    "The Front Row": 35,
+    "The Ritual": 35,
+    "The Pulse": 25,
+    "The Craft": 5,
+}
 
 PILLAR_COLORS = {
-    "Cuervo in Culture": "#2ea3f2",
-    "Tradicional, Made Social": "#C9A87E",
+    "The Front Row": "#CC0000",    # Bold red — sports/events energy
+    "The Ritual": "#F8C090",       # Warm peach — drinking occasions
+    "The Pulse": "#2ea3f2",        # Blue — pop culture/reactive
+    "The Craft": "#C9A87E",        # Gold — heritage/premium
 }
 
 PILLAR_DESCRIPTIONS = {
-    "Cuervo in Culture": "Cultural moments, memes, reactive content, UGC — Especial + RTDs",
-    "Tradicional, Made Social": "Heritage reimagined, bartender POV, distillery stories — Cuervo Tradicional",
+    "The Front Row": "NASCAR, UFC, music festivals — all-access pass to excitement (Especial + RTDs)",
+    "The Ritual": "Drinking occasions — visual blueprint for the perfect serve (Especial + RTDs)",
+    "The Pulse": "Pop culture, memes, trending moments — talk with the audience, not at them (Especial + RTDs)",
+    "The Craft": "Heritage, bartender POV, distillery stories — defend the 230-year legacy (Tradicional)",
 }
 
 # ── Content Mix (Entertain / Educate / Connect / Convince) ──────────
@@ -39,7 +52,7 @@ CONTENT_MIX_MAP = {
     "Convince": ["Giveaway/Promo"],
 }
 
-CONTENT_MIX_TARGETS = {"Entertain": 50, "Educate": 30, "Connect": 10, "Convince": 10}
+CONTENT_MIX_TARGETS = {"Entertain": 60, "Educate": 10, "Connect": 20, "Convince": 10}
 
 CONTENT_MIX_COLORS = {
     "Entertain": "#F8C090",

@@ -341,36 +341,67 @@ with tab_content:
 
     st.markdown("---")
 
-    # ── Theme Performance ──────────────────────────────────────────────
+    # ── Content Pillar Performance ──────────────────────────────────────
     if cfg.themes_ready:
-        st.subheader("Content Theme Performance")
-        st.caption(_perf.get("theme_caption", f"Which themes drive the highest engagement for {HERO}"))
+        # Show pillar performance if content_pillar column exists, otherwise fall back to content_theme
+        has_pillars = "content_pillar" in hero_df.columns and hero_df["content_pillar"].notna().any()
 
-        if len(hero_df) and hero_df["content_theme"].notna().any():
-            theme_eng = (hero_df.groupby("content_theme")
-                         .agg(avg_eng=("total_engagement", "mean"), count=("total_engagement", "size"))
-                         .reset_index()
-                         .sort_values("avg_eng", ascending=False))
-            theme_eng["avg_eng"] = theme_eng["avg_eng"].round(0)
+        if has_pillars:
+            st.subheader("Content Pillar Performance")
+            st.caption(f"Which pillars drive the highest engagement for {HERO}")
 
-            fig_theme = px.bar(theme_eng, x="content_theme", y="avg_eng",
-                               color_discrete_sequence=[cfg.brand_colors[HERO]],
-                               labels={"avg_eng": "Avg Engagements", "content_theme": ""},
-                               template=CHART_TEMPLATE, text_auto=",.0f",
-                               hover_data={"count": True})
-            fig_theme.add_hline(y=ENG_PER_POST_TARGET, line_dash="dash", line_color="#333",
-                                annotation_text=f"{ENG_PER_POST_TARGET} eng/post target", annotation_position="top right")
-            fig_theme.update_layout(font=CHART_FONT, height=400, showlegend=False,
-                                    xaxis_tickangle=-35)
-            st.plotly_chart(fig_theme, use_container_width=True)
+            pillar_eng = (hero_df[hero_df["content_pillar"].notna()]
+                          .groupby("content_pillar")
+                          .agg(avg_eng=("total_engagement", "mean"), count=("total_engagement", "size"))
+                          .reset_index()
+                          .sort_values("avg_eng", ascending=False))
+            pillar_eng["avg_eng"] = pillar_eng["avg_eng"].round(0)
 
-            # So What
-            top_theme = theme_eng.iloc[0]
-            bottom_theme = theme_eng.iloc[-1] if len(theme_eng) > 1 else top_theme
-            themes_above_target = theme_eng[theme_eng["avg_eng"] >= ENG_PER_POST_TARGET]
-            st.info(f"**Top theme:** {top_theme['content_theme']} at {top_theme['avg_eng']:,.0f} avg engagements ({top_theme['count']} posts). "
-                    f"{len(themes_above_target)} of {len(theme_eng)} themes meet the {ENG_PER_POST_TARGET} eng/post target. "
-                    f"**Lowest:** {bottom_theme['content_theme']} at {bottom_theme['avg_eng']:,.0f}.")
+            fig_pillar = px.bar(pillar_eng, x="content_pillar", y="avg_eng",
+                                color="content_pillar", color_discrete_map=cfg.pillar_colors,
+                                labels={"avg_eng": "Avg Engagements", "content_pillar": ""},
+                                template=CHART_TEMPLATE, text_auto=",.0f",
+                                hover_data={"count": True})
+            fig_pillar.add_hline(y=ENG_PER_POST_TARGET, line_dash="dash", line_color="#333",
+                                 annotation_text=f"{ENG_PER_POST_TARGET} eng/post target", annotation_position="top right")
+            fig_pillar.update_layout(font=CHART_FONT, height=400, showlegend=False,
+                                     xaxis_tickangle=-35)
+            st.plotly_chart(fig_pillar, use_container_width=True)
+
+            top_p = pillar_eng.iloc[0]
+            bottom_p = pillar_eng.iloc[-1] if len(pillar_eng) > 1 else top_p
+            pillars_above = pillar_eng[pillar_eng["avg_eng"] >= ENG_PER_POST_TARGET]
+            st.info(f"**Top pillar:** {top_p['content_pillar']} at {top_p['avg_eng']:,.0f} avg engagements ({top_p['count']} posts). "
+                    f"{len(pillars_above)} of {len(pillar_eng)} pillars meet the {ENG_PER_POST_TARGET} eng/post target. "
+                    f"**Lowest:** {bottom_p['content_pillar']} at {bottom_p['avg_eng']:,.0f}.")
+        else:
+            st.subheader("Content Theme Performance")
+            st.caption(_perf.get("theme_caption", f"Which themes drive the highest engagement for {HERO}"))
+
+            if len(hero_df) and hero_df["content_theme"].notna().any():
+                theme_eng = (hero_df.groupby("content_theme")
+                             .agg(avg_eng=("total_engagement", "mean"), count=("total_engagement", "size"))
+                             .reset_index()
+                             .sort_values("avg_eng", ascending=False))
+                theme_eng["avg_eng"] = theme_eng["avg_eng"].round(0)
+
+                fig_theme = px.bar(theme_eng, x="content_theme", y="avg_eng",
+                                   color_discrete_sequence=[cfg.brand_colors[HERO]],
+                                   labels={"avg_eng": "Avg Engagements", "content_theme": ""},
+                                   template=CHART_TEMPLATE, text_auto=",.0f",
+                                   hover_data={"count": True})
+                fig_theme.add_hline(y=ENG_PER_POST_TARGET, line_dash="dash", line_color="#333",
+                                    annotation_text=f"{ENG_PER_POST_TARGET} eng/post target", annotation_position="top right")
+                fig_theme.update_layout(font=CHART_FONT, height=400, showlegend=False,
+                                        xaxis_tickangle=-35)
+                st.plotly_chart(fig_theme, use_container_width=True)
+
+                top_theme = theme_eng.iloc[0]
+                bottom_theme = theme_eng.iloc[-1] if len(theme_eng) > 1 else top_theme
+                themes_above_target = theme_eng[theme_eng["avg_eng"] >= ENG_PER_POST_TARGET]
+                st.info(f"**Top theme:** {top_theme['content_theme']} at {top_theme['avg_eng']:,.0f} avg engagements ({top_theme['count']} posts). "
+                        f"{len(themes_above_target)} of {len(theme_eng)} themes meet the {ENG_PER_POST_TARGET} eng/post target. "
+                        f"**Lowest:** {bottom_theme['content_theme']} at {bottom_theme['avg_eng']:,.0f}.")
     else:
         st.info(f"**Content theme analysis hidden** — post-level theme tagging is not yet complete for {HERO}. "
                 f"This section will appear once all posts have been manually reviewed and tagged.")
