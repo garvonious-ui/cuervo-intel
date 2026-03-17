@@ -241,12 +241,15 @@ elif data_mode == "Sprout Social Import":
         SPROUT_INPUT_DIR, SPROUT_OUTPUT_DIR,
         fingerprint=_sprout_fingerprint(SPROUT_INPUT_DIR)
     )
-    st.sidebar.success(
-        f"Imported {sprout_stats['total_posts']} posts from "
-        f"{sprout_stats['files_imported']} file(s)"
-    )
-    if sprout_stats["brands_found"]:
-        st.sidebar.caption(f"Brands: {', '.join(sprout_stats['brands_found'])}")
+    if sprout_stats.get("skipped"):
+        st.sidebar.success("Loaded data from posts_data.csv")
+    else:
+        st.sidebar.success(
+            f"Imported {sprout_stats.get('total_posts', '?')} posts from "
+            f"{sprout_stats.get('files_imported', '?')} file(s)"
+        )
+        if sprout_stats.get("brands_found"):
+            st.sidebar.caption(f"Brands: {', '.join(sprout_stats['brands_found'])}")
     # Show benchmark status
     benchmark = results.get("benchmark", {})
     if benchmark:
