@@ -37,7 +37,7 @@ ENG_PER_1K_TARGET = cfg.kpi_targets["eng_per_1k_followers"]
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 tab_overview, tab_gaps = st.tabs([
-    "Competitive Overview", "Content Gaps",
+    "Competitive Overview", "Format & Frequency",
 ])
 
 # ══════════════════════════════════════════════════════════════════════
