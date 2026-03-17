@@ -831,6 +831,13 @@ def import_sprout_directory(sprout_dir: str, output_dir: str) -> tuple[list[str]
                     present = [c for c in eng_cols if c in manual_df.columns]
                     if present:
                         manual_df["total_engagement"] = manual_df[present].sum(axis=1)
+                # Auto-classify caption_tone and cta_type if missing
+                caption_col = "caption" if "caption" in manual_df.columns else "caption_text"
+                if caption_col in manual_df.columns:
+                    if "caption_tone" not in manual_df.columns or manual_df["caption_tone"].isna().all():
+                        manual_df["caption_tone"] = manual_df[caption_col].fillna("").apply(classify_tone)
+                    if "cta_type" not in manual_df.columns or manual_df["cta_type"].isna().all():
+                        manual_df["cta_type"] = manual_df[caption_col].fillna("").apply(classify_cta)
                 # Remove Sprout rows for brands that exist in the manual CSV
                 manual_brands = set(manual_df["brand"].dropna().unique())
                 posts_df = posts_df[~posts_df["brand"].isin(manual_brands)]
