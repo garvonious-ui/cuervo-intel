@@ -109,7 +109,6 @@ def _sprout_fingerprint(sprout_dir: str) -> str:
     return hashlib.md5("|".join(entries).encode()).hexdigest()
 
 
-@st.cache_data(show_spinner="Importing Sprout Social data...", ttl=300)
 def load_sprout(sprout_dir: str, output_dir: str, fingerprint: str = ""):
     from sprout_import import import_sprout_directory, import_benchmark_csv
     from analysis import run_full_analysis
