@@ -509,8 +509,8 @@ with tab_content:
             st.markdown(f"#### {plat_label}")
             col_best, col_worst = st.columns(2)
             with col_best:
-                st.markdown("**Top 5 by Engagements**")
-                top5 = plat_df.nlargest(5, "total_engagement").reset_index(drop=True)
+                st.markdown("**Top 10 by Engagements**")
+                top5 = plat_df.nlargest(10, "total_engagement").reset_index(drop=True)
                 top5.index = top5.index + 1
                 for idx, row in top5.iterrows():
                     caption_preview = str(row.get("caption_text", ""))[:100]
@@ -527,8 +527,8 @@ with tab_content:
                             st.markdown(f"[View post]({url})")
 
             with col_worst:
-                st.markdown("**Bottom 5 by Engagements**")
-                bottom5 = plat_df.nsmallest(5, "total_engagement").reset_index(drop=True)
+                st.markdown("**Bottom 10 by Engagements**")
+                bottom5 = plat_df.nsmallest(10, "total_engagement").reset_index(drop=True)
                 bottom5.index = bottom5.index + 1
                 for idx, row in bottom5.iterrows():
                     caption_preview = str(row.get("caption_text", ""))[:100]
