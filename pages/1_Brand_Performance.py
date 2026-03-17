@@ -484,10 +484,6 @@ with tab_content:
     st.subheader("Best & Worst Posts")
 
     if len(hero_df):
-        post_cols = ["platform", "post_type", "total_engagement", "likes", "comments",
-                     "shares", "views", "content_theme", "post_date", "caption_text", "post_url"]
-        available_cols = [c for c in post_cols if c in hero_df.columns]
-
         # Split by platform
         _has_platform = "platform" in hero_df.columns
         if _has_platform:
@@ -497,6 +493,16 @@ with tab_content:
             ig_df = hero_df
             tt_df = pd.DataFrame()
 
+        def _post_label(row):
+            pillar = row.get("content_pillar", "") or ""
+            collab = row.get("collaboration", "") or ""
+            parts = [row.get("post_type", "")]
+            if pillar:
+                parts.append(pillar)
+            if collab:
+                parts.append(collab)
+            return " | ".join(p for p in parts if p)
+
         for plat_label, plat_df in [("Instagram", ig_df), ("TikTok", tt_df)]:
             if len(plat_df) == 0:
                 continue
@@ -504,31 +510,37 @@ with tab_content:
             col_best, col_worst = st.columns(2)
             with col_best:
                 st.markdown("**Top 5 by Engagements**")
-                top5 = plat_df.nlargest(5, "total_engagement")[available_cols].reset_index(drop=True)
+                top5 = plat_df.nlargest(5, "total_engagement").reset_index(drop=True)
                 top5.index = top5.index + 1
                 for idx, row in top5.iterrows():
                     caption_preview = str(row.get("caption_text", ""))[:100]
+                    if caption_preview == "nan":
+                        caption_preview = ""
                     eng_val = row["total_engagement"]
                     url = row.get("post_url", "")
-                    with st.expander(f"#{idx} — {eng_val:,} eng | {row.get('post_type', '')} | {row.get('content_theme', '')}"):
-                        st.markdown(f"*\"{caption_preview}...\"*")
+                    with st.expander(f"#{idx} — {eng_val:,} eng | {_post_label(row)}"):
+                        if caption_preview:
+                            st.markdown(f"*\"{caption_preview}...\"*")
                         st.caption(f"Likes: {row.get('likes', 0):,} | Comments: {row.get('comments', 0):,} | "
-                                   f"Shares: {row.get('shares', 0):,} | Views: {row.get('views', 0):,}")
+                                   f"Shares: {row.get('shares', 0):,} | Saves: {row.get('saves', 0):,}")
                         if url:
                             st.markdown(f"[View post]({url})")
 
             with col_worst:
                 st.markdown("**Bottom 5 by Engagements**")
-                bottom5 = plat_df.nsmallest(5, "total_engagement")[available_cols].reset_index(drop=True)
+                bottom5 = plat_df.nsmallest(5, "total_engagement").reset_index(drop=True)
                 bottom5.index = bottom5.index + 1
                 for idx, row in bottom5.iterrows():
                     caption_preview = str(row.get("caption_text", ""))[:100]
+                    if caption_preview == "nan":
+                        caption_preview = ""
                     eng_val = row["total_engagement"]
                     url = row.get("post_url", "")
-                    with st.expander(f"#{idx} — {eng_val:,} eng | {row.get('post_type', '')} | {row.get('content_theme', '')}"):
-                        st.markdown(f"*\"{caption_preview}...\"*")
+                    with st.expander(f"#{idx} — {eng_val:,} eng | {_post_label(row)}"):
+                        if caption_preview:
+                            st.markdown(f"*\"{caption_preview}...\"*")
                         st.caption(f"Likes: {row.get('likes', 0):,} | Comments: {row.get('comments', 0):,} | "
-                                   f"Shares: {row.get('shares', 0):,} | Views: {row.get('views', 0):,}")
+                                   f"Shares: {row.get('shares', 0):,} | Saves: {row.get('saves', 0):,}")
                         if url:
                             st.markdown(f"[View post]({url})")
     else:
