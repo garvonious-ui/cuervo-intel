@@ -807,6 +807,31 @@ def import_sprout_directory(sprout_dir: str, output_dir: str) -> tuple[list[str]
         posts_df = pd.DataFrame(all_posts)
         if "post_url" in posts_df.columns and "post_date" in posts_df.columns:
             posts_df = posts_df.drop_duplicates(subset=["post_url", "post_date"], keep="last")
+
+        # Merge manual columns from theme_overrides.csv if it exists
+        # These are columns manually assigned outside of Sprout (content_pillar, etc.)
+        _MANUAL_COLS = ["content_pillar", "collaboration", "content_mix_funnel", "sku",
+                        "content_theme"]
+        overrides_path = os.path.join(sprout_dir, "theme_overrides.csv")
+        if os.path.isfile(overrides_path) and "post_url" in posts_df.columns:
+            try:
+                overrides = pd.read_csv(overrides_path, encoding="utf-8-sig")
+                # Strip whitespace from string columns
+                for col in _MANUAL_COLS:
+                    if col in overrides.columns:
+                        overrides[col] = overrides[col].astype(str).str.strip().replace("nan", pd.NA)
+                merge_cols = [c for c in _MANUAL_COLS if c in overrides.columns]
+                if merge_cols and "post_url" in overrides.columns:
+                    # Drop any existing manual columns from Sprout data before merge
+                    posts_df = posts_df.drop(columns=[c for c in merge_cols if c in posts_df.columns],
+                                             errors="ignore")
+                    posts_df = posts_df.merge(
+                        overrides[["post_url"] + merge_cols].drop_duplicates(subset=["post_url"], keep="last"),
+                        on="post_url", how="left"
+                    )
+            except Exception:
+                pass  # If overrides fail, just use Sprout data as-is
+
         posts_df.to_csv(posts_path, index=False)
         files.append(posts_path)
 
