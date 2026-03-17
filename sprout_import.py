@@ -808,29 +808,36 @@ def import_sprout_directory(sprout_dir: str, output_dir: str) -> tuple[list[str]
         if "post_url" in posts_df.columns and "post_date" in posts_df.columns:
             posts_df = posts_df.drop_duplicates(subset=["post_url", "post_date"], keep="last")
 
-        # Merge manual columns from theme_overrides.csv if it exists
-        # These are columns manually assigned outside of Sprout (content_pillar, etc.)
-        _MANUAL_COLS = ["content_pillar", "collaboration", "content_mix_funnel", "sku",
-                        "content_theme"]
-        overrides_path = os.path.join(sprout_dir, "theme_overrides.csv")
-        if os.path.isfile(overrides_path) and "post_url" in posts_df.columns:
+        # Replace hero brand posts with manual CSV if it exists
+        # The manual CSV is the source of truth for hero brand posts —
+        # it has columns Sprout doesn't (content_pillar, collaboration, etc.)
+        # and may contain posts Sprout didn't capture.
+        manual_path = os.path.join(sprout_dir, "manual_posts.csv")
+        if os.path.isfile(manual_path) and "post_url" in posts_df.columns:
             try:
-                overrides = pd.read_csv(overrides_path, encoding="utf-8-sig")
-                # Strip whitespace from string columns
-                for col in _MANUAL_COLS:
-                    if col in overrides.columns:
-                        overrides[col] = overrides[col].astype(str).str.strip().replace("nan", pd.NA)
-                merge_cols = [c for c in _MANUAL_COLS if c in overrides.columns]
-                if merge_cols and "post_url" in overrides.columns:
-                    # Drop any existing manual columns from Sprout data before merge
-                    posts_df = posts_df.drop(columns=[c for c in merge_cols if c in posts_df.columns],
-                                             errors="ignore")
-                    posts_df = posts_df.merge(
-                        overrides[["post_url"] + merge_cols].drop_duplicates(subset=["post_url"], keep="last"),
-                        on="post_url", how="left"
-                    )
+                manual_df = pd.read_csv(manual_path, encoding="utf-8-sig")
+                # Strip whitespace from key columns
+                _STR_COLS = ["content_pillar", "collaboration", "content_mix_funnel",
+                             "sku", "content_theme", "brand"]
+                for col in _STR_COLS:
+                    if col in manual_df.columns:
+                        manual_df[col] = manual_df[col].astype(str).str.strip().replace("nan", pd.NA)
+                # Compute total_engagement if missing
+                eng_cols = ["likes", "comments", "shares", "saves"]
+                for c in eng_cols:
+                    if c in manual_df.columns:
+                        manual_df[c] = pd.to_numeric(manual_df[c], errors="coerce").fillna(0)
+                if "total_engagement" not in manual_df.columns:
+                    present = [c for c in eng_cols if c in manual_df.columns]
+                    if present:
+                        manual_df["total_engagement"] = manual_df[present].sum(axis=1)
+                # Remove Sprout rows for brands that exist in the manual CSV
+                manual_brands = set(manual_df["brand"].dropna().unique())
+                posts_df = posts_df[~posts_df["brand"].isin(manual_brands)]
+                # Append manual posts
+                posts_df = pd.concat([manual_df, posts_df], ignore_index=True)
             except Exception:
-                pass  # If overrides fail, just use Sprout data as-is
+                pass  # If manual load fails, just use Sprout data as-is
 
         posts_df.to_csv(posts_path, index=False)
         files.append(posts_path)

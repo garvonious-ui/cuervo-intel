@@ -43,21 +43,20 @@ PILLAR_DESCRIPTIONS = {
     "The Craft": "Heritage, bartender POV, distillery stories — defend the 230-year legacy (Tradicional)",
 }
 
-# ── Content Mix (Entertain / Educate / Edutain / Convince) ──────────
+# ── Content Mix (Entertain / Educate / Convince) ────────────────────
 
 CONTENT_MIX_MAP = {
-    "Entertain": ["Meme/Humor", "Event/Activation", "Creator Collab", "Sports Tie-in"],
-    "Educate": ["Cocktail Highlights", "Behind the Scenes", "Brand Heritage / Culture"],
-    "Edutain": ["Product/Lifestyle", "Cultural Moment/Holiday", "Partner", "User Repost"],
+    "Entertain": ["Meme/Humor", "Event/Activation", "Creator Collab", "Sports Tie-in",
+                   "Product/Lifestyle", "Cultural Moment/Holiday", "User Repost"],
+    "Educate": ["Cocktail Highlights", "Behind the Scenes", "Brand Heritage / Culture", "Partner"],
     "Convince": ["Giveaway/Promo"],
 }
 
-CONTENT_MIX_TARGETS = {"Entertain": 60, "Educate": 10, "Edutain": 20, "Convince": 10}
+CONTENT_MIX_TARGETS = {"Entertain": 70, "Educate": 20, "Convince": 10}
 
 CONTENT_MIX_COLORS = {
     "Entertain": "#F8C090",
     "Educate": "#2ea3f2",
-    "Edutain": "#66BB6A",
     "Convince": "#D9534F",
 }
 

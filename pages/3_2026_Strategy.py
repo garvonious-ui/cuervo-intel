@@ -442,21 +442,21 @@ with tab_frameworks:
     st.caption(f"Grab attention first ({_mix_cats[0]} {cfg.content_mix_targets[_mix_cats[0]]}%), then guide to action ({_mix_cats[-1]} {cfg.content_mix_targets[_mix_cats[-1]]}%)")
 
     hero_mix_data = []
+    # Use _mix_weight if present (Edutain split into 0.5 Educate + 0.5 Entertain)
+    has_weight = "_mix_weight" in hero_df.columns
+    total_weight = hero_df["_mix_weight"].sum() if has_weight else len(hero_df)
     for cat in _mix_cats:
         if "content_mix_funnel" in hero_df.columns:
-            # Direct funnel column — count exact matches
             matching = hero_df[hero_df["content_mix_funnel"] == cat]
-            # "Edutain" posts count 0.5 in both Educate and Entertain
-            edutain_count = len(hero_df[hero_df["content_mix_funnel"] == "Edutain"])
-            if cat in ("Educate", "Entertain") and edutain_count > 0:
-                pct = (len(matching) + edutain_count * 0.5) / max(len(hero_df), 1) * 100
+            if has_weight:
+                pct = matching["_mix_weight"].sum() / max(total_weight, 1) * 100
             else:
                 pct = len(matching) / max(len(hero_df), 1) * 100
         else:
             cat_themes = cfg.content_mix_map[cat]
             matching = hero_df[hero_df["content_theme"].isin(cat_themes)]
             pct = len(matching) / max(len(hero_df), 1) * 100
-        target = cfg.content_mix_targets[cat]
+        target = cfg.content_mix_targets.get(cat, 0)
         hero_mix_data.append({
             "Category": cat,
             "Actual %": round(pct, 1),
@@ -472,7 +472,7 @@ with tab_frameworks:
         st.markdown(f"**{HERO} Content Mix: Actual vs Poplife Target**")
         fig_mix = go.Figure()
         fig_mix.add_trace(go.Bar(x=mix_df["Category"], y=mix_df["Actual %"],
-                                 name="Actual", marker_color=[cfg.content_mix_colors[c] for c in mix_df["Category"]],
+                                 name="Actual", marker_color=[cfg.content_mix_colors.get(c, "#999999") for c in mix_df["Category"]],
                                  text=mix_df["Actual %"], textposition="outside", texttemplate="%{text:.0f}%"))
         fig_mix.add_trace(go.Scatter(x=mix_df["Category"], y=mix_df["Target %"],
                                      name="Poplife Target", mode="markers+lines",

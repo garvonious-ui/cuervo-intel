@@ -350,7 +350,8 @@ with tab_content:
             st.subheader("Content Pillar Performance")
             st.caption(f"Which pillars drive the highest engagement for {HERO}")
 
-            pillar_eng = (hero_df[hero_df["content_pillar"].notna()]
+            _pillar_valid = hero_df[hero_df["content_pillar"].notna() & (hero_df["content_pillar"].astype(str).str.strip() != "")]
+            pillar_eng = (_pillar_valid
                           .groupby("content_pillar")
                           .agg(avg_eng=("total_engagement", "mean"), count=("total_engagement", "size"))
                           .reset_index()

@@ -190,6 +190,24 @@ def results_to_df(results: dict) -> pd.DataFrame:
         except Exception:
             pass  # Silently skip if override CSV is malformed
 
+    # Split "Edutain" posts: duplicate each as 0.5 Educate + 0.5 Entertain
+    if "content_mix_funnel" in df.columns:
+        edutain_mask = df["content_mix_funnel"] == "Edutain"
+        if edutain_mask.any():
+            edutain_rows = df[edutain_mask].copy()
+            # Create Educate half
+            edu_half = edutain_rows.copy()
+            edu_half["content_mix_funnel"] = "Educate"
+            edu_half["_mix_weight"] = 0.5
+            # Create Entertain half
+            ent_half = edutain_rows.copy()
+            ent_half["content_mix_funnel"] = "Entertain"
+            ent_half["_mix_weight"] = 0.5
+            # Remove original Edutain rows and append split rows
+            df = df[~edutain_mask]
+            df["_mix_weight"] = 1.0
+            df = pd.concat([df, edu_half, ent_half], ignore_index=True)
+
     return df
 
 
