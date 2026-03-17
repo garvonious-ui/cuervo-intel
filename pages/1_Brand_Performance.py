@@ -68,9 +68,9 @@ with tab_kpi:
     ig_followers = eng.get("Instagram", {}).get("followers", 0)
     tt_followers = eng.get("TikTok", {}).get("followers", 0)
 
-    # Avg Engagements per Reel
+    # Median Engagements per Reel (median to reduce collab outlier skew)
     hero_reels = hero_df[hero_df["post_type"] == "Reel"]
-    avg_eng_per_reel = hero_reels["total_engagement"].mean() if len(hero_reels) else 0
+    avg_eng_per_reel = hero_reels["total_engagement"].median() if len(hero_reels) else 0
     avg_eng_per_reel = 0 if pd.isna(avg_eng_per_reel) else avg_eng_per_reel
 
     # Reel ratio (IG only)
@@ -89,16 +89,16 @@ with tab_kpi:
     IG_PPM_TARGET = _t["ig_posts_per_month"]
     TT_PPW_TARGET = _t["tt_posts_per_week"]
 
-    # ── Engagement metrics ────────────────────────────────────────────
-    avg_eng_per_post = hero_df["total_engagement"].mean() if len(hero_df) else 0
+    # ── Engagement metrics (median to reduce collab outlier skew) ─────
+    avg_eng_per_post = hero_df["total_engagement"].median() if len(hero_df) else 0
     avg_eng_per_post = 0 if pd.isna(avg_eng_per_post) else avg_eng_per_post
 
     k1, k2, k3, k4, k5 = st.columns(5)
     with k1:
-        st.metric("Avg Eng/Post", f"{avg_eng_per_post:,.0f}",
+        st.metric("Median Eng/Post", f"{avg_eng_per_post:,.0f}",
                   delta=f"{avg_eng_per_post - ENG_PER_POST_TARGET:+,.0f} vs {ENG_PER_POST_TARGET} target")
     with k2:
-        st.metric("Avg Eng/Reel", f"{avg_eng_per_reel:,.0f}",
+        st.metric("Median Eng/Reel", f"{avg_eng_per_reel:,.0f}",
                   delta=f"{avg_eng_per_reel - ENG_PER_POST_TARGET:+,.0f} vs {ENG_PER_POST_TARGET} target")
     with k3:
         st.metric("Reel Ratio (IG)", f"{reel_ratio:.0f}%",
