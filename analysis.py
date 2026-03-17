@@ -242,26 +242,29 @@ def analyze_engagement(posts: list[dict], profiles: list[dict],
             plat_posts = [p for p in brand_posts if p["platform"] == platform]
             followers = follower_map.get((brand, platform), 0)
 
-            # Overall averages
-            if plat_posts:
-                avg_engagement = sum(p["total_engagement"] for p in plat_posts) / len(plat_posts)
-                avg_likes = sum(p["likes"] for p in plat_posts) / len(plat_posts)
-                avg_comments = sum(p["comments"] for p in plat_posts) / len(plat_posts)
-                avg_shares = sum(p["shares"] for p in plat_posts) / len(plat_posts)
-                avg_views = sum(p["views"] for p in plat_posts) / len(plat_posts)
+            # Filter to brand-owned posts if collaboration data exists
+            # (excludes influencer/partner collab posts that inflate metrics)
+            _has_collab = any(p.get("collaboration") for p in plat_posts)
+            if _has_collab:
+                brand_owned_posts = [p for p in plat_posts
+                                     if not p.get("collaboration")
+                                     or str(p.get("collaboration", "")).strip() in ("", "nan", brand)]
+            else:
+                brand_owned_posts = plat_posts
+
+            # Overall averages (brand-owned only to avoid collab inflation)
+            _metric_posts = brand_owned_posts if brand_owned_posts else plat_posts
+            if _metric_posts:
+                avg_engagement = sum(p["total_engagement"] for p in _metric_posts) / len(_metric_posts)
+                avg_likes = sum(p["likes"] for p in _metric_posts) / len(_metric_posts)
+                avg_comments = sum(p["comments"] for p in _metric_posts) / len(_metric_posts)
+                avg_shares = sum(p["shares"] for p in _metric_posts) / len(_metric_posts)
+                avg_views = sum(p["views"] for p in _metric_posts) / len(_metric_posts)
             else:
                 avg_engagement = avg_likes = avg_comments = avg_shares = avg_views = 0
 
-            # Engagements per 1K followers (for cross-brand comparison)
-            # Filter out influencer/partner collab posts for hero brand to avoid inflating
-            brand_owned_posts = [p for p in plat_posts
-                                 if p.get("collaboration", "") in ("", "Cuervo", brand)
-                                 or not p.get("collaboration")]
-            if brand_owned_posts:
-                brand_owned_avg = sum(p["total_engagement"] for p in brand_owned_posts) / len(brand_owned_posts)
-            else:
-                brand_owned_avg = avg_engagement
-            eng_per_1k = round((brand_owned_avg / followers) * 1000, 2) if followers > 0 else 0
+            # Engagements per 1K followers (brand-owned only)
+            eng_per_1k = round((avg_engagement / followers) * 1000, 2) if followers > 0 else 0
 
             # By content type: avg engagements per type
             type_engagement = defaultdict(list)
