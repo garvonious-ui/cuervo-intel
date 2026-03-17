@@ -202,65 +202,46 @@ with tab_scorecard:
     if cfg.themes_ready:
         st.markdown("---")
 
-        # ── Content Source Mix ─────────────────────────────────────────────
-        st.subheader("Content Source Mix — Creator / Brand / Events")
-        st.caption("Target: 50% Owned / Sponsored Live Events, 30% Creator / Influencer / UGC, 20% Brand-Owned")
+        # ── Collaboration Mix ──────────────────────────────────────────────
+        if "collaboration" in hero_df.columns and hero_df["collaboration"].notna().any():
+            st.subheader("Collaboration Mix")
+            st.caption(f"Who is creating {HERO}'s content — based on manual post tagging")
 
-        # Owned / Sponsored Events = event activations, cultural moments, sponsored events
-        event_themes = ["Event/Activation", "Cultural Moment/Holiday"]
-        event_caption_signals = [
-            "ufc", "akamba", "tales_of_the_cocktail", "tales of the cocktail",
-            "nola", "new orleans", "workshop", "activation", "festival",
-            "hanky panky", "vertical team", "mexico on film", "brought the party",
-        ]
-        creator_posts = hero_df[hero_df["has_creator_collab"] == "Yes"] if "has_creator_collab" in hero_df.columns else pd.DataFrame()
-        # Event posts that aren't already counted as creator collabs
-        non_creator_mask = ~hero_df.index.isin(creator_posts.index) if len(creator_posts) > 0 else pd.Series(True, index=hero_df.index)
-        theme_match = hero_df["content_theme"].isin(event_themes)
-        caption_col = hero_df["caption_text"].fillna("").str.lower() if "caption_text" in hero_df.columns else hero_df.get("caption", pd.Series("", index=hero_df.index)).fillna("").str.lower()
-        caption_match = caption_col.apply(lambda t: any(s in t for s in event_caption_signals))
-        event_posts = hero_df[(theme_match | caption_match) & non_creator_mask]
-        brand_posts_count = len(hero_df) - len(creator_posts) - len(event_posts)
+            collab_total = max(len(hero_df[hero_df["collaboration"].notna()]), 1)
+            collab_colors = {"Cuervo": "#2ea3f2", "Partner": "#66BB6A", "Influencer": "#F8C090", "Collective": "#C9A87E"}
+            src_rows = []
+            for collab_type in sorted(hero_df["collaboration"].dropna().unique()):
+                count = len(hero_df[hero_df["collaboration"] == collab_type])
+                avg_eng = hero_df[hero_df["collaboration"] == collab_type]["total_engagement"].mean()
+                avg_eng = 0 if pd.isna(avg_eng) else avg_eng
+                src_rows.append({
+                    "Source": collab_type,
+                    "Posts": count,
+                    "% of Content": round(count / collab_total * 100, 1),
+                    "Avg Eng": round(avg_eng, 0),
+                })
+            src_data = pd.DataFrame(src_rows).sort_values("% of Content", ascending=False)
 
-        src_total = max(len(hero_df), 1)
-        src_data = pd.DataFrame([
-            {"Source": "Owned / Sponsored Events", "Actual %": round(len(event_posts) / src_total * 100, 1), "Target %": 50},
-            {"Source": "Creator / Influencer / UGC", "Actual %": round(len(creator_posts) / src_total * 100, 1), "Target %": 30},
-            {"Source": "Brand-Owned", "Actual %": round(brand_posts_count / src_total * 100, 1), "Target %": 20},
-        ])
+            col_src1, col_src2 = st.columns(2)
+            with col_src1:
+                st.markdown(f"**{HERO} Collaboration Breakdown**")
+                fig_src = px.bar(src_data, x="Source", y="% of Content",
+                                 color="Source", color_discrete_map=collab_colors,
+                                 text="% of Content", template=CHART_TEMPLATE,
+                                 labels={"% of Content": "% of Content", "Source": ""})
+                fig_src.update_traces(texttemplate="%{text:.0f}%", textposition="outside")
+                fig_src.update_layout(font=CHART_FONT, height=380, showlegend=False,
+                                      yaxis_title="% of Content")
+                st.plotly_chart(fig_src, use_container_width=True)
 
-        src_colors = {"Creator / Influencer / UGC": "#2ea3f2", "Owned / Sponsored Events": "#D4956A", "Brand-Owned": "#C9A87E"}
-
-        col_src1, col_src2 = st.columns(2)
-        with col_src1:
-            st.markdown("**Content Source: Actual vs Poplife Target**")
-            fig_src = go.Figure()
-            fig_src.add_trace(go.Bar(x=src_data["Source"], y=src_data["Actual %"],
-                                     name="Actual", marker_color=[src_colors[s] for s in src_data["Source"]],
-                                     text=src_data["Actual %"], textposition="outside", texttemplate="%{text:.0f}%"))
-            fig_src.add_trace(go.Scatter(x=src_data["Source"], y=src_data["Target %"],
-                                         name="Poplife Target", mode="markers+lines",
-                                         marker=dict(size=12, color="#333333", symbol="diamond"),
-                                         line=dict(color="#333333", width=2, dash="dash")))
-            fig_src.update_layout(template=CHART_TEMPLATE, font=CHART_FONT, height=380,
-                                  yaxis_title="% of Content", legend=dict(orientation="h", y=-0.15))
-            st.plotly_chart(fig_src, use_container_width=True)
-
-        with col_src2:
-            st.markdown("**Content Source Scorecard**")
-            for _, row in src_data.iterrows():
-                gap = row["Actual %"] - row["Target %"]
-                direction = "ON TRACK" if abs(gap) < 10 else ("MORE" if gap < 0 else "LESS")
-                if direction == "ON TRACK":
-                    st.success(f"**{row['Source']}**: {row['Actual %']:.0f}% actual / {row['Target %']}% target ({gap:+.0f}%)")
-                elif direction == "MORE":
-                    st.error(f"**{row['Source']}**: {row['Actual %']:.0f}% actual / {row['Target %']}% target ({gap:+.0f}%) — Need MORE")
-                else:
-                    st.warning(f"**{row['Source']}**: {row['Actual %']:.0f}% actual / {row['Target %']}% target ({gap:+.0f}%) — Need LESS")
-            st.markdown("")
-            st.info("**Content Engine**: Owned / Sponsored Live Events anchor the feed (50%). "
-                    "Creator & influencer partnerships drive 1.7x more engagement (30%). "
-                    "Brand-owned content fills the remaining 20%.")
+            with col_src2:
+                st.markdown("**Collaboration Scorecard**")
+                for _, row in src_data.iterrows():
+                    st.markdown(f"**{row['Source']}**: {row['Posts']} posts ({row['% of Content']:.0f}%) — "
+                                f"Avg Eng: {row['Avg Eng']:,.0f}")
+                best_collab = src_data.iloc[0]
+                st.info(f"**Top collaboration type: {best_collab['Source']}** at {best_collab['% of Content']:.0f}% of content "
+                        f"with {best_collab['Avg Eng']:,.0f} avg engagements.")
 
         st.markdown("---")
 
