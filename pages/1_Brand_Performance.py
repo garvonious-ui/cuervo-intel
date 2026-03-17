@@ -287,7 +287,7 @@ with tab_content:
         format_counts["pct"] = (format_counts["count"] / format_counts["count"].sum() * 100).round(1)
 
         # Avg total engagements by format
-        format_eng = (hero_ig.groupby("post_type")["total_engagement"].mean().reset_index())
+        format_eng = (hero_ig.groupby("post_type")["total_engagement"].median().reset_index())
         format_eng.columns = ["post_type", "avg_engagements"]
 
         col_f1, col_f2 = st.columns(2)
@@ -300,10 +300,10 @@ with tab_content:
             st.plotly_chart(fig_fmt, use_container_width=True)
 
         with col_f2:
-            st.markdown("**Avg Engagements by Format**")
+            st.markdown("**Median Engagements by Format**")
             fig_eng = px.bar(format_eng, x="post_type", y="avg_engagements",
                              color_discrete_sequence=[cfg.brand_colors[HERO]],
-                             labels={"avg_engagements": "Avg Engagements", "post_type": ""},
+                             labels={"avg_engagements": "Median Engagements", "post_type": ""},
                              template=CHART_TEMPLATE, text_auto=",.0f")
             fig_eng.add_hline(y=ENG_PER_POST_TARGET, line_dash="dash", line_color="#333",
                               annotation_text=f"{ENG_PER_POST_TARGET} eng/post target", annotation_position="top right")
