@@ -242,18 +242,11 @@ def analyze_engagement(posts: list[dict], profiles: list[dict],
             plat_posts = [p for p in brand_posts if p["platform"] == platform]
             followers = follower_map.get((brand, platform), 0)
 
-            # Filter to brand-owned posts if collaboration data exists
-            # (excludes influencer/partner/collective collab posts that inflate metrics)
-            _collab_vals = [str(p.get("collaboration", "")).strip() for p in plat_posts]
-            _has_collab = any(v and v != "nan" for v in _collab_vals)
+            # Exclude influencer posts (they inflate metrics due to higher reach)
+            _has_collab = any(p.get("collaboration") for p in plat_posts)
             if _has_collab:
-                # Keep only posts where collaboration is empty, nan, or matches brand name
-                # (brand name may be partial match, e.g. "Cuervo" in "Jose Cuervo")
                 brand_owned_posts = [p for p in plat_posts
-                                     if not p.get("collaboration")
-                                     or str(p.get("collaboration", "")).strip() in ("", "nan")
-                                     or str(p.get("collaboration", "")).strip() in brand
-                                     or brand in str(p.get("collaboration", ""))]
+                                     if str(p.get("collaboration", "")).strip().lower() != "influencer"]
             else:
                 brand_owned_posts = plat_posts
 
