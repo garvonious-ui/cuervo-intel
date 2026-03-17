@@ -122,7 +122,14 @@ def load_sprout(sprout_dir: str, output_dir: str, fingerprint: str = ""):
                 benchmark_data = import_benchmark_csv(os.path.join(sprout_dir, f))
                 break  # Only one benchmark file expected
 
-    files, stats = import_sprout_directory(sprout_dir, output_dir)
+    # If posts_data.csv already exists (committed with correct data),
+    # skip re-importing from Sprout CSVs to avoid overwriting manual edits.
+    posts_path = os.path.join(output_dir, "posts_data.csv")
+    if os.path.isfile(posts_path):
+        stats = {"skipped": True, "reason": "posts_data.csv already exists"}
+    else:
+        files, stats = import_sprout_directory(sprout_dir, output_dir)
+
     results = run_full_analysis(output_dir, benchmark=benchmark_data)
     return results, output_dir, stats
 
