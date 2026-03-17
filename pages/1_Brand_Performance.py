@@ -312,6 +312,15 @@ with tab_content:
 
         st.caption("Total engagements = likes + comments + shares + saves")
 
+        # Note about collab post inflation on Reels
+        if "collaboration" in hero_ig.columns:
+            reels = hero_ig[hero_ig["post_type"] == "Reel"]
+            brand_owned_reels = reels[reels["collaboration"] == "Cuervo"] if len(reels) else reels
+            if len(brand_owned_reels) and len(reels) > len(brand_owned_reels):
+                brand_median = brand_owned_reels["total_engagement"].median()
+                st.caption(f"*Note: Reel engagement is elevated by influencer/partner collab posts which drive significantly higher reach. "
+                           f"Median brand-owned Reel engagement is {brand_median:,.0f}.*")
+
         # Format KPIs
         reel_pct = len(hero_ig[hero_ig["post_type"] == "Reel"]) / max(len(hero_ig), 1) * 100
         carousel_pct = len(hero_ig[hero_ig["post_type"] == "Carousel"]) / max(len(hero_ig), 1) * 100
