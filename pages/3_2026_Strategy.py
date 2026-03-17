@@ -264,48 +264,45 @@ with tab_scorecard:
 
         st.markdown("---")
 
-        # ── Best Performing Theme ──────────────────────────────────────────
-        st.subheader("Best Performing Content Theme")
-        st.caption(f"Which content theme drives the highest engagement for {HERO}")
+        # ── Best Performing Pillar ──────────────────────────────────────────
+        _has_pillar_col = "content_pillar" in hero_df.columns and hero_df["content_pillar"].notna().any()
+        if _has_pillar_col:
+            st.subheader("Best Performing Content Pillar")
+            st.caption(f"Which content pillar drives the highest engagement for {HERO}")
 
-        theme_perf = results["themes"].get(HERO, {}).get("theme_performance", {})
-        best_theme_name = results["themes"].get(HERO, {}).get("best_performing_theme", "N/A")
+            pillar_perf = (hero_df[hero_df["content_pillar"].notna()]
+                           .groupby("content_pillar")
+                           .agg(avg_eng=("total_engagement", "mean"), count=("total_engagement", "size"))
+                           .reset_index()
+                           .sort_values("avg_eng", ascending=False))
+            pillar_perf["avg_eng"] = pillar_perf["avg_eng"].round(0)
 
-        if theme_perf and best_theme_name != "N/A":
-            best_theme_data = theme_perf.get(best_theme_name, {})
-            best_eng = best_theme_data.get("avg_engagements", 0)
-            best_count = best_theme_data.get("count", 0)
-
-            # Metric card
+            best_pillar = pillar_perf.iloc[0]
             bt_col1, bt_col2, bt_col3 = st.columns(3)
             with bt_col1:
-                st.metric("Best Theme", best_theme_name)
+                st.metric("Best Pillar", best_pillar["content_pillar"])
             with bt_col2:
-                st.metric("Avg Engagements", f"{best_eng:,.0f}",
-                          delta=f"{best_eng - ENG_PER_POST_TARGET:+,.0f} vs {ENG_PER_POST_TARGET} target")
+                st.metric("Avg Engagements", f"{best_pillar['avg_eng']:,.0f}",
+                          delta=f"{best_pillar['avg_eng'] - ENG_PER_POST_TARGET:+,.0f} vs {ENG_PER_POST_TARGET} target")
             with bt_col3:
-                st.metric("Posts", f"{best_count}")
+                st.metric("Posts", f"{best_pillar['count']}")
 
-            # Mini bar chart of all themes by engagements
-            theme_rows = [{"Theme": t, "Avg Eng": round(v["avg_engagements"], 0), "Posts": v["count"]}
-                          for t, v in theme_perf.items() if v.get("avg_engagements", 0) > 0]
-            if theme_rows:
-                theme_chart_df = pd.DataFrame(theme_rows).sort_values("Avg Eng", ascending=True)
-                fig_bt = px.bar(theme_chart_df, x="Avg Eng", y="Theme", orientation="h",
-                                color_discrete_sequence=[cfg.brand_colors.get(HERO, cfg.primary_color)],
-                                labels={"Avg Eng": "Avg Engagements", "Theme": ""},
-                                template=CHART_TEMPLATE, text_auto=",.0f",
-                                hover_data={"Posts": True})
-                fig_bt.add_vline(x=ENG_PER_POST_TARGET, line_dash="dash", line_color="#333",
-                                 annotation_text=f"{ENG_PER_POST_TARGET} eng target")
-                fig_bt.update_layout(font=CHART_FONT, height=max(280, len(theme_rows) * 35),
-                                     showlegend=False)
-                st.plotly_chart(fig_bt, use_container_width=True)
+            pillar_chart = pillar_perf.sort_values("avg_eng", ascending=True)
+            fig_bt = px.bar(pillar_chart, x="avg_eng", y="content_pillar", orientation="h",
+                            color="content_pillar", color_discrete_map=cfg.pillar_colors,
+                            labels={"avg_eng": "Avg Engagements", "content_pillar": ""},
+                            template=CHART_TEMPLATE, text_auto=",.0f",
+                            hover_data={"count": True})
+            fig_bt.add_vline(x=ENG_PER_POST_TARGET, line_dash="dash", line_color="#333",
+                             annotation_text=f"{ENG_PER_POST_TARGET} eng target")
+            fig_bt.update_layout(font=CHART_FONT, height=max(280, len(pillar_chart) * 50),
+                                 showlegend=False)
+            st.plotly_chart(fig_bt, use_container_width=True)
 
-            st.info(f"**Best theme: {best_theme_name}** at {best_eng:,.0f} avg engagements — lean into this for upcoming content. "
-                    f"Themes above the {ENG_PER_POST_TARGET} eng target are proven winners worth scaling.")
+            st.info(f"**Best pillar: {best_pillar['content_pillar']}** at {best_pillar['avg_eng']:,.0f} avg engagements — lean into this for upcoming content. "
+                    f"Pillars above the {ENG_PER_POST_TARGET} eng target are proven winners worth scaling.")
         else:
-            st.info(f"No content theme performance data available for {HERO}.")
+            st.info(f"No content pillar data available for {HERO}.")
     else:
         st.markdown("---")
         st.info(f"**Content source mix & theme analysis hidden** — post-level theme tagging is not yet complete for {HERO}. "
@@ -459,11 +456,12 @@ with tab_frameworks:
     st.markdown("---")
 
     # ── Content Mix Funnel ─────────────────────────────────────────────
-    st.subheader("Content Mix Funnel — Entertain / Educate / Connect / Convince")
-    st.caption("Grab attention first (Entertain 50%), then guide to action (Convince 10%)")
+    _mix_cats = list(cfg.content_mix_targets.keys())
+    st.subheader(f"Content Mix Funnel — {' / '.join(_mix_cats)}")
+    st.caption(f"Grab attention first ({_mix_cats[0]} {cfg.content_mix_targets[_mix_cats[0]]}%), then guide to action ({_mix_cats[-1]} {cfg.content_mix_targets[_mix_cats[-1]]}%)")
 
     hero_mix_data = []
-    for cat in ["Entertain", "Educate", "Connect", "Convince"]:
+    for cat in _mix_cats:
         if "content_mix_funnel" in hero_df.columns:
             # Direct funnel column — count exact matches
             matching = hero_df[hero_df["content_mix_funnel"] == cat]
