@@ -207,12 +207,14 @@ with tab_scorecard:
             st.subheader("Collaboration Mix")
             st.caption(f"Who is creating {HERO}'s content — based on manual post tagging")
 
-            collab_total = max(len(hero_df[hero_df["collaboration"].notna()]), 1)
+            # Use only original rows (exclude Edutain half-row duplicates)
+            _collab_df = hero_df[hero_df["_mix_weight"] >= 1.0] if "_mix_weight" in hero_df.columns else hero_df
+            collab_total = max(len(_collab_df[_collab_df["collaboration"].notna()]), 1)
             collab_colors = {"Cuervo": "#2ea3f2", "Partner": "#66BB6A", "Influencer": "#F8C090", "Collective": "#C9A87E"}
             src_rows = []
-            for collab_type in sorted(hero_df["collaboration"].dropna().unique()):
-                count = len(hero_df[hero_df["collaboration"] == collab_type])
-                avg_eng = hero_df[hero_df["collaboration"] == collab_type]["total_engagement"].mean()
+            for collab_type in sorted(_collab_df["collaboration"].dropna().unique()):
+                count = len(_collab_df[_collab_df["collaboration"] == collab_type])
+                avg_eng = _collab_df[_collab_df["collaboration"] == collab_type]["total_engagement"].mean()
                 avg_eng = 0 if pd.isna(avg_eng) else avg_eng
                 src_rows.append({
                     "Source": collab_type,
@@ -502,10 +504,12 @@ with tab_frameworks:
         st.subheader("Collaboration Type Breakdown")
         st.caption("Who's creating the content — brand-owned vs. partners, influencers, and collective")
 
+        # Use only original rows (exclude Edutain half-row duplicates)
+        _ct_df = hero_df[hero_df["_mix_weight"] >= 1.0] if "_mix_weight" in hero_df.columns else hero_df
         collab_data = []
-        for collab_type in hero_df["collaboration"].dropna().unique():
-            collab_posts = hero_df[hero_df["collaboration"] == collab_type]
-            collab_pct = len(collab_posts) / max(len(hero_df), 1) * 100
+        for collab_type in _ct_df["collaboration"].dropna().unique():
+            collab_posts = _ct_df[_ct_df["collaboration"] == collab_type]
+            collab_pct = len(collab_posts) / max(len(_ct_df), 1) * 100
             avg_eng = collab_posts["total_engagement"].mean() if len(collab_posts) else 0
             avg_eng = 0 if pd.isna(avg_eng) else avg_eng
             collab_data.append({

@@ -350,7 +350,9 @@ with tab_content:
             st.subheader("Content Pillar Performance")
             st.caption(f"Which pillars drive the highest engagement for {HERO}")
 
-            _pillar_valid = hero_df[hero_df["content_pillar"].notna() & (hero_df["content_pillar"].astype(str).str.strip() != "")]
+            # Filter out duplicated Edutain half-rows (weight 0.5) to avoid inflating pillar stats
+            _pillar_src = hero_df[hero_df["_mix_weight"] >= 1.0] if "_mix_weight" in hero_df.columns else hero_df
+            _pillar_valid = _pillar_src[_pillar_src["content_pillar"].notna() & (_pillar_src["content_pillar"].astype(str).str.strip() != "")]
             pillar_eng = (_pillar_valid
                           .groupby("content_pillar")
                           .agg(avg_eng=("total_engagement", "mean"), count=("total_engagement", "size"))
