@@ -5,6 +5,16 @@ All Poplife playbook frameworks, KPI targets, content mix definitions,
 cultural calendar, creator archetypes, and voice principles.
 """
 
+# ── North Star ──────────────────────────────────────────────────────────────
+NORTH_STAR = {
+    "title": "Signal for Fun",
+    "tagline": "Cuervo turns regular plans into stories.",
+    "description": (
+        "This is our guiding idea across all content. Whether it\u2019s a casual hang, "
+        "a festival weekend, or a watch party, Cuervo is the catalyst that elevates the energy."
+    ),
+}
+
 # ── Content Pillars (2026 Social Strategy — 4 pillars from Poplife deck) ─
 
 PILLAR_MAP = {

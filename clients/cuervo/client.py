@@ -13,6 +13,7 @@ from clients.cuervo.brands import (
     BRAND_PROFILES, HASHTAG_POOLS,
 )
 from clients.cuervo.strategy import (
+    NORTH_STAR,
     PILLAR_MAP, PILLAR_TARGETS, PILLAR_COLORS, PILLAR_DESCRIPTIONS,
     CONTENT_MIX_MAP, CONTENT_MIX_TARGETS, CONTENT_MIX_COLORS,
     KPI_TARGETS, CADENCE_TARGETS, IG_FORMAT_MIX, PLATFORM_ROLES,
@@ -137,6 +138,9 @@ def get_config() -> ClientConfig:
         hero_hashtag_ids=HERO_HASHTAG_IDS,
         category_hashtags=CATEGORY_HASHTAGS,
         hero_news_id="jose_cuervo_tequila",
+
+        # Brand positioning
+        north_star=NORTH_STAR,
 
         # Strategy frameworks
         pillar_map=PILLAR_MAP,

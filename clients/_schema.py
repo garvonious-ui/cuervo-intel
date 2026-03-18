@@ -38,6 +38,9 @@ class ClientConfig:
     category_hashtags: dict[str, str] = field(default_factory=dict)
     hero_news_id: str = ""                                             # Google News report identifier
 
+    # ── Brand Positioning ──
+    north_star: dict[str, str] = field(default_factory=dict)  # title, tagline, description
+
     # ── Strategy Frameworks ──
     pillar_map: dict[str, list[str]] = field(default_factory=dict)
     pillar_targets: dict[str, int] = field(default_factory=dict)

@@ -54,6 +54,28 @@ leader_df = df[df["brand"].isin(GEN_Z_LEADERS)]
 if "collaboration" in leader_df.columns:
     leader_df = leader_df[leader_df["collaboration"].str.strip().str.lower() != "influencer"]
 
+def _render_north_star():
+    """Display the brand North Star banner if configured."""
+    ns = cfg.north_star
+    if not ns:
+        return
+    st.markdown(f"""
+    <div style="background-color:#3D6B7E; border-radius:10px; padding:28px 32px; margin-bottom:24px;">
+        <div style="font-size:0.85rem; font-weight:700; letter-spacing:2px; color:#E8E0D4; text-transform:uppercase; margin-bottom:6px;">
+            Our North Star
+        </div>
+        <div style="font-size:1.6rem; font-weight:800; color:#D4A843; text-transform:uppercase; margin-bottom:10px;">
+            {ns.get("title", "")}
+        </div>
+        <div style="font-size:1.05rem; color:#E8E0D4; font-weight:600; margin-bottom:4px;">
+            {ns.get("tagline", "")}
+        </div>
+        <div style="font-size:0.95rem; color:#C8C0B4; line-height:1.5;">
+            {ns.get("description", "")}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 tab_scorecard, tab_frameworks, tab_platform, tab_action = st.tabs([
     "Social Brief Scorecard", "Content Strategy Frameworks",
@@ -65,6 +87,7 @@ tab_scorecard, tab_frameworks, tab_platform, tab_action = st.tabs([
 # ══════════════════════════════════════════════════════════════════════
 
 with tab_scorecard:
+    _render_north_star()
 
     # ── Expanded KPI Scorecard ─────────────────────────────────────────
     st.subheader("Social Brief KPI Scorecard")
@@ -305,6 +328,7 @@ with tab_scorecard:
 # ══════════════════════════════════════════════════════════════════════
 
 with tab_frameworks:
+    _render_north_star()
 
     # ── Content Pillars (4 pillars from 2026 deck) ──────────────────────
     st.subheader("Content Pillars")
