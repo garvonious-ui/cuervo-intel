@@ -232,11 +232,10 @@ with tab_overview:
 
             row_data = {
                 "#": i,
-                "Caption": (p.get("caption_preview", "") or "")[:60] + ("..." if len(p.get("caption_preview", "")) > 60 else ""),
+                "Post": post_url if post_url else "",
                 "Engagements": p.get("total_engagement", 0),
                 "Likes": p.get("likes", 0),
                 "Comments": p.get("comments", 0),
-                "Views": p.get("views", 0),
                 "Type": p.get("type", ""),
             }
 
@@ -262,9 +261,17 @@ with tab_overview:
             return ""
 
         styled_top10 = top10_df.style.map(color_top10_eng, subset=["Engagements"]).format({
-            "Engagements": "{:,.0f}", "Likes": "{:,.0f}", "Comments": "{:,.0f}", "Views": "{:,.0f}"
+            "Engagements": "{:,.0f}", "Likes": "{:,.0f}", "Comments": "{:,.0f}"
         })
-        st.dataframe(styled_top10, use_container_width=True, hide_index=True, height=400)
+        st.dataframe(
+            styled_top10,
+            use_container_width=True,
+            hide_index=True,
+            height=400,
+            column_config={
+                "Post": st.column_config.LinkColumn("Post", display_text="View Post"),
+            },
+        )
 
         # So What
         best_type = pd.DataFrame(top10_rows).groupby("Type")["Engagements"].mean()
