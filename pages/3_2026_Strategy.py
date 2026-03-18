@@ -263,25 +263,25 @@ with tab_scorecard:
 
             pillar_perf = (hero_df[hero_df["content_pillar"].notna()]
                            .groupby("content_pillar")
-                           .agg(avg_eng=("total_engagement", "mean"), count=("total_engagement", "size"))
+                           .agg(median_eng=("total_engagement", "median"), count=("total_engagement", "size"))
                            .reset_index()
-                           .sort_values("avg_eng", ascending=False))
-            pillar_perf["avg_eng"] = pillar_perf["avg_eng"].round(0)
+                           .sort_values("median_eng", ascending=False))
+            pillar_perf["median_eng"] = pillar_perf["median_eng"].round(0)
 
             best_pillar = pillar_perf.iloc[0]
             bt_col1, bt_col2, bt_col3 = st.columns(3)
             with bt_col1:
                 st.metric("Best Pillar", best_pillar["content_pillar"])
             with bt_col2:
-                st.metric("Avg Engagements", f"{best_pillar['avg_eng']:,.0f}",
-                          delta=f"{best_pillar['avg_eng'] - ENG_PER_POST_TARGET:+,.0f} vs {ENG_PER_POST_TARGET} target")
+                st.metric("Median Engagements", f"{best_pillar['median_eng']:,.0f}",
+                          delta=f"{best_pillar['median_eng'] - ENG_PER_POST_TARGET:+,.0f} vs {ENG_PER_POST_TARGET} target")
             with bt_col3:
                 st.metric("Posts", f"{best_pillar['count']}")
 
-            pillar_chart = pillar_perf.sort_values("avg_eng", ascending=True)
-            fig_bt = px.bar(pillar_chart, x="avg_eng", y="content_pillar", orientation="h",
+            pillar_chart = pillar_perf.sort_values("median_eng", ascending=True)
+            fig_bt = px.bar(pillar_chart, x="median_eng", y="content_pillar", orientation="h",
                             color="content_pillar", color_discrete_map=cfg.pillar_colors,
-                            labels={"avg_eng": "Avg Engagements", "content_pillar": ""},
+                            labels={"median_eng": "Median Engagements", "content_pillar": ""},
                             template=CHART_TEMPLATE, text_auto=",.0f",
                             hover_data={"count": True})
             fig_bt.add_vline(x=ENG_PER_POST_TARGET, line_dash="dash", line_color="#333",
@@ -290,7 +290,7 @@ with tab_scorecard:
                                  showlegend=False)
             st.plotly_chart(fig_bt, use_container_width=True)
 
-            st.info(f"**Best pillar: {best_pillar['content_pillar']}** at {best_pillar['avg_eng']:,.0f} avg engagements — lean into this for upcoming content. "
+            st.info(f"**Best pillar: {best_pillar['content_pillar']}** at {best_pillar['median_eng']:,.0f} median engagements — lean into this for upcoming content. "
                     f"Pillars above the {ENG_PER_POST_TARGET} eng target are proven winners worth scaling.")
         else:
             st.info(f"No content pillar data available for {HERO}.")
