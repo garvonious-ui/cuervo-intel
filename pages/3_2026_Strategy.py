@@ -776,8 +776,8 @@ with tab_action:
 
     top_themes_for_leaders = leader_df.groupby("content_theme")["total_engagement"].mean().nlargest(3)
 
-    hero_scores_local = compute_genz_scores(HERO)
-    video_pct = hero_scores_local[3]
+    _hero_ig_action = hero_df[hero_df["platform"] == "Instagram"]
+    video_pct = len(_hero_ig_action[_hero_ig_action["post_type"].isin(["Reel", "Video"])]) / max(len(_hero_ig_action), 1) * 100
 
     plan = [
         {
