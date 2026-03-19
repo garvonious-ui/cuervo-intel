@@ -258,6 +258,45 @@ with tab_frameworks:
         fig_pe.update_layout(showlegend=False, font=CHART_FONT, height=380)
         st.plotly_chart(fig_pe, use_container_width=True)
 
+    # ── Best Performing Pillar ──────────────────────────────────────────
+    if cfg.themes_ready:
+        _has_pillar_col = "content_pillar" in hero_df.columns and hero_df["content_pillar"].notna().any()
+        if _has_pillar_col:
+            st.subheader("Best Performing Content Pillar")
+            st.caption(f"Which content pillar drives the highest engagement for {HERO}")
+
+            pillar_perf = (hero_df[hero_df["content_pillar"].notna()]
+                           .groupby("content_pillar")
+                           .agg(avg_eng=("total_engagement", "mean"), count=("total_engagement", "size"))
+                           .reset_index()
+                           .sort_values("avg_eng", ascending=False))
+            pillar_perf["avg_eng"] = pillar_perf["avg_eng"].round(0)
+
+            best_pillar = pillar_perf.iloc[0]
+            bt_col1, bt_col2, bt_col3 = st.columns(3)
+            with bt_col1:
+                st.metric("Best Pillar", best_pillar["content_pillar"])
+            with bt_col2:
+                st.metric("Avg Engagements", f"{best_pillar['avg_eng']:,.0f}",
+                          delta=f"{best_pillar['avg_eng'] - ENG_PER_POST_TARGET:+,.0f} vs {ENG_PER_POST_TARGET} target")
+            with bt_col3:
+                st.metric("Posts", f"{best_pillar['count']}")
+
+            pillar_chart = pillar_perf.sort_values("avg_eng", ascending=True)
+            fig_bt = px.bar(pillar_chart, x="avg_eng", y="content_pillar", orientation="h",
+                            color="content_pillar", color_discrete_map=cfg.pillar_colors,
+                            labels={"avg_eng": "Avg Engagements", "content_pillar": ""},
+                            template=CHART_TEMPLATE, text_auto=",.0f",
+                            hover_data={"count": True})
+            fig_bt.add_vline(x=ENG_PER_POST_TARGET, line_dash="dash", line_color="#333",
+                             annotation_text=f"{ENG_PER_POST_TARGET} eng target")
+            fig_bt.update_layout(font=CHART_FONT, height=max(280, len(pillar_chart) * 50),
+                                 showlegend=False)
+            st.plotly_chart(fig_bt, use_container_width=True)
+
+            st.info(f"**Best pillar: {best_pillar['content_pillar']}** at {best_pillar['avg_eng']:,.0f} avg engagements — lean into this for upcoming content. "
+                    f"Pillars above the {ENG_PER_POST_TARGET} eng target are proven winners worth scaling.")
+
     st.markdown("---")
 
     # ── SKU Strategy ────────────────────────────────────────────────────
@@ -297,10 +336,10 @@ with tab_frameworks:
 
     st.markdown("---")
 
-    # ── Collaboration Mix ──────────────────────────────────────────────
+    # ── Content Source Mix ─────────────────────────────────────────────
     if cfg.themes_ready and "collaboration" in hero_df_with_influencer.columns and hero_df_with_influencer["collaboration"].notna().any():
-        st.subheader("Collaboration Mix")
-        st.caption(f"Who is creating {HERO}'s content — based on manual post tagging")
+        st.subheader("Content Source Mix")
+        st.caption(f"Where {HERO}'s content comes from — brand, collective, influencer, or partner")
 
         collab_total = max(len(hero_df_with_influencer[hero_df_with_influencer["collaboration"].notna()]), 1)
         collab_colors = {"Cuervo": "#2ea3f2", "Partner": "#66BB6A", "Influencer": "#F8C090", "Collective": "#C9A87E"}
@@ -319,7 +358,7 @@ with tab_frameworks:
 
         col_src1, col_src2 = st.columns(2)
         with col_src1:
-            st.markdown(f"**{HERO} Collaboration Breakdown**")
+            st.markdown(f"**{HERO} Content Source Breakdown**")
             fig_src = px.bar(src_data, x="Source", y="% of Content",
                              color="Source", color_discrete_map=collab_colors,
                              text="% of Content", template=CHART_TEMPLATE,
@@ -330,54 +369,13 @@ with tab_frameworks:
             st.plotly_chart(fig_src, use_container_width=True)
 
         with col_src2:
-            st.markdown("**Collaboration Scorecard**")
+            st.markdown("**Content Source Scorecard**")
             for _, row in src_data.iterrows():
                 st.markdown(f"**{row['Source']}**: {row['Posts']} posts ({row['% of Content']:.0f}%) — "
                             f"Avg Eng: {row['Avg Eng']:,.0f}")
             best_collab = src_data.iloc[0]
-            st.info(f"**Top collaboration type: {best_collab['Source']}** at {best_collab['% of Content']:.0f}% of content "
+            st.info(f"**Top content source: {best_collab['Source']}** at {best_collab['% of Content']:.0f}% of content "
                     f"with {best_collab['Avg Eng']:,.0f} avg engagements.")
-
-        st.markdown("---")
-
-    # ── Best Performing Pillar ──────────────────────────────────────────
-    if cfg.themes_ready:
-        _has_pillar_col = "content_pillar" in hero_df.columns and hero_df["content_pillar"].notna().any()
-        if _has_pillar_col:
-            st.subheader("Best Performing Content Pillar")
-            st.caption(f"Which content pillar drives the highest engagement for {HERO}")
-
-            pillar_perf = (hero_df[hero_df["content_pillar"].notna()]
-                           .groupby("content_pillar")
-                           .agg(avg_eng=("total_engagement", "mean"), count=("total_engagement", "size"))
-                           .reset_index()
-                           .sort_values("avg_eng", ascending=False))
-            pillar_perf["avg_eng"] = pillar_perf["avg_eng"].round(0)
-
-            best_pillar = pillar_perf.iloc[0]
-            bt_col1, bt_col2, bt_col3 = st.columns(3)
-            with bt_col1:
-                st.metric("Best Pillar", best_pillar["content_pillar"])
-            with bt_col2:
-                st.metric("Avg Engagements", f"{best_pillar['avg_eng']:,.0f}",
-                          delta=f"{best_pillar['avg_eng'] - ENG_PER_POST_TARGET:+,.0f} vs {ENG_PER_POST_TARGET} target")
-            with bt_col3:
-                st.metric("Posts", f"{best_pillar['count']}")
-
-            pillar_chart = pillar_perf.sort_values("avg_eng", ascending=True)
-            fig_bt = px.bar(pillar_chart, x="avg_eng", y="content_pillar", orientation="h",
-                            color="content_pillar", color_discrete_map=cfg.pillar_colors,
-                            labels={"avg_eng": "Avg Engagements", "content_pillar": ""},
-                            template=CHART_TEMPLATE, text_auto=",.0f",
-                            hover_data={"count": True})
-            fig_bt.add_vline(x=ENG_PER_POST_TARGET, line_dash="dash", line_color="#333",
-                             annotation_text=f"{ENG_PER_POST_TARGET} eng target")
-            fig_bt.update_layout(font=CHART_FONT, height=max(280, len(pillar_chart) * 50),
-                                 showlegend=False)
-            st.plotly_chart(fig_bt, use_container_width=True)
-
-            st.info(f"**Best pillar: {best_pillar['content_pillar']}** at {best_pillar['avg_eng']:,.0f} avg engagements — lean into this for upcoming content. "
-                    f"Pillars above the {ENG_PER_POST_TARGET} eng target are proven winners worth scaling.")
 
         st.markdown("---")
 
