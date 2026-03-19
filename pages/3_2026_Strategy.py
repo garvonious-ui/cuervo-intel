@@ -413,7 +413,7 @@ with tab_frameworks:
 
     # ── Content Mix Funnel ─────────────────────────────────────────────
     _mix_cats = list(cfg.content_mix_targets.keys())
-    st.subheader(f"Content Mix Funnel — {' / '.join(_mix_cats)}")
+    st.subheader(f"Content Mix Funnel — {' / '.join(_mix_cats)} / Connect")
     st.caption(f"Grab attention first ({_mix_cats[0]} {cfg.content_mix_targets[_mix_cats[0]]}%), then guide to action ({_mix_cats[-1]} {cfg.content_mix_targets[_mix_cats[-1]]}%)")
 
     hero_mix_data = []
