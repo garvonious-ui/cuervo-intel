@@ -73,9 +73,9 @@ with tab_kpi:
     ig_followers = eng.get("Instagram", {}).get("followers", 0)
     tt_followers = eng.get("TikTok", {}).get("followers", 0)
 
-    # Median Engagements per Reel (brand-owned posts only)
+    # Avg Engagements per Reel (brand-owned posts only)
     hero_reels = hero_owned[hero_owned["post_type"] == "Reel"]
-    avg_eng_per_reel = hero_reels["total_engagement"].median() if len(hero_reels) else 0
+    avg_eng_per_reel = hero_reels["total_engagement"].mean() if len(hero_reels) else 0
     avg_eng_per_reel = 0 if pd.isna(avg_eng_per_reel) else avg_eng_per_reel
 
     # Reel ratio (IG only, brand-owned)
@@ -95,15 +95,15 @@ with tab_kpi:
     TT_PPW_TARGET = _t["tt_posts_per_week"]
 
     # ── Engagement metrics (brand-owned posts only) ─────
-    avg_eng_per_post = hero_owned["total_engagement"].median() if len(hero_owned) else 0
+    avg_eng_per_post = hero_owned["total_engagement"].mean() if len(hero_owned) else 0
     avg_eng_per_post = 0 if pd.isna(avg_eng_per_post) else avg_eng_per_post
 
     k1, k2, k3, k4, k5 = st.columns(5)
     with k1:
-        st.metric("Median Eng/Post", f"{avg_eng_per_post:,.0f}",
+        st.metric("Avg Eng/Post", f"{avg_eng_per_post:,.0f}",
                   delta=f"{avg_eng_per_post - ENG_PER_POST_TARGET:+,.0f} vs {ENG_PER_POST_TARGET} target")
     with k2:
-        st.metric("Median Eng/Reel", f"{avg_eng_per_reel:,.0f}",
+        st.metric("Avg Eng/Reel", f"{avg_eng_per_reel:,.0f}",
                   delta=f"{avg_eng_per_reel - ENG_PER_POST_TARGET:+,.0f} vs {ENG_PER_POST_TARGET} target")
     with k3:
         st.metric("Reel Ratio (IG)", f"{reel_ratio:.0f}%",
@@ -291,8 +291,8 @@ with tab_content:
         format_counts = hero_ig_owned.groupby("post_type").size().reset_index(name="count")
         format_counts["pct"] = (format_counts["count"] / format_counts["count"].sum() * 100).round(1)
 
-        # Median total engagements by format (brand-owned only)
-        format_eng = (hero_ig_owned.groupby("post_type")["total_engagement"].median().reset_index())
+        # Avg total engagements by format (brand-owned only)
+        format_eng = (hero_ig_owned.groupby("post_type")["total_engagement"].mean().reset_index())
         format_eng.columns = ["post_type", "avg_engagements"]
 
         col_f1, col_f2 = st.columns(2)
@@ -305,10 +305,10 @@ with tab_content:
             st.plotly_chart(fig_fmt, use_container_width=True)
 
         with col_f2:
-            st.markdown("**Median Engagements by Format (Brand-Owned)**")
+            st.markdown("**Avg Engagements by Format (Brand-Owned)**")
             fig_eng = px.bar(format_eng, x="post_type", y="avg_engagements",
                              color_discrete_sequence=[cfg.brand_colors[HERO]],
-                             labels={"avg_engagements": "Median Engagements", "post_type": ""},
+                             labels={"avg_engagements": "Avg Engagements", "post_type": ""},
                              template=CHART_TEMPLATE, text_auto=",.0f")
             fig_eng.add_hline(y=ENG_PER_POST_TARGET, line_dash="dash", line_color="#333",
                               annotation_text=f"{ENG_PER_POST_TARGET} eng/post target", annotation_position="top right")
@@ -355,18 +355,18 @@ with tab_content:
                "are posted by partner accounts and reflect their larger reach.")
 
     if len(hero_collab):
-        owned_median = hero_owned["total_engagement"].median() if len(hero_owned) else 0
-        owned_median = 0 if pd.isna(owned_median) else owned_median
-        collab_median = hero_collab["total_engagement"].median() if len(hero_collab) else 0
-        collab_median = 0 if pd.isna(collab_median) else collab_median
-        lift = collab_median / owned_median if owned_median > 0 else 0
+        owned_avg = hero_owned["total_engagement"].mean() if len(hero_owned) else 0
+        owned_avg = 0 if pd.isna(owned_avg) else owned_avg
+        collab_avg = hero_collab["total_engagement"].mean() if len(hero_collab) else 0
+        collab_avg = 0 if pd.isna(collab_avg) else collab_avg
+        lift = collab_avg / owned_avg if owned_avg > 0 else 0
 
         ca1, ca2, ca3 = st.columns(3)
         with ca1:
-            st.metric("Owned Median Eng", f"{owned_median:,.0f}",
+            st.metric("Owned Avg Eng", f"{owned_avg:,.0f}",
                       help=f"{HERO} + Partner posts ({len(hero_owned)} posts)")
         with ca2:
-            st.metric("Collab Median Eng", f"{collab_median:,.0f}",
+            st.metric("Collab Avg Eng", f"{collab_avg:,.0f}",
                       help=f"Influencer + Collective posts ({len(hero_collab)} posts)")
         with ca3:
             st.metric("Collab Lift", f"{lift:.1f}x",
@@ -379,20 +379,20 @@ with tab_content:
             collab_fmt = hero_collab[hero_collab["post_type"] == fmt]
             if len(owned_fmt):
                 fmt_comparison.append({"Format": fmt, "Source": "Owned",
-                                       "Median Eng": owned_fmt["total_engagement"].median()})
+                                       "Avg Eng": owned_fmt["total_engagement"].mean()})
             if len(collab_fmt):
                 fmt_comparison.append({"Format": fmt, "Source": "Collab",
-                                       "Median Eng": collab_fmt["total_engagement"].median()})
+                                       "Avg Eng": collab_fmt["total_engagement"].mean()})
 
         if fmt_comparison:
             fmt_df = pd.DataFrame(fmt_comparison)
-            fig_collab = px.bar(fmt_df, x="Format", y="Median Eng", color="Source",
+            fig_collab = px.bar(fmt_df, x="Format", y="Avg Eng", color="Source",
                                 barmode="group",
                                 color_discrete_map={"Owned": cfg.brand_colors.get(HERO, "#2ea3f2"),
                                                     "Collab": "#F8C090"},
                                 template=CHART_TEMPLATE, text_auto=",.0f")
             fig_collab.update_layout(font=CHART_FONT, height=380,
-                                     yaxis_title="Median Engagements", xaxis_title="")
+                                     yaxis_title="Avg Engagements", xaxis_title="")
             st.plotly_chart(fig_collab, use_container_width=True)
 
         # Narrative
@@ -417,14 +417,14 @@ with tab_content:
             _pillar_valid = hero_owned[hero_owned["content_pillar"].notna() & (hero_owned["content_pillar"].astype(str).str.strip() != "")]
             pillar_eng = (_pillar_valid
                           .groupby("content_pillar")
-                          .agg(avg_eng=("total_engagement", "median"), count=("total_engagement", "size"))
+                          .agg(avg_eng=("total_engagement", "mean"), count=("total_engagement", "size"))
                           .reset_index()
                           .sort_values("avg_eng", ascending=False))
             pillar_eng["avg_eng"] = pillar_eng["avg_eng"].round(0)
 
             fig_pillar = px.bar(pillar_eng, x="content_pillar", y="avg_eng",
                                 color="content_pillar", color_discrete_map=cfg.pillar_colors,
-                                labels={"avg_eng": "Median Engagements", "content_pillar": ""},
+                                labels={"avg_eng": "Avg Engagements", "content_pillar": ""},
                                 template=CHART_TEMPLATE, text_auto=",.0f",
                                 hover_data={"count": True})
             fig_pillar.add_hline(y=ENG_PER_POST_TARGET, line_dash="dash", line_color="#333",
@@ -436,7 +436,7 @@ with tab_content:
             top_p = pillar_eng.iloc[0]
             bottom_p = pillar_eng.iloc[-1] if len(pillar_eng) > 1 else top_p
             pillars_above = pillar_eng[pillar_eng["avg_eng"] >= ENG_PER_POST_TARGET]
-            st.info(f"**Top pillar:** {top_p['content_pillar']} at {top_p['avg_eng']:,.0f} median engagements ({top_p['count']} posts). "
+            st.info(f"**Top pillar:** {top_p['content_pillar']} at {top_p['avg_eng']:,.0f} avg engagements ({top_p['count']} posts). "
                     f"{len(pillars_above)} of {len(pillar_eng)} pillars meet the {ENG_PER_POST_TARGET} eng/post target. "
                     f"**Lowest:** {bottom_p['content_pillar']} at {bottom_p['avg_eng']:,.0f}.")
         else:
@@ -445,7 +445,7 @@ with tab_content:
 
             if len(hero_owned) and hero_owned["content_theme"].notna().any():
                 theme_eng = (hero_owned.groupby("content_theme")
-                             .agg(avg_eng=("total_engagement", "median"), count=("total_engagement", "size"))
+                             .agg(avg_eng=("total_engagement", "mean"), count=("total_engagement", "size"))
                              .reset_index()
                              .sort_values("avg_eng", ascending=False))
                 theme_eng["avg_eng"] = theme_eng["avg_eng"].round(0)
