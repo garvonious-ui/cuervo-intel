@@ -283,6 +283,70 @@ with tab_overview:
     else:
         st.info(f"No {top10_plat} post data available for {top10_brand}.")
 
+    # ── Dynamic vs Static Performance ──────────────────────────────────
+    st.divider()
+    st.subheader("Dynamic vs Static Performance")
+    st.caption("Comparing avg engagements: Dynamic (video) vs Static (image) content")
+
+    dynamic_types = ["Reel", "Video"]
+    static_types = ["Static Image", "Carousel"]
+
+    # Hero brand metrics (owned only)
+    _hero_df = df[df["brand"] == HERO]
+    if "collaboration" in _hero_df.columns:
+        _hero_df = _hero_df[~_hero_df["collaboration"].str.strip().str.lower().isin(COLLAB_AMPLIFIED_TYPES)]
+    dyn_posts = _hero_df[_hero_df["post_type"].isin(dynamic_types)]
+    stat_posts = _hero_df[_hero_df["post_type"].isin(static_types)]
+    total_ds = len(dyn_posts) + len(stat_posts) or 1
+    dyn_pct = len(dyn_posts) / total_ds * 100
+    stat_pct = len(stat_posts) / total_ds * 100
+    dyn_eng = dyn_posts["total_engagement"].mean() if len(dyn_posts) else 0
+    stat_eng = stat_posts["total_engagement"].mean() if len(stat_posts) else 0
+    dyn_eng = 0 if pd.isna(dyn_eng) else dyn_eng
+    stat_eng = 0 if pd.isna(stat_eng) else stat_eng
+
+    ds1, ds2, ds3, ds4 = st.columns(4)
+    with ds1:
+        st.metric("Dynamic %", f"{dyn_pct:.0f}%", help="Reels + Video")
+    with ds2:
+        st.metric("Dynamic Avg Eng", f"{dyn_eng:,.0f}",
+                  delta=f"{dyn_eng - stat_eng:+,.0f} vs Static" if stat_eng > 0 else None)
+    with ds3:
+        st.metric("Static %", f"{stat_pct:.0f}%", help="Static Image + Carousel")
+    with ds4:
+        st.metric("Static Avg Eng", f"{stat_eng:,.0f}")
+
+    # Cross-brand comparison
+    all_brand_ds = []
+    for brand in order:
+        bdf = df[df["brand"] == brand]
+        if "collaboration" in bdf.columns:
+            bdf = bdf[~bdf["collaboration"].str.strip().str.lower().isin(COLLAB_AMPLIFIED_TYPES)]
+        if len(bdf) == 0:
+            continue
+        b_dyn = bdf[bdf["post_type"].isin(dynamic_types)]
+        b_stat = bdf[bdf["post_type"].isin(static_types)]
+        b_dyn_eng = b_dyn["total_engagement"].mean() if len(b_dyn) else 0
+        b_stat_eng = b_stat["total_engagement"].mean() if len(b_stat) else 0
+        b_dyn_eng = 0 if pd.isna(b_dyn_eng) else b_dyn_eng
+        b_stat_eng = 0 if pd.isna(b_stat_eng) else b_stat_eng
+        all_brand_ds.append({"Brand": brand, "Dynamic Eng": round(b_dyn_eng, 0), "Static Eng": round(b_stat_eng, 0)})
+
+    if all_brand_ds:
+        ds_df = pd.DataFrame(all_brand_ds)
+        ds_melt = pd.melt(ds_df, id_vars=["Brand"], value_vars=["Dynamic Eng", "Static Eng"],
+                          var_name="Format", value_name="Avg Eng")
+        fig_ds = px.bar(ds_melt, x="Brand", y="Avg Eng", color="Format", barmode="group",
+                        color_discrete_map={"Dynamic Eng": "#2ea3f2", "Static Eng": "#C9A87E"},
+                        labels={"Avg Eng": "Avg Engagements", "Brand": ""},
+                        template=CHART_TEMPLATE, text_auto=",.0f")
+        fig_ds.update_layout(font=CHART_FONT, height=380, legend=dict(orientation="h", y=-0.15))
+        st.plotly_chart(fig_ds, use_container_width=True)
+
+    st.info(f"**Dynamic content {'outperforms' if dyn_eng > stat_eng else 'underperforms vs'} static** by "
+            f"{abs(dyn_eng - stat_eng):,.0f} avg engagements. {HERO}'s dynamic mix is {dyn_pct:.0f}% — "
+            f"{'meeting' if dyn_pct >= 50 else 'below'} the 50%+ target.")
+
 
 # ══════════════════════════════════════════════════════════════════════
 # TAB 2 — Content Gaps
