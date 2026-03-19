@@ -123,10 +123,10 @@ CONTENT_SOURCE_MIX = {
 # ── Monthly Ramp Targets (March-June 2026) ───────────────────────────
 
 MONTHLY_RAMP = {
-    "March": {"creator_pct": "20%+", "er_target": "0.15%", "proactive_comments_wk": "15-20"},
-    "April": {"creator_pct": "23%+", "er_target": "0.18%", "proactive_comments_wk": "20-25"},
-    "May": {"creator_pct": "27%+", "er_target": "0.22%", "proactive_comments_wk": "25-30"},
-    "June": {"creator_pct": "30%", "er_target": "0.25%", "proactive_comments_wk": "30+"},
+    "March": {"creator_pct": "20%+", "er_target": "100+", "proactive_comments_wk": "15-20"},
+    "April": {"creator_pct": "23%+", "er_target": "120+", "proactive_comments_wk": "20-25"},
+    "May": {"creator_pct": "27%+", "er_target": "140+", "proactive_comments_wk": "25-30"},
+    "June": {"creator_pct": "30%", "er_target": "150+", "proactive_comments_wk": "30+"},
 }
 
 # ── Testing Roadmap ──────────────────────────────────────────────────
