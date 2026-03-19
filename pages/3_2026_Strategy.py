@@ -562,56 +562,6 @@ with tab_platform:
     if ig_total == 0:
         st.info("No Instagram data available yet.")
     else:
-        # ── Format Mix: Actual vs Target ────────────────────────────────
-        st.markdown("##### Format Mix: Actual vs Target")
-
-        # Compute actual format distribution
-        _type_counts = hero_ig["post_type"].value_counts()
-        _format_map = {
-            "Reels": _type_counts.get("Reel", 0) + _type_counts.get("Video", 0),
-            "Carousels": _type_counts.get("Carousel", 0),
-            "Stories": _type_counts.get("Story", 0),
-            "Collabs/Lives": _type_counts.get("Live", 0),
-        }
-        # Static images count toward Carousels bucket for format mix context,
-        # but let's show them separately and note it
-        _static_count = _type_counts.get("Static Image", 0)
-        if _static_count > 0:
-            _format_map["Static Image"] = _static_count
-
-        _actual_pcts = {k: (v / ig_total * 100) for k, v in _format_map.items() if v > 0}
-
-        _fmt_data = []
-        for fmt, target_info in cfg.ig_format_mix.items():
-            _fmt_data.append({"Format": fmt, "Type": "Target", "Pct": target_info["pct"],
-                              "Role": target_info["role"]})
-            _fmt_data.append({"Format": fmt, "Type": "Actual", "Pct": _actual_pcts.get(fmt, 0),
-                              "Role": target_info["role"]})
-        # Add Static Image if present (no target for it)
-        if "Static Image" in _actual_pcts:
-            _fmt_data.append({"Format": "Static Image", "Type": "Actual",
-                              "Pct": _actual_pcts["Static Image"], "Role": "—"})
-            _fmt_data.append({"Format": "Static Image", "Type": "Target",
-                              "Pct": 0, "Role": "—"})
-
-        _fmt_df = pd.DataFrame(_fmt_data)
-        fig_fmt = px.bar(
-            _fmt_df, x="Pct", y="Format", color="Type", barmode="group",
-            orientation="h",
-            color_discrete_map={"Target": "#4A6B7A", "Actual": "#F8C090"},
-            text="Pct",
-        )
-        fig_fmt.update_traces(texttemplate="%{text:.0f}%", textposition="outside")
-        fig_fmt.update_layout(
-            template=CHART_TEMPLATE, font=CHART_FONT,
-            xaxis_title="% of Posts", yaxis_title="",
-            legend_title="", height=300,
-            yaxis=dict(categoryorder="array",
-                       categoryarray=list(reversed(list(cfg.ig_format_mix.keys()) + (["Static Image"] if "Static Image" in _actual_pcts else [])))),
-            margin=dict(l=0, r=40, t=10, b=30),
-        )
-        st.plotly_chart(fig_fmt, use_container_width=True)
-
         # ── Avg Engagements by Format ───────────────────────────────────
         col_eng, col_cadence = st.columns(2)
 
