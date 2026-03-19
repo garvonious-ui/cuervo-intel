@@ -99,7 +99,7 @@ def _sprout_fingerprint(sprout_dir: str) -> str:
     when files change OR analysis logic is updated."""
     import hashlib
     # Bump this version whenever sprout_import.py or analysis.py logic changes
-    CODE_VERSION = "v28_exclude_influencer_metrics"
+    CODE_VERSION = "v29_owned_vs_collab_segmentation"
     entries = [CODE_VERSION]
     if os.path.isdir(sprout_dir):
         for f in sorted(os.listdir(sprout_dir)):

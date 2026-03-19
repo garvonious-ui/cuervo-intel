@@ -12,7 +12,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-from config import CHART_TEMPLATE, CHART_FONT
+from config import CHART_TEMPLATE, CHART_FONT, split_owned_collab
 from client_context import get_client
 from autostrat_loader import (
     has_autostrat_data, get_report, get_all_how_to_win,
@@ -48,6 +48,11 @@ if "_mix_weight" in hero_df.columns:
 hero_ig = hero_df[hero_df["platform"] == "Instagram"]
 hero_tt = hero_df[hero_df["platform"] == "TikTok"]
 
+# Segment owned vs collab posts
+hero_owned, hero_collab = split_owned_collab(hero_df)
+hero_ig_owned, hero_ig_collab = split_owned_collab(hero_ig)
+hero_tt_owned, hero_tt_collab = split_owned_collab(hero_tt)
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 tab_kpi, tab_content, tab_audit = st.tabs([
     "KPI Dashboard", "Content Performance", "Self-Audit Intelligence",
@@ -68,13 +73,13 @@ with tab_kpi:
     ig_followers = eng.get("Instagram", {}).get("followers", 0)
     tt_followers = eng.get("TikTok", {}).get("followers", 0)
 
-    # Median Engagements per Reel (median to reduce collab outlier skew)
-    hero_reels = hero_df[hero_df["post_type"] == "Reel"]
+    # Median Engagements per Reel (brand-owned posts only)
+    hero_reels = hero_owned[hero_owned["post_type"] == "Reel"]
     avg_eng_per_reel = hero_reels["total_engagement"].median() if len(hero_reels) else 0
     avg_eng_per_reel = 0 if pd.isna(avg_eng_per_reel) else avg_eng_per_reel
 
-    # Reel ratio (IG only)
-    reel_ratio = len(hero_ig[hero_ig["post_type"] == "Reel"]) / max(len(hero_ig), 1) * 100
+    # Reel ratio (IG only, brand-owned)
+    reel_ratio = len(hero_ig_owned[hero_ig_owned["post_type"] == "Reel"]) / max(len(hero_ig_owned), 1) * 100
 
     # Posts/week → also compute monthly estimate for target comparison
     freq = results["frequency"].get(HERO, {})
@@ -89,8 +94,8 @@ with tab_kpi:
     IG_PPM_TARGET = _t["ig_posts_per_month"]
     TT_PPW_TARGET = _t["tt_posts_per_week"]
 
-    # ── Engagement metrics (median to reduce collab outlier skew) ─────
-    avg_eng_per_post = hero_df["total_engagement"].median() if len(hero_df) else 0
+    # ── Engagement metrics (brand-owned posts only) ─────
+    avg_eng_per_post = hero_owned["total_engagement"].median() if len(hero_owned) else 0
     avg_eng_per_post = 0 if pd.isna(avg_eng_per_post) else avg_eng_per_post
 
     k1, k2, k3, k4, k5 = st.columns(5)
@@ -236,10 +241,10 @@ with tab_kpi:
     st.subheader("Engagement Signals")
     st.caption(_perf.get("signals_caption", "Beyond likes — saves, shares, and comments indicate deeper audience connection"))
 
-    if len(hero_df):
-        save_rate = hero_df["saves"].sum() / max(hero_df["likes"].sum(), 1) * 100
-        share_rate = hero_df["shares"].sum() / max(hero_df["likes"].sum(), 1) * 100
-        comment_rate = hero_df["comments"].sum() / max(hero_df["likes"].sum(), 1) * 100
+    if len(hero_owned):
+        save_rate = hero_owned["saves"].sum() / max(hero_owned["likes"].sum(), 1) * 100
+        share_rate = hero_owned["shares"].sum() / max(hero_owned["likes"].sum(), 1) * 100
+        comment_rate = hero_owned["comments"].sum() / max(hero_owned["likes"].sum(), 1) * 100
 
         # Category averages for comparison
         cat_save = df["saves"].sum() / max(df["likes"].sum(), 1) * 100
@@ -282,17 +287,17 @@ with tab_content:
     st.subheader("Content Format Breakdown")
     st.caption(_perf.get("format_caption", f"{HERO}'s format mix on Instagram — reach vs engagement by format"))
 
-    if len(hero_ig):
-        format_counts = hero_ig.groupby("post_type").size().reset_index(name="count")
+    if len(hero_ig_owned):
+        format_counts = hero_ig_owned.groupby("post_type").size().reset_index(name="count")
         format_counts["pct"] = (format_counts["count"] / format_counts["count"].sum() * 100).round(1)
 
-        # Avg total engagements by format
-        format_eng = (hero_ig.groupby("post_type")["total_engagement"].median().reset_index())
+        # Median total engagements by format (brand-owned only)
+        format_eng = (hero_ig_owned.groupby("post_type")["total_engagement"].median().reset_index())
         format_eng.columns = ["post_type", "avg_engagements"]
 
         col_f1, col_f2 = st.columns(2)
         with col_f1:
-            st.markdown("**Format Distribution**")
+            st.markdown("**Format Distribution (Brand-Owned)**")
             fig_fmt = px.pie(format_counts, values="count", names="post_type",
                              color_discrete_sequence=["#F8C090", "#2ea3f2", "#7B6B63", "#D4956A"],
                              template=CHART_TEMPLATE)
@@ -300,7 +305,7 @@ with tab_content:
             st.plotly_chart(fig_fmt, use_container_width=True)
 
         with col_f2:
-            st.markdown("**Median Engagements by Format**")
+            st.markdown("**Median Engagements by Format (Brand-Owned)**")
             fig_eng = px.bar(format_eng, x="post_type", y="avg_engagements",
                              color_discrete_sequence=[cfg.brand_colors[HERO]],
                              labels={"avg_engagements": "Median Engagements", "post_type": ""},
@@ -310,20 +315,11 @@ with tab_content:
             fig_eng.update_layout(font=CHART_FONT, height=350, showlegend=False)
             st.plotly_chart(fig_eng, use_container_width=True)
 
-        st.caption("Total engagements = likes + comments + shares + saves")
-
-        # Note about collab post inflation on Reels
-        if "collaboration" in hero_ig.columns:
-            reels = hero_ig[hero_ig["post_type"] == "Reel"]
-            brand_owned_reels = reels[reels["collaboration"] == "Cuervo"] if len(reels) else reels
-            if len(brand_owned_reels) and len(reels) > len(brand_owned_reels):
-                brand_median = brand_owned_reels["total_engagement"].median()
-                st.caption(f"*Note: Reel engagement is elevated by influencer/partner collab posts which drive significantly higher reach. "
-                           f"Median brand-owned Reel engagement is {brand_median:,.0f}.*")
+        st.caption("Total engagements = likes + comments + shares + saves. Metrics reflect brand-owned posts (Cuervo + Partner).")
 
         # Format KPIs
-        reel_pct = len(hero_ig[hero_ig["post_type"] == "Reel"]) / max(len(hero_ig), 1) * 100
-        carousel_pct = len(hero_ig[hero_ig["post_type"] == "Carousel"]) / max(len(hero_ig), 1) * 100
+        reel_pct = len(hero_ig_owned[hero_ig_owned["post_type"] == "Reel"]) / max(len(hero_ig_owned), 1) * 100
+        carousel_pct = len(hero_ig_owned[hero_ig_owned["post_type"] == "Carousel"]) / max(len(hero_ig_owned), 1) * 100
 
         # Best format by engagements
         best_eng_fmt = format_eng.loc[format_eng["avg_engagements"].idxmax(), "post_type"] if len(format_eng) else "N/A"
@@ -353,6 +349,62 @@ with tab_content:
 
     st.markdown("---")
 
+    # ── Collaboration Amplification ──────────────────────────────────────
+    st.subheader("Collaboration Amplification")
+    st.caption(f"Owned posts reflect {HERO}'s organic audience. Collab posts (Influencer + Collective) "
+               "are posted by partner accounts and reflect their larger reach.")
+
+    if len(hero_collab):
+        owned_median = hero_owned["total_engagement"].median() if len(hero_owned) else 0
+        owned_median = 0 if pd.isna(owned_median) else owned_median
+        collab_median = hero_collab["total_engagement"].median() if len(hero_collab) else 0
+        collab_median = 0 if pd.isna(collab_median) else collab_median
+        lift = collab_median / owned_median if owned_median > 0 else 0
+
+        ca1, ca2, ca3 = st.columns(3)
+        with ca1:
+            st.metric("Owned Median Eng", f"{owned_median:,.0f}",
+                      help=f"{HERO} + Partner posts ({len(hero_owned)} posts)")
+        with ca2:
+            st.metric("Collab Median Eng", f"{collab_median:,.0f}",
+                      help=f"Influencer + Collective posts ({len(hero_collab)} posts)")
+        with ca3:
+            st.metric("Collab Lift", f"{lift:.1f}x",
+                      help="How much more engagement collab posts generate vs owned")
+
+        # Grouped bar: Owned vs Collab by Format
+        fmt_comparison = []
+        for fmt in ["Reel", "Carousel", "Static Image"]:
+            owned_fmt = hero_owned[hero_owned["post_type"] == fmt]
+            collab_fmt = hero_collab[hero_collab["post_type"] == fmt]
+            if len(owned_fmt):
+                fmt_comparison.append({"Format": fmt, "Source": "Owned",
+                                       "Median Eng": owned_fmt["total_engagement"].median()})
+            if len(collab_fmt):
+                fmt_comparison.append({"Format": fmt, "Source": "Collab",
+                                       "Median Eng": collab_fmt["total_engagement"].median()})
+
+        if fmt_comparison:
+            fmt_df = pd.DataFrame(fmt_comparison)
+            fig_collab = px.bar(fmt_df, x="Format", y="Median Eng", color="Source",
+                                barmode="group",
+                                color_discrete_map={"Owned": cfg.brand_colors.get(HERO, "#2ea3f2"),
+                                                    "Collab": "#F8C090"},
+                                template=CHART_TEMPLATE, text_auto=",.0f")
+            fig_collab.update_layout(font=CHART_FONT, height=380,
+                                     yaxis_title="Median Engagements", xaxis_title="")
+            st.plotly_chart(fig_collab, use_container_width=True)
+
+        # Narrative
+        collab_eng_share = hero_collab["total_engagement"].sum() / max(hero_df["total_engagement"].sum(), 1) * 100
+        collab_post_share = len(hero_collab) / max(len(hero_df), 1) * 100
+        st.info(f"**Collab amplification:** Influencer + Collective posts are **{collab_post_share:.0f}%** of content "
+                f"but drive **{collab_eng_share:.0f}%** of total engagements — a **{lift:.1f}x** lift over brand-owned posts.")
+    else:
+        st.info("No collab posts detected in the dataset.")
+
+    st.markdown("---")
+
     # ── Content Pillar Performance ──────────────────────────────────────
     if cfg.themes_ready:
         # Show pillar performance if content_pillar column exists, otherwise fall back to content_theme
@@ -360,9 +412,9 @@ with tab_content:
 
         if has_pillars:
             st.subheader("Content Pillar Performance")
-            st.caption(f"Which pillars drive the highest engagement for {HERO} (median to reduce outlier skew)")
+            st.caption(f"Which pillars drive the highest engagement for {HERO} (brand-owned posts only)")
 
-            _pillar_valid = hero_df[hero_df["content_pillar"].notna() & (hero_df["content_pillar"].astype(str).str.strip() != "")]
+            _pillar_valid = hero_owned[hero_owned["content_pillar"].notna() & (hero_owned["content_pillar"].astype(str).str.strip() != "")]
             pillar_eng = (_pillar_valid
                           .groupby("content_pillar")
                           .agg(avg_eng=("total_engagement", "median"), count=("total_engagement", "size"))
@@ -391,9 +443,9 @@ with tab_content:
             st.subheader("Content Theme Performance")
             st.caption(_perf.get("theme_caption", f"Which themes drive the highest engagement for {HERO}"))
 
-            if len(hero_df) and hero_df["content_theme"].notna().any():
-                theme_eng = (hero_df.groupby("content_theme")
-                             .agg(avg_eng=("total_engagement", "mean"), count=("total_engagement", "size"))
+            if len(hero_owned) and hero_owned["content_theme"].notna().any():
+                theme_eng = (hero_owned.groupby("content_theme")
+                             .agg(avg_eng=("total_engagement", "median"), count=("total_engagement", "size"))
                              .reset_index()
                              .sort_values("avg_eng", ascending=False))
                 theme_eng["avg_eng"] = theme_eng["avg_eng"].round(0)
@@ -492,25 +544,25 @@ with tab_content:
     # ── Best & Worst Posts ─────────────────────────────────────────────
     st.subheader("Best & Worst Posts")
 
-    if len(hero_df):
-        # Split by platform
-        _has_platform = "platform" in hero_df.columns
-        if _has_platform:
-            ig_df = hero_df[hero_df["platform"].str.lower().str.contains("instagram", na=False)]
-            tt_df = hero_df[hero_df["platform"].str.lower().str.contains("tiktok", na=False)]
-        else:
-            ig_df = hero_df
-            tt_df = pd.DataFrame()
+    def _post_label(row):
+        pillar = row.get("content_pillar", "") or ""
+        collab = row.get("collaboration", "") or ""
+        parts = [row.get("post_type", "")]
+        if pillar:
+            parts.append(pillar)
+        if collab:
+            parts.append(collab)
+        return " | ".join(p for p in parts if p)
 
-        def _post_label(row):
-            pillar = row.get("content_pillar", "") or ""
-            collab = row.get("collaboration", "") or ""
-            parts = [row.get("post_type", "")]
-            if pillar:
-                parts.append(pillar)
-            if collab:
-                parts.append(collab)
-            return " | ".join(p for p in parts if p)
+    def _render_post_list(source_df, label_best="Top 10", label_worst="Bottom 10"):
+        """Render best/worst posts for a DataFrame, split by platform."""
+        _has_platform = "platform" in source_df.columns
+        if _has_platform:
+            ig_df = source_df[source_df["platform"].str.lower().str.contains("instagram", na=False)]
+            tt_df = source_df[source_df["platform"].str.lower().str.contains("tiktok", na=False)]
+        else:
+            ig_df = source_df
+            tt_df = pd.DataFrame()
 
         for plat_label, plat_df in [("Instagram", ig_df), ("TikTok", tt_df)]:
             if len(plat_df) == 0:
@@ -518,7 +570,7 @@ with tab_content:
             st.markdown(f"#### {plat_label}")
             col_best, col_worst = st.columns(2)
             with col_best:
-                st.markdown("**Top 10 by Engagements**")
+                st.markdown(f"**{label_best} by Engagements**")
                 top5 = plat_df.nlargest(10, "total_engagement").reset_index(drop=True)
                 top5.index = top5.index + 1
                 for idx, row in top5.iterrows():
@@ -536,7 +588,7 @@ with tab_content:
                             st.markdown(f"[View post]({url})")
 
             with col_worst:
-                st.markdown("**Bottom 10 by Engagements**")
+                st.markdown(f"**{label_worst} by Engagements**")
                 bottom5 = plat_df.nsmallest(10, "total_engagement").reset_index(drop=True)
                 bottom5.index = bottom5.index + 1
                 for idx, row in bottom5.iterrows():
@@ -552,6 +604,21 @@ with tab_content:
                                    f"Shares: {row.get('shares', 0):,} | Saves: {row.get('saves', 0):,}")
                         if url:
                             st.markdown(f"[View post]({url})")
+
+    if len(hero_df):
+        if len(hero_collab):
+            bw_owned_tab, bw_collab_tab = st.tabs(["Brand-Owned Posts", "Collab Posts"])
+            with bw_owned_tab:
+                if len(hero_owned):
+                    _render_post_list(hero_owned)
+                else:
+                    st.info(f"No brand-owned {HERO} posts in the dataset.")
+            with bw_collab_tab:
+                st.caption("These posts appeared on Cuervo's feed via collab. "
+                           "Engagement reflects the partner's audience reach.")
+                _render_post_list(hero_collab, label_best="Top Collab", label_worst="Bottom Collab")
+        else:
+            _render_post_list(hero_owned)
     else:
         st.info(_perf.get("no_posts", f"No {HERO} posts in the dataset."))
 

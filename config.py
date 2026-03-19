@@ -21,3 +21,22 @@ PRIORITY_COLORS = {
 
 CHART_TEMPLATE = "plotly_white"
 CHART_FONT = dict(family="Barlow Condensed, Helvetica, Arial, sans-serif")
+
+# ── Collaboration type classification ──
+COLLAB_OWNED_TYPES = {"cuervo", "partner"}        # brand-account posts
+COLLAB_AMPLIFIED_TYPES = {"influencer", "collective"}  # other-account posts
+
+
+def split_owned_collab(df):
+    """Split a DataFrame into owned and collab subsets based on collaboration column.
+
+    Owned = Cuervo + Partner (brand-account posts).
+    Collab = Influencer + Collective (other-account posts with inflated reach).
+    Returns (owned_df, collab_df). If no collaboration column, returns (df, empty_df).
+    """
+    if "collaboration" not in df.columns:
+        return df, df.iloc[0:0]
+    collab_lower = df["collaboration"].str.strip().str.lower()
+    owned = df[collab_lower.isin(COLLAB_OWNED_TYPES) | collab_lower.isna()]
+    collab = df[collab_lower.isin(COLLAB_AMPLIFIED_TYPES)]
+    return owned, collab

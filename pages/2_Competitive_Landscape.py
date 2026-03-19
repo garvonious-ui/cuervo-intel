@@ -11,7 +11,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-from config import CHART_TEMPLATE, CHART_FONT
+from config import CHART_TEMPLATE, CHART_FONT, COLLAB_AMPLIFIED_TYPES
 from client_context import get_client
 
 if "results" not in st.session_state:
@@ -55,9 +55,9 @@ with tab_overview:
     rows = []
     for brand in order:
         plat_df = df[df["brand"] == brand]
-        # Exclude Influencer posts to match engagement methodology
+        # Exclude collab posts (Influencer + Collective) to match engagement methodology
         if "collaboration" in plat_df.columns:
-            plat_df = plat_df[plat_df["collaboration"].str.strip().str.lower() != "influencer"]
+            plat_df = plat_df[~plat_df["collaboration"].str.strip().str.lower().isin(COLLAB_AMPLIFIED_TYPES)]
         eng = results["engagement"].get(brand, {})
         freq_b = results["frequency"].get(brand, {})
         followers = sum(eng.get(p, {}).get("followers", 0) for p in ["Instagram", "TikTok"])
@@ -140,7 +140,7 @@ with tab_overview:
     # ── "Who's Winning & Why" ──────────────────────────────────────────
     st.subheader("Who's Winning & Why")
 
-    _df_owned = df[df["collaboration"].str.strip().str.lower() != "influencer"] if "collaboration" in df.columns else df
+    _df_owned = df[~df["collaboration"].str.strip().str.lower().isin(COLLAB_AMPLIFIED_TYPES)] if "collaboration" in df.columns else df
     brand_engs = _df_owned.groupby("brand")["total_engagement"].mean().dropna()
     brand_engs = brand_engs[brand_engs > 0].sort_values(ascending=False)
     top3 = brand_engs.head(3)

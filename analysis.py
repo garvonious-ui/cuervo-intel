@@ -10,6 +10,7 @@ from collections import Counter, defaultdict
 from datetime import datetime
 from typing import Any
 
+from config import COLLAB_AMPLIFIED_TYPES
 from templates import CONTENT_THEMES, TONE_OPTIONS
 
 
@@ -242,11 +243,11 @@ def analyze_engagement(posts: list[dict], profiles: list[dict],
             plat_posts = [p for p in brand_posts if p["platform"] == platform]
             followers = follower_map.get((brand, platform), 0)
 
-            # Exclude influencer posts (they inflate metrics due to higher reach)
+            # Exclude collab posts (Influencer + Collective inflate metrics due to higher reach)
             _has_collab = any(p.get("collaboration") for p in plat_posts)
             if _has_collab:
                 brand_owned_posts = [p for p in plat_posts
-                                     if str(p.get("collaboration", "")).strip().lower() != "influencer"]
+                                     if str(p.get("collaboration", "")).strip().lower() not in COLLAB_AMPLIFIED_TYPES]
             else:
                 brand_owned_posts = plat_posts
 
@@ -264,9 +265,9 @@ def analyze_engagement(posts: list[dict], profiles: list[dict],
             # Engagements per 1K followers (brand-owned only)
             eng_per_1k = round((avg_engagement / followers) * 1000, 2) if followers > 0 else 0
 
-            # By content type: avg engagements per type
+            # By content type: avg engagements per type (brand-owned only)
             type_engagement = defaultdict(list)
-            for p in plat_posts:
+            for p in _metric_posts:
                 type_engagement[p.get("post_type", "Unknown")].append(p["total_engagement"])
 
             type_avg = {}
@@ -285,6 +286,7 @@ def analyze_engagement(posts: list[dict], profiles: list[dict],
                 "views": p["views"],
                 "theme": p.get("content_theme", ""),
                 "caption_preview": (p.get("caption_text", "") or "")[:100],
+                "collaboration": p.get("collaboration", ""),
             } for p in top_10]
 
             # Benchmark bonus metrics (IG only, from external benchmark CSV)

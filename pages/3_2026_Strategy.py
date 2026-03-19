@@ -11,7 +11,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-from config import CHART_TEMPLATE, CHART_FONT, PRIORITY_COLORS
+from config import CHART_TEMPLATE, CHART_FONT, PRIORITY_COLORS, COLLAB_AMPLIFIED_TYPES
 from client_context import get_client
 from autostrat_loader import (
     has_autostrat_data, get_all_how_to_win, get_all_audience_profiles,
@@ -47,12 +47,12 @@ hero_df_full = df[df["brand"] == HERO]  # Includes Edutain dupes — only for co
 hero_df = hero_df_full[hero_df_full["_mix_weight"] >= 1.0] if "_mix_weight" in hero_df_full.columns else hero_df_full
 # Keep unfiltered copy for collaboration breakdown sections (which intentionally show Influencer data)
 hero_df_with_influencer = hero_df.copy()
-# Exclude Influencer posts from engagement metrics (they inflate due to higher reach)
+# Exclude collab posts (Influencer + Collective) from engagement metrics (they inflate due to higher reach)
 if "collaboration" in hero_df.columns:
-    hero_df = hero_df[hero_df["collaboration"].str.strip().str.lower() != "influencer"]
+    hero_df = hero_df[~hero_df["collaboration"].str.strip().str.lower().isin(COLLAB_AMPLIFIED_TYPES)]
 leader_df = df[df["brand"].isin(GEN_Z_LEADERS)]
 if "collaboration" in leader_df.columns:
-    leader_df = leader_df[leader_df["collaboration"].str.strip().str.lower() != "influencer"]
+    leader_df = leader_df[~leader_df["collaboration"].str.strip().str.lower().isin(COLLAB_AMPLIFIED_TYPES)]
 
 def _render_north_star():
     """Display the brand North Star banner if configured."""
@@ -206,7 +206,7 @@ with tab_scorecard:
     for brand in cfg.brand_order:
         bdf = df[df["brand"] == brand]
         if "collaboration" in bdf.columns:
-            bdf = bdf[bdf["collaboration"].str.strip().str.lower() != "influencer"]
+            bdf = bdf[~bdf["collaboration"].str.strip().str.lower().isin(COLLAB_AMPLIFIED_TYPES)]
         if len(bdf) == 0:
             continue
         b_dyn = bdf[bdf["post_type"].isin(dynamic_types)]
@@ -591,7 +591,7 @@ with tab_frameworks:
     def compute_genz_scores(brand):
         bdf = df[df["brand"] == brand]
         if "collaboration" in bdf.columns:
-            bdf = bdf[bdf["collaboration"].str.strip().str.lower() != "influencer"]
+            bdf = bdf[~bdf["collaboration"].str.strip().str.lower().isin(COLLAB_AMPLIFIED_TYPES)]
         total = len(bdf) or 1
         ugc_pct = len(bdf[bdf["has_creator_collab"].astype(str).str.lower() == "yes"]) / total * 100 if "has_creator_collab" in bdf.columns else 0
         collab_pct = results["creators"].get(brand, {}).get("collab_pct", 0)
@@ -1030,7 +1030,7 @@ with tab_action:
 
     with col_t:
         st.error("**Competitive Threats**")
-        _df_owned = df[df["collaboration"].str.strip().str.lower() != "influencer"] if "collaboration" in df.columns else df
+        _df_owned = df[~df["collaboration"].str.strip().str.lower().isin(COLLAB_AMPLIFIED_TYPES)] if "collaboration" in df.columns else df
         brand_counts = _df_owned.groupby("brand").size()
         if len(brand_counts):
             highest_poster = brand_counts.idxmax()
