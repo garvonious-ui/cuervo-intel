@@ -484,55 +484,6 @@ with tab_frameworks:
 
     st.markdown("---")
 
-    # ── Gen Z Engagement Drivers ───────────────────────────────────────
-    st.subheader("Gen Z Engagement Drivers")
-    st.caption(f"{HERO} vs Gen Z leaders on 6 key dimensions")
-
-    compare_brands = [HERO] + GEN_Z_LEADERS
-
-    def compute_genz_scores(brand):
-        bdf = df[df["brand"] == brand]
-        if "collaboration" in bdf.columns:
-            bdf = bdf[~bdf["collaboration"].str.strip().str.lower().isin(COLLAB_AMPLIFIED_TYPES)]
-        total = len(bdf) or 1
-        ugc_pct = len(bdf[bdf["has_creator_collab"].astype(str).str.lower() == "yes"]) / total * 100 if "has_creator_collab" in bdf.columns else 0
-        collab_pct = results["creators"].get(brand, {}).get("collab_pct", 0)
-        humor_pct = len(bdf[bdf["content_theme"].isin(["Meme/Humor"])]) / total * 100
-        video_pct = len(bdf[bdf["post_type"].isin(["Reel", "Video"])]) / total * 100
-        music_pct = len(bdf[bdf["has_music_audio"].str.lower() == "yes"]) / total * 100 if "has_music_audio" in bdf.columns else 0
-        comment_rate = (bdf["comments"].sum() / max(bdf["likes"].sum(), 1)) * 100
-        return [ugc_pct, collab_pct, humor_pct, video_pct, music_pct, comment_rate]
-
-    dims = ["Creator/UGC Content %", "Creator Partners %", "Humor/Meme %",
-            "Short-form Video %", "Music Integration %", "Community Engagement"]
-
-    genz_rows = []
-    for brand in compare_brands:
-        scores = compute_genz_scores(brand)
-        for i, dim in enumerate(dims):
-            genz_rows.append({"Brand": brand, "Driver": dim, "Value": round(scores[i], 1)})
-
-    genz_df = pd.DataFrame(genz_rows)
-    fig_radar = px.bar(genz_df, x="Value", y="Driver", color="Brand", orientation="h",
-                       barmode="group", color_discrete_map=cfg.brand_colors,
-                       labels={"Value": "%", "Driver": ""},
-                       template=CHART_TEMPLATE, text_auto=".1f")
-    fig_radar.update_layout(height=480, font=CHART_FONT,
-                            legend=dict(orientation="h", y=-0.12))
-    st.plotly_chart(fig_radar, use_container_width=True)
-
-    # So What
-    hero_scores = compute_genz_scores(HERO)
-    leader_avg_scores = [sum(compute_genz_scores(b)[i] for b in GEN_Z_LEADERS) / len(GEN_Z_LEADERS) for i in range(6)]
-    biggest_gap_idx = max(range(6), key=lambda i: leader_avg_scores[i] - hero_scores[i])
-    biggest_lead_idx = max(range(6), key=lambda i: hero_scores[i] - leader_avg_scores[i])
-    st.info(f"**Biggest gap vs leaders:** {dims[biggest_gap_idx]} "
-            f"({HERO} {hero_scores[biggest_gap_idx]:.0f}% vs leaders {leader_avg_scores[biggest_gap_idx]:.0f}%). "
-            f"**Strongest area:** {dims[biggest_lead_idx]} "
-            f"({HERO} {hero_scores[biggest_lead_idx]:.0f}% vs leaders {leader_avg_scores[biggest_lead_idx]:.0f}%).")
-
-    st.markdown("---")
-
     # ── Voice Principles ────────────────────────────────────────────────
     st.subheader("Tone of Voice — The Life of the Party")
     st.caption(f"{HERO}'s social voice: lively, approachable, human-forward, extroverted")
