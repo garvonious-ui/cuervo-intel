@@ -658,15 +658,15 @@ with tab_platform:
             else:
                 st.caption("Not enough data")
 
-        # ── Top Themes on IG ────────────────────────────────────────────
+        # ── Top Pillars on IG ────────────────────────────────────────────
         with col_themes:
-            st.markdown("**Top Themes (by Avg Eng)**")
-            if "content_theme" in hero_ig.columns:
-                _theme_eng = hero_ig.groupby("content_theme")["total_engagement"].mean().sort_values(ascending=False)
-                for theme, eng in _theme_eng.head(5).items():
-                    st.markdown(f"- {theme}: **{eng:.0f}**")
+            st.markdown("**Top Pillars (by Avg Eng)**")
+            if "content_pillar" in hero_ig.columns and hero_ig["content_pillar"].notna().any():
+                _pillar_eng = hero_ig[hero_ig["content_pillar"].notna()].groupby("content_pillar")["total_engagement"].mean().sort_values(ascending=False)
+                for pillar, eng in _pillar_eng.head(5).items():
+                    st.markdown(f"- {pillar}: **{eng:.0f}**")
             else:
-                st.caption("No theme data")
+                st.caption("No pillar data")
 
     st.markdown("---")
 
@@ -723,7 +723,7 @@ with tab_action:
     ) / max(len(GEN_Z_LEADERS), 1)
     rec_ppw = round(leader_avg_ppw, 0)
 
-    top_themes_for_leaders = leader_df.groupby("content_theme")["total_engagement"].mean().nlargest(3)
+    top_pillars_for_leaders = leader_df.groupby("content_pillar")["total_engagement"].mean().nlargest(3) if "content_pillar" in leader_df.columns and leader_df["content_pillar"].notna().any() else leader_df.groupby("content_theme")["total_engagement"].mean().nlargest(3)
 
     _hero_ig_action = hero_df[hero_df["platform"] == "Instagram"]
     video_pct = len(_hero_ig_action[_hero_ig_action["post_type"].isin(["Reel", "Video"])]) / max(len(_hero_ig_action), 1) * 100
@@ -745,7 +745,7 @@ with tab_action:
             "actions": [
                 f"Launch content pillars: " + ", ".join(f"'{p}'" for p in list(cfg.pillar_map.keys())[:2]) + " — 2 Reels + 1 Carousel" if cfg.pillar_map else "Launch primary content pillars: 2 Reels + 1 Carousel",
                 "Test first meme-format Reel (POV/trending audio) — keep it native, not ad-like",
-                f"Test top-performing themes from leaders: {', '.join(top_themes_for_leaders.index[:2])}" if len(top_themes_for_leaders) >= 2 else "Identify and test high-performing themes from competitors",
+                f"Test top-performing pillars from leaders: {', '.join(top_pillars_for_leaders.index[:2])}" if len(top_pillars_for_leaders) >= 2 else "Identify and test high-performing content pillars from competitors",
             ],
         },
         {
