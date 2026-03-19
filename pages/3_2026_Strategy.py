@@ -173,53 +173,64 @@ with tab_scorecard:
 
     st.markdown("---")
 
+    if not cfg.themes_ready:
+        st.markdown("---")
+        st.info(f"**Content source mix & theme analysis hidden** — post-level theme tagging is not yet complete for {HERO}. "
+                f"These sections will appear once all posts have been manually reviewed and tagged.")
+
+
+# ══════════════════════════════════════════════════════════════════════
+# TAB 2 — Content Strategy Frameworks
+# ══════════════════════════════════════════════════════════════════════
+
+with tab_frameworks:
+    _render_north_star()
+
+    # ── Collaboration Mix ──────────────────────────────────────────────
+    if cfg.themes_ready and "collaboration" in hero_df_with_influencer.columns and hero_df_with_influencer["collaboration"].notna().any():
+        st.subheader("Collaboration Mix")
+        st.caption(f"Who is creating {HERO}'s content — based on manual post tagging")
+
+        collab_total = max(len(hero_df_with_influencer[hero_df_with_influencer["collaboration"].notna()]), 1)
+        collab_colors = {"Cuervo": "#2ea3f2", "Partner": "#66BB6A", "Influencer": "#F8C090", "Collective": "#C9A87E"}
+        src_rows = []
+        for collab_type in sorted(hero_df_with_influencer["collaboration"].dropna().unique()):
+            count = len(hero_df_with_influencer[hero_df_with_influencer["collaboration"] == collab_type])
+            avg_eng = hero_df_with_influencer[hero_df_with_influencer["collaboration"] == collab_type]["total_engagement"].mean()
+            avg_eng = 0 if pd.isna(avg_eng) else avg_eng
+            src_rows.append({
+                "Source": collab_type,
+                "Posts": count,
+                "% of Content": round(count / collab_total * 100, 1),
+                "Avg Eng": round(avg_eng, 0),
+            })
+        src_data = pd.DataFrame(src_rows).sort_values("% of Content", ascending=False)
+
+        col_src1, col_src2 = st.columns(2)
+        with col_src1:
+            st.markdown(f"**{HERO} Collaboration Breakdown**")
+            fig_src = px.bar(src_data, x="Source", y="% of Content",
+                             color="Source", color_discrete_map=collab_colors,
+                             text="% of Content", template=CHART_TEMPLATE,
+                             labels={"% of Content": "% of Content", "Source": ""})
+            fig_src.update_traces(texttemplate="%{text:.0f}%", textposition="outside")
+            fig_src.update_layout(font=CHART_FONT, height=380, showlegend=False,
+                                  yaxis_title="% of Content")
+            st.plotly_chart(fig_src, use_container_width=True)
+
+        with col_src2:
+            st.markdown("**Collaboration Scorecard**")
+            for _, row in src_data.iterrows():
+                st.markdown(f"**{row['Source']}**: {row['Posts']} posts ({row['% of Content']:.0f}%) — "
+                            f"Avg Eng: {row['Avg Eng']:,.0f}")
+            best_collab = src_data.iloc[0]
+            st.info(f"**Top collaboration type: {best_collab['Source']}** at {best_collab['% of Content']:.0f}% of content "
+                    f"with {best_collab['Avg Eng']:,.0f} avg engagements.")
+
+        st.markdown("---")
+
+    # ── Best Performing Pillar ──────────────────────────────────────────
     if cfg.themes_ready:
-        st.markdown("---")
-
-        # ── Collaboration Mix ──────────────────────────────────────────────
-        if "collaboration" in hero_df_with_influencer.columns and hero_df_with_influencer["collaboration"].notna().any():
-            st.subheader("Collaboration Mix")
-            st.caption(f"Who is creating {HERO}'s content — based on manual post tagging")
-
-            collab_total = max(len(hero_df_with_influencer[hero_df_with_influencer["collaboration"].notna()]), 1)
-            collab_colors = {"Cuervo": "#2ea3f2", "Partner": "#66BB6A", "Influencer": "#F8C090", "Collective": "#C9A87E"}
-            src_rows = []
-            for collab_type in sorted(hero_df_with_influencer["collaboration"].dropna().unique()):
-                count = len(hero_df_with_influencer[hero_df_with_influencer["collaboration"] == collab_type])
-                avg_eng = hero_df_with_influencer[hero_df_with_influencer["collaboration"] == collab_type]["total_engagement"].mean()
-                avg_eng = 0 if pd.isna(avg_eng) else avg_eng
-                src_rows.append({
-                    "Source": collab_type,
-                    "Posts": count,
-                    "% of Content": round(count / collab_total * 100, 1),
-                    "Avg Eng": round(avg_eng, 0),
-                })
-            src_data = pd.DataFrame(src_rows).sort_values("% of Content", ascending=False)
-
-            col_src1, col_src2 = st.columns(2)
-            with col_src1:
-                st.markdown(f"**{HERO} Collaboration Breakdown**")
-                fig_src = px.bar(src_data, x="Source", y="% of Content",
-                                 color="Source", color_discrete_map=collab_colors,
-                                 text="% of Content", template=CHART_TEMPLATE,
-                                 labels={"% of Content": "% of Content", "Source": ""})
-                fig_src.update_traces(texttemplate="%{text:.0f}%", textposition="outside")
-                fig_src.update_layout(font=CHART_FONT, height=380, showlegend=False,
-                                      yaxis_title="% of Content")
-                st.plotly_chart(fig_src, use_container_width=True)
-
-            with col_src2:
-                st.markdown("**Collaboration Scorecard**")
-                for _, row in src_data.iterrows():
-                    st.markdown(f"**{row['Source']}**: {row['Posts']} posts ({row['% of Content']:.0f}%) — "
-                                f"Avg Eng: {row['Avg Eng']:,.0f}")
-                best_collab = src_data.iloc[0]
-                st.info(f"**Top collaboration type: {best_collab['Source']}** at {best_collab['% of Content']:.0f}% of content "
-                        f"with {best_collab['Avg Eng']:,.0f} avg engagements.")
-
-        st.markdown("---")
-
-        # ── Best Performing Pillar ──────────────────────────────────────────
         _has_pillar_col = "content_pillar" in hero_df.columns and hero_df["content_pillar"].notna().any()
         if _has_pillar_col:
             st.subheader("Best Performing Content Pillar")
@@ -256,20 +267,8 @@ with tab_scorecard:
 
             st.info(f"**Best pillar: {best_pillar['content_pillar']}** at {best_pillar['avg_eng']:,.0f} avg engagements — lean into this for upcoming content. "
                     f"Pillars above the {ENG_PER_POST_TARGET} eng target are proven winners worth scaling.")
-        else:
-            st.info(f"No content pillar data available for {HERO}.")
-    else:
+
         st.markdown("---")
-        st.info(f"**Content source mix & theme analysis hidden** — post-level theme tagging is not yet complete for {HERO}. "
-                f"These sections will appear once all posts have been manually reviewed and tagged.")
-
-
-# ══════════════════════════════════════════════════════════════════════
-# TAB 2 — Content Strategy Frameworks
-# ══════════════════════════════════════════════════════════════════════
-
-with tab_frameworks:
-    _render_north_star()
 
     # ── Content Pillars (4 pillars from 2026 deck) ──────────────────────
     st.subheader("Content Pillars")
