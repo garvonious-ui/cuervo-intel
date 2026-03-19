@@ -924,70 +924,8 @@ with tab_action:
 
     st.markdown("---")
 
-    # ── Strategic Actions (consolidated) ──────────────────────────────
-    st.subheader("Strategic Actions")
-    st.caption("Side-by-side: what the numbers say vs what the conversations say")
-
-    autostrat = st.session_state.get("autostrat", {})
-
-    # Helper: aggregate autostrat entries into flat action lists
-    def _aggregate_actions(entries):
-        actions = []
-        seen = set()
-        for entry in entries:
-            src = entry["source_identifier"].replace("_", " ").title()
-            for a in entry.get("strategic_actions", []):
-                key = a[:50]
-                if key not in seen:
-                    actions.append({"source": src, "text": a})
-                    seen.add(key)
-            for o in entry.get("opportunities", []):
-                key = o[:50]
-                if key not in seen:
-                    actions.append({"source": src, "text": o})
-                    seen.add(key)
-        return actions
-
-    col_data_recs, col_convo_recs = st.columns(2)
-
-    with col_data_recs:
-        st.markdown("**From Performance Data**")
-        recs = results["recommendations"]
-        if recs:
-            for priority in ["High", "Medium", "Low"]:
-                pri_recs = [r for r in recs if r["priority"] == priority]
-                if pri_recs:
-                    color = PRIORITY_COLORS[priority]
-                    st.markdown(f"**{priority} Priority** ({len(pri_recs)})")
-                    for r in pri_recs:
-                        st.markdown(f"- [{r['platform']}] {r['recommendation']}")
-        else:
-            st.info("No data-driven recommendations generated.")
-
-    with col_convo_recs:
-        st.markdown("**From Conversation Intelligence**")
-        if has_autostrat_data(autostrat):
-            all_strat = get_all_strategic_actions(autostrat)
-            hero_strat = [a for a in all_strat if a["source_identifier"] in cfg.hero_hashtag_ids]
-            comp_strat = [a for a in all_strat if a["source_identifier"] not in cfg.hero_hashtag_ids]
-
-            hero_actions = _aggregate_actions(hero_strat)
-            comp_actions = _aggregate_actions(comp_strat)
-
-            if hero_actions:
-                st.markdown(f"**{HERO} Insights** ({len(hero_actions)})")
-                for item in hero_actions[:8]:
-                    st.markdown(f"- {item['text']}")
-            if comp_actions:
-                with st.expander(f"Competitive Insights ({len(comp_actions)})"):
-                    for item in comp_actions[:8]:
-                        st.markdown(f"- **{item['source']}** — {item['text']}")
-        else:
-            st.info("Import autostrat reports to see conversation-driven insights.")
-
-    st.markdown("---")
-
     # ── Qualitative Strategic Intel ────────────────────────────────────
+    autostrat = st.session_state.get("autostrat", {})
     _has_autostrat = has_autostrat_data(autostrat)
 
     if _has_autostrat:
