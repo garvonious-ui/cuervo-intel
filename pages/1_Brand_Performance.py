@@ -622,6 +622,53 @@ with tab_content:
     else:
         st.info(_perf.get("no_posts", f"No {HERO} posts in the dataset."))
 
+    # ── Collaboration Type Breakdown ──────────────────────────────────
+    if "collaboration" in hero_df.columns and hero_df["collaboration"].notna().any():
+        st.divider()
+        st.subheader("Collaboration Type Breakdown")
+        st.caption("Who's creating the content — brand-owned vs. partners, influencers, and collective")
+
+        collab_data = []
+        for collab_type in hero_df["collaboration"].dropna().unique():
+            collab_posts = hero_df[hero_df["collaboration"] == collab_type]
+            collab_pct = len(collab_posts) / max(len(hero_df), 1) * 100
+            avg_eng = collab_posts["total_engagement"].mean() if len(collab_posts) else 0
+            avg_eng = 0 if pd.isna(avg_eng) else avg_eng
+            collab_data.append({
+                "Type": collab_type,
+                "Posts": len(collab_posts),
+                "% of Content": round(collab_pct, 1),
+                "Avg Engagement": round(avg_eng, 0),
+            })
+
+        collab_df = pd.DataFrame(collab_data).sort_values("% of Content", ascending=False)
+        collab_colors = {"Cuervo": "#2ea3f2", "Partner": "#66BB6A", "Influencer": "#F8C090", "Collective": "#C9A87E"}
+
+        col_c1, col_c2 = st.columns(2)
+        with col_c1:
+            st.markdown("**Content by Collaboration Type**")
+            fig_collab = px.bar(collab_df, x="Type", y="% of Content",
+                                color="Type", color_discrete_map=collab_colors,
+                                template=CHART_TEMPLATE, text_auto=".0f")
+            fig_collab.update_layout(showlegend=False, font=CHART_FONT, height=380,
+                                     yaxis_title="% of Content")
+            st.plotly_chart(fig_collab, use_container_width=True)
+
+        with col_c2:
+            st.markdown("**Avg Engagement by Collaboration Type**")
+            fig_collab_eng = px.bar(collab_df, x="Type", y="Avg Engagement",
+                                    color="Type", color_discrete_map=collab_colors,
+                                    template=CHART_TEMPLATE, text_auto=",.0f")
+            fig_collab_eng.update_layout(showlegend=False, font=CHART_FONT, height=380,
+                                         yaxis_title="Avg Engagements")
+            st.plotly_chart(fig_collab_eng, use_container_width=True)
+
+        if len(collab_df):
+            top = collab_df.iloc[0]
+            best_eng = collab_df.sort_values("Avg Engagement", ascending=False).iloc[0]
+            st.info(f"**Most used:** {top['Type']} ({top['% of Content']:.0f}% of posts). "
+                    f"**Highest engagement:** {best_eng['Type']} ({best_eng['Avg Engagement']:,.0f} avg eng/post).")
+
 
 # ══════════════════════════════════════════════════════════════════════
 # TAB 3 — Self-Audit Intelligence
