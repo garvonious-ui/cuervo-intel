@@ -471,6 +471,17 @@ with tab_frameworks:
         st.markdown("")
         st.info("**Funnel logic**: Entertain grabs attention → Educate builds relevance → Connect fosters relationships → Convince drives action")
 
+    st.markdown("""
+    <div style="border-left: 4px solid #2ea3f2; background: linear-gradient(135deg, #f0f7fc 0%, #e8f4f8 100%); border-radius: 0 8px 8px 0; padding: 20px 24px; margin: 16px 0 24px 0;">
+        <div style="display: flex; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 1.1rem; font-weight: 700; color: #2ea3f2; letter-spacing: 1px; text-transform: uppercase;">Connect — Always On</span>
+        </div>
+        <div style="font-size: 0.95rem; color: #444; line-height: 1.6;">
+            Connection isn't a content category — it's how we show up every day. Replying to comments, engaging in DMs, reposting fan content, and jumping into conversations in the feed. This layer runs underneath everything and turns passive followers into active community.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
     st.markdown("---")
 
     # ── Collaboration Type Breakdown ──────────────────────────────────
