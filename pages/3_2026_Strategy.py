@@ -636,7 +636,8 @@ with tab_platform:
             st.markdown("**Best Days**")
             if _best_days:
                 for d in _best_days[:3]:
-                    st.markdown(f"- {d}")
+                    day_name = d[0] if isinstance(d, (list, tuple)) else d
+                    st.markdown(f"- {day_name}")
             else:
                 st.caption("Not enough data")
 
@@ -644,7 +645,8 @@ with tab_platform:
             st.markdown("**Best Hours**")
             if _best_hours:
                 for h in _best_hours[:3]:
-                    hr = int(h) if isinstance(h, (int, float)) else h
+                    hr_val = h[0] if isinstance(h, (list, tuple)) else h
+                    hr = int(hr_val) if isinstance(hr_val, (int, float)) else hr_val
                     if isinstance(hr, int):
                         ampm = "AM" if hr < 12 else "PM"
                         display_hr = hr if hr <= 12 else hr - 12
@@ -666,42 +668,6 @@ with tab_platform:
             else:
                 st.caption("No pillar data")
 
-    st.markdown("---")
-
-    # ── Section 3: Other Platforms ──────────────────────────────────────
-    st.subheader("Other Platforms")
-
-    _other_platforms = {k: v for k, v in cfg.platform_roles.items() if k != "Instagram"}
-    _cols = st.columns(min(len(_other_platforms), 3))
-
-    for i, (plat, info) in enumerate(_other_platforms.items()):
-        with _cols[i % 3]:
-            is_primary = info["priority"] == "Primary"
-            _border_color = "#F8C090" if is_primary else "#ccc"
-            _priority_badge = f'<span style="background:#F8C090;color:#333;padding:2px 8px;border-radius:4px;font-size:0.8rem;font-weight:600;">PRIMARY</span>' if is_primary else f'<span style="background:#e8e5e0;color:#666;padding:2px 8px;border-radius:4px;font-size:0.8rem;">SECONDARY</span>'
-
-            # Check if we have data for this platform
-            _plat_key = plat.split(" /")[0].split(" ")[0]  # "TikTok", "Facebook", etc.
-            _plat_posts = len(hero_df[hero_df["platform"] == _plat_key]) if _plat_key in hero_df["platform"].values else 0
-
-            if _plat_posts > 0:
-                _status_html = f'<div style="color:#5CB85C;font-size:0.85rem;margin-top:8px;">{_plat_posts} posts tracked</div>'
-            elif is_primary:
-                _status_html = '<div style="color:#F0AD4E;font-size:0.85rem;margin-top:8px;">Data incoming</div>'
-            else:
-                _status_html = '<div style="color:#999;font-size:0.85rem;margin-top:8px;">Not yet tracked</div>'
-
-            st.markdown(f"""
-            <div style="border:1px solid #e0ddd8; border-top:4px solid {_border_color};
-                        border-radius:8px; padding:16px; margin-bottom:12px; min-height:180px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                    <strong style="font-size:1.1rem;">{plat}</strong>
-                    {_priority_badge}
-                </div>
-                <div style="color:#555;font-size:0.9rem;margin-bottom:8px;">{info['role']}</div>
-                <div style="color:#333;font-size:0.9rem;"><strong>Cadence:</strong> {info['cadence']}</div>
-                {_status_html}
-            </div>""", unsafe_allow_html=True)
 
 
 # ══════════════════════════════════════════════════════════════════════

@@ -229,7 +229,15 @@ with tab_kpi:
         best_days = freq_hm.get("best_days", [])
         best_hours = freq_hm.get("best_hours", [])
         best_day_str = best_days[0][0] if best_days else "N/A"
-        best_hour_str = f"{best_hours[0][0]}:00" if best_hours else "N/A"
+        if best_hours:
+            _bh = int(best_hours[0][0])
+            _ampm = "AM" if _bh < 12 else "PM"
+            _dh = _bh if _bh <= 12 else _bh - 12
+            if _dh == 0:
+                _dh = 12
+            best_hour_str = f"{_dh} {_ampm}"
+        else:
+            best_hour_str = "N/A"
         st.info(f"**Peak posting window:** {best_day_str} at {best_hour_str} on {heatmap_plat}. "
                 f"Total posts in period: {freq_hm.get('total_posts', 0)}.")
     else:

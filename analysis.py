@@ -647,7 +647,7 @@ def generate_hero_recommendations(
         top_category_hours = best_hours_across.most_common(3)
 
         if top_category_hours:
-            hour_strs = [f"{h}:00" for h, _ in top_category_hours]
+            hour_strs = [f"{h % 12 or 12} {'AM' if h < 12 else 'PM'}" for h, _ in top_category_hours]
             recs.append({
                 "category": "Posting Schedule",
                 "platform": platform,
