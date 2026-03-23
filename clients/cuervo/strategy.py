@@ -18,14 +18,14 @@ NORTH_STAR = {
 # ── Content Pillars (2026 Social Strategy — 4 pillars from Poplife deck) ─
 
 PILLAR_MAP = {
-    "The Front Row": [
-        "Event/Activation", "Sports Tie-in", "Partner",
-    ],
     "The Ritual": [
         "Product/Lifestyle", "Cocktail Highlights", "Cultural Moment/Holiday",
     ],
     "The Pulse": [
         "Meme/Humor", "Creator Collab", "User Repost", "Giveaway/Promo",
+    ],
+    "The Front Row": [
+        "Event/Activation", "Sports Tie-in", "Partner",
     ],
     "The Craft": [
         "Brand Heritage / Culture", "Behind the Scenes",
@@ -33,9 +33,9 @@ PILLAR_MAP = {
 }
 
 PILLAR_TARGETS = {
-    "The Front Row": 35,
     "The Ritual": 35,
-    "The Pulse": 25,
+    "The Pulse": 35,
+    "The Front Row": 25,
     "The Craft": 5,
 }
 
