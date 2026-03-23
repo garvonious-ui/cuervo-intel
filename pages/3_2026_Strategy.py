@@ -823,11 +823,11 @@ with tab_action:
 
     with col_o:
         st.success(f"**Opportunities for {HERO}**")
-        hero_theme_eng = hero_df.groupby("content_theme")["total_engagement"].mean() if len(hero_df) else pd.Series(dtype=float)
+        hero_theme_eng = hero_df.groupby("content_pillar")["total_engagement"].mean() if len(hero_df) else pd.Series(dtype=float)
         hero_best_theme = hero_theme_eng.idxmax() if len(hero_theme_eng) else "N/A"
         hero_best_eng = hero_theme_eng.max() if len(hero_theme_eng) else 0
         if hero_best_theme != "N/A":
-            st.markdown(f"- {HERO}'s **{hero_best_theme}** content is the top-performing theme at {hero_best_eng:,.0f} avg eng")
+            st.markdown(f"- {HERO}'s **{hero_best_theme}** content is the top-performing pillar at {hero_best_eng:,.0f} avg eng")
 
         reel_pct_opp = len(hero_df[hero_df["post_type"] == "Reel"]) / max(len(hero_df[hero_df["platform"] == "Instagram"]), 1) * 100
         if reel_pct_opp < 60:
