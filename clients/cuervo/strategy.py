@@ -178,7 +178,7 @@ VOICE_PRINCIPLES = [
 
 CULTURAL_CALENDAR = {
     "Q1": {"moments": "Super Bowl, Oscars, Grammys, Nat'l Margarita Day", "angle": "Game day serves, awards content, Valentine's cocktails"},
-    "Q2": {"moments": "Cinco de Mayo, Kentucky Derby, Memorial Day, NBA Finals", "angle": "Marg Season launch, cocktail culture, summer kickoff"},
+    "Q2": {"moments": "Cinco de Mayo, Kentucky Derby, Memorial Day, NBA Finals", "angle": "Summer Fridays and Marg Season launch, cocktail culture, summer kickoff"},
     "Q3": {"moments": "4th of July, Love Island, Labor Day, Mexican Independence Day", "angle": "Peak summer, RTD outdoor, reality TV tie-ins, tailgate season"},
     "Q4": {"moments": "Halloween, Day of the Dead, NFL, holiday hosting, NYE", "angle": "Holiday serves, cultural celebrations, game day"},
 }
