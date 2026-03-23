@@ -841,18 +841,6 @@ with tab_action:
 
     st.markdown("---")
 
-    # ── Testing Roadmap ─────────────────────────────────────────────────
-    st.subheader("Testing Roadmap")
-    st.caption("Monthly A/B tests to optimize content strategy")
-
-    test_rows = []
-    for month, info in cfg.testing_roadmap.items():
-        test_rows.append({"Month": month, "Test Variable": info["variable"], "What We're Learning": info["learning"]})
-    test_df = pd.DataFrame(test_rows)
-    st.dataframe(test_df, use_container_width=True, hide_index=True)
-
-    st.markdown("---")
-
     # ── Threats & Opportunities ────────────────────────────────────────
     st.subheader("Threats & Opportunities")
 
