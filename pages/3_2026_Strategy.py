@@ -758,6 +758,25 @@ with tab_action:
                 <p style="color:#666; font-size:0.82rem; margin:0;">{info['angle']}</p>
             </div>""", unsafe_allow_html=True)
 
+    # ── Year-Round Partner Events ────────────────────────────────────────
+    st.subheader("Year-Round Partner Events")
+    st.caption("Official brand partnerships with a recurring presence throughout the year")
+
+    partners = [
+        {"name": "NASCAR", "icon": "🏁", "desc": "Official tequila of NASCAR — on-site activations, race-day content, driver partnerships"},
+        {"name": "UFC", "icon": "🥊", "desc": "Official tequila of UFC — fight night activations, athlete content, octagon branding"},
+        {"name": "Love Island", "icon": "🏝️", "desc": "Official tequila of Love Island — in-show integration, watch party content, cast partnerships"},
+    ]
+    pcols = st.columns(len(partners))
+    for col, p in zip(pcols, partners):
+        with col:
+            st.markdown(f"""
+            <div style="background:white; border-radius:10px; padding:14px; min-height:120px;
+                        border-left:4px solid #CC0000; border:1px solid #E0D8D0;">
+                <h4 style="margin:0 0 6px 0;">{p['icon']} {p['name']}</h4>
+                <p style="color:#666; font-size:0.82rem; margin:0;">{p['desc']}</p>
+            </div>""", unsafe_allow_html=True)
+
     st.markdown("---")
 
     # ── Monthly Ramp (March-June) ───────────────────────────────────────
