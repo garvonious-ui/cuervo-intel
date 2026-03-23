@@ -100,6 +100,17 @@ IG_FORMAT_MIX = {
     "Stories": {"pct": 15, "role": "Community + utility"},
 }
 
+# ── Content Production Needs ─────────────────────────────────────────
+
+CONTENT_PRODUCTION_NEEDS = [
+    {"type": "Creator Reels + Carousels", "source": "External creators", "volume": "8–10"},
+    {"type": "Cocktail recipe content", "source": "In-house or creator", "volume": "4–6"},
+    {"type": "Brand carousels/stills", "source": "In-house design", "volume": "2–4"},
+    {"type": "Event/partnership content", "source": "On-the-ground", "volume": "As events occur"},
+    {"type": "Reactive/trend content", "source": "Social team or creator", "volume": "As culture dictates"},
+    {"type": "Stories (polls, Q&As, BTS)", "source": "Social team", "volume": "Daily"},
+]
+
 # ── Platform Roles ───────────────────────────────────────────────────
 
 PLATFORM_ROLES = {

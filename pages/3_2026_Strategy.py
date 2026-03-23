@@ -549,6 +549,51 @@ with tab_platform:
                 <p style="color:#888; font-size:0.8rem; margin:0;">{info['role']}</p>
             </div>""", unsafe_allow_html=True)
 
+    # ── Content Production Needs ─────────────────────────────────────────
+    if cfg.content_production_needs:
+        st.markdown("---")
+        st.subheader("Content Production Needs")
+        st.caption("Monthly asset requirements by content type and source")
+
+        teal = "#2C5F5D"
+        gold = "#D4A843"
+        # Build HTML table
+        rows_html = ""
+        for item in cfg.content_production_needs:
+            rows_html += f"""
+            <tr>
+                <td style="padding:10px 14px; border-bottom:1px solid #E0D8D0; color:#333;">{item['type']}</td>
+                <td style="padding:10px 14px; border-bottom:1px solid #E0D8D0; color:#555;">{item['source']}</td>
+                <td style="padding:10px 14px; border-bottom:1px solid #E0D8D0; color:#555; font-weight:600;">{item['volume']}</td>
+            </tr>"""
+
+        st.markdown(f"""
+        <table style="width:100%; border-collapse:collapse; border-radius:8px; overflow:hidden; border:1px solid #E0D8D0;">
+            <thead>
+                <tr style="background:{teal};">
+                    <th style="padding:10px 14px; text-align:left; color:white; font-weight:600; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Content Type</th>
+                    <th style="padding:10px 14px; text-align:left; color:white; font-weight:600; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Source</th>
+                    <th style="padding:10px 14px; text-align:left; color:white; font-weight:600; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Volume/Mo</th>
+                </tr>
+            </thead>
+            <tbody>{rows_html}</tbody>
+        </table>
+        """, unsafe_allow_html=True)
+
+        st.markdown(f"""
+        <div style="background:{teal}; border-radius:10px; padding:20px 24px; margin-top:16px;
+                    border:2px solid {gold};">
+            <p style="color:{gold}; font-size:1.05rem; font-weight:700; margin:0 0 6px 0;">
+                Total Monthly Need: <span style="color:white; font-weight:400;">~20–25 assets across platforms, plus daily Stories</span></p>
+            <p style="color:white; font-size:0.88rem; font-style:italic; margin:0 0 4px 0;">
+                All IG Reel and TikTok content cross-pollinated into YT Shorts</p>
+            <p style="color:white; font-size:0.88rem; font-style:italic; margin:0 0 10px 0;">
+                All cocktail recipe content and aesthetic content cross-pollinated on Pinterest</p>
+            <p style="color:{gold}; font-size:1.05rem; font-weight:700; margin:0;">
+                Total 2026 (9 Month) Need: <span style="color:white; font-weight:400;">~180–225 assets across all platforms</span></p>
+        </div>
+        """, unsafe_allow_html=True)
+
     st.markdown("---")
 
     # ── Section 2: Instagram Deep Dive ──────────────────────────────────
