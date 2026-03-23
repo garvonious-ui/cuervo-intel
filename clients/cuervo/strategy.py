@@ -96,9 +96,8 @@ CADENCE_TARGETS = {
 
 IG_FORMAT_MIX = {
     "Reels": {"pct": 50, "role": "Reach + discovery"},
-    "Carousels": {"pct": 30, "role": "Engagement driver"},
+    "Carousels": {"pct": 35, "role": "Engagement driver"},
     "Stories": {"pct": 15, "role": "Community + utility"},
-    "Collabs/Lives": {"pct": 5, "role": "Creator amplification"},
 }
 
 # ── Platform Roles ───────────────────────────────────────────────────
