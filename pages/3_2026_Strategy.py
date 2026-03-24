@@ -214,6 +214,9 @@ with tab_scorecard:
     st.info(f"**{on_track}/{total} KPIs on track.** "
             f"{'Strong position — maintain momentum.' if on_track >= 4 else 'Focus areas identified below.' if on_track >= 2 else 'Significant gaps — prioritize the Action Plan tab.'}")
 
+    st.caption("**Reel Views** = number of times the video was played. **Carousel/Static Impressions** = number of times the post appeared on screen. "
+               "These are different metrics — impressions are typically higher than views for equivalent reach.")
+
     st.markdown("---")
 
     if not cfg.themes_ready:
