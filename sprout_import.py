@@ -463,9 +463,7 @@ def import_sprout_posts(csv_path: str) -> list[dict]:
         raw_content_type = str(row.get(col_map.get("content_type", ""), ""))
         post_type = _resolve_post_type(raw_type, platform, raw_content_type)
 
-        # Skip Stories — ephemeral, different metrics, not available for competitors
-        if post_type == "Story":
-            continue
+        is_story = post_type == "Story"
 
         caption = str(row.get(col_map.get("caption_text", ""), ""))
         if caption in ("nan", "None", ""):
@@ -543,6 +541,7 @@ def import_sprout_posts(csv_path: str) -> list[dict]:
             "caption_word_count": word_count,
             "mentions_count": mentions_count,
             "is_paid_partnership": "Yes" if is_paid else "No",
+            "is_story": "Yes" if is_story else "No",
             "notes": f"Imported from Sprout Social — {os.path.basename(csv_path)}",
         })
 
@@ -838,9 +837,12 @@ def import_sprout_directory(sprout_dir: str, output_dir: str) -> tuple[list[str]
                         manual_df["caption_tone"] = manual_df[caption_col].fillna("").apply(classify_tone)
                     if "cta_type" not in manual_df.columns or manual_df["cta_type"].isna().all():
                         manual_df["cta_type"] = manual_df[caption_col].fillna("").apply(classify_cta)
-                # Remove Sprout rows for brands that exist in the manual CSV
+                # Remove non-story Sprout rows for brands in the manual CSV
+                # (keep Sprout stories since the manual sheet only has feed posts)
                 manual_brands = set(manual_df["brand"].dropna().unique())
-                posts_df = posts_df[~posts_df["brand"].isin(manual_brands)]
+                is_hero = posts_df["brand"].isin(manual_brands)
+                is_story = posts_df["is_story"].astype(str).str.lower() == "yes" if "is_story" in posts_df.columns else pd.Series(False, index=posts_df.index)
+                posts_df = posts_df[~is_hero | is_story]
                 # Append manual posts
                 posts_df = pd.concat([manual_df, posts_df], ignore_index=True)
             except Exception:

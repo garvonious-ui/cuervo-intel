@@ -104,28 +104,61 @@ with tab_scorecard:
     save_rate = (hero_df["saves"].sum() / total_eng * 100) if "saves" in hero_df.columns else 0
     share_rate = (hero_df["shares"].sum() / total_eng * 100) if "shares" in hero_df.columns else 0
 
-    # Creator content %
-    creator_posts = hero_df[hero_df["has_creator_collab"].astype(str).str.lower() == "yes"] if "has_creator_collab" in hero_df.columns else pd.DataFrame()
-    creator_pct = len(creator_posts) / max(len(hero_df), 1) * 100
-    creator_avg_eng = creator_posts["total_engagement"].mean() if len(creator_posts) else 0
-    creator_avg_eng = 0 if pd.isna(creator_avg_eng) else creator_avg_eng
-
     freq = results["frequency"].get(HERO, {})
     ig_ppm = freq.get("Instagram", {}).get("posts_per_week", 0) * 4.33  # Convert to monthly
     tt_ppw = freq.get("TikTok", {}).get("posts_per_week", 0)
+    tt_ppm = tt_ppw * 4.33
+
+    # ── Monthly volume metrics (owned posts only) ──────────────────────
+    # Separate stories from feed posts
+    is_story_col = hero_df["is_story"].astype(str).str.lower() == "yes" if "is_story" in hero_df.columns else pd.Series(False, index=hero_df.index)
+    hero_feed = hero_df[~is_story_col]
+    hero_stories = hero_df[is_story_col]
+
+    # Filter to owned posts for volume metrics
+    from config import split_owned_collab
+    _hero_owned_sc, _ = split_owned_collab(hero_feed)
+
+    # Calculate months in dataset for averaging
+    if len(hero_df) and "post_date" in hero_df.columns:
+        date_range = (hero_df["post_date"].max() - hero_df["post_date"].min()).days
+        n_months = max(date_range / 30.44, 1)
+    else:
+        n_months = 1
+
+    # Monthly totals (owned feed posts, averaged across months)
+    saves_pm = pd.to_numeric(_hero_owned_sc["saves"], errors="coerce").fillna(0).sum() / n_months if "saves" in _hero_owned_sc.columns else 0
+    shares_pm = pd.to_numeric(_hero_owned_sc["shares"], errors="coerce").fillna(0).sum() / n_months if "shares" in _hero_owned_sc.columns else 0
+    likes_pm = pd.to_numeric(_hero_owned_sc["likes"], errors="coerce").fillna(0).sum() / n_months if "likes" in _hero_owned_sc.columns else 0
+    comments_pm = pd.to_numeric(_hero_owned_sc["comments"], errors="coerce").fillna(0).sum() / n_months if "comments" in _hero_owned_sc.columns else 0
+
+    # Reel/Video views + impressions per month (owned only)
+    hero_reels = _hero_owned_sc[_hero_owned_sc["post_type"].isin(["Reel", "Video"])]
+    reel_views_imp_pm = (pd.to_numeric(hero_reels["views"], errors="coerce").fillna(0).sum() + pd.to_numeric(hero_reels["impressions"], errors="coerce").fillna(0).sum()) / n_months if len(hero_reels) else 0
+
+    # Carousel/Static impressions per month (owned only)
+    hero_static = _hero_owned_sc[~_hero_owned_sc["post_type"].isin(["Reel", "Video"])]
+    carousel_imp_pm = pd.to_numeric(hero_static["impressions"], errors="coerce").fillna(0).sum() / n_months if "impressions" in hero_static.columns and len(hero_static) else 0
+
+    # Stories per month (all stories — not filtered by owned since stories are always brand-posted)
+    stories_pm = len(hero_stories) / n_months
+    story_views_pm = pd.to_numeric(hero_stories["impressions"], errors="coerce").fillna(0).sum() / n_months if "impressions" in hero_stories.columns and len(hero_stories) else 0
 
     # Scorecard table (targets from kpi_targets in client config)
     _ig_ppm = _t["ig_posts_per_month"]
-    _tt_ppw = _t["tt_posts_per_week"]
+    _tt_ppm = _t.get("tt_posts_per_month", None) or (tuple(x * 4 for x in _t["tt_posts_per_week"]) if "tt_posts_per_week" in _t else (12, 20))
+
+    def _vol_row(kpi, actual, target_key):
+        tgt = _t.get(target_key, 0)
+        return {"KPI": kpi, "Actual": f"{actual:,.0f}", "Target": f"{tgt:,}/mo",
+                "Status": "ON TRACK" if actual >= tgt else "BELOW",
+                "Gap": f"{actual - tgt:+,.0f}"}
+
     scorecard_data = [
         {"KPI": "Avg Eng/Post", "Actual": f"{avg_eng_per_post:,.0f}",
          "Target": f"{_t['engagements_per_post']:,}+",
          "Status": "ON TRACK" if avg_eng_per_post >= _t["engagements_per_post"] else "BELOW",
          "Gap": f"{avg_eng_per_post - _t['engagements_per_post']:+,.0f}"},
-        {"KPI": "Creator Avg Eng", "Actual": f"{creator_avg_eng:,.0f}",
-         "Target": f"{_t['creator_engagements_per_post']:,}+",
-         "Status": "ON TRACK" if creator_avg_eng >= _t["creator_engagements_per_post"] else "BELOW",
-         "Gap": f"{creator_avg_eng - _t['creator_engagements_per_post']:+,.0f}"},
         {"KPI": "Save Rate", "Actual": f"{save_rate:.1f}%",
          "Target": f"{_t['save_rate']}%+",
          "Status": "ON TRACK" if save_rate >= _t["save_rate"] else "BELOW",
@@ -142,10 +175,18 @@ with tab_scorecard:
          "Target": f"{_ig_ppm[0]}-{_ig_ppm[1]}/mo",
          "Status": "ON TRACK" if _ig_ppm[0] <= ig_ppm <= _ig_ppm[1] else ("BELOW" if ig_ppm < _ig_ppm[0] else "ABOVE"),
          "Gap": f"{ig_ppm - sum(_ig_ppm)/2:+.0f} vs mid"},
-        {"KPI": "TT Posts/Week", "Actual": f"{tt_ppw:.1f}",
-         "Target": f"{_tt_ppw[0]}-{_tt_ppw[1]}/wk",
-         "Status": "ON TRACK" if _tt_ppw[0] <= tt_ppw <= _tt_ppw[1] else ("BELOW" if tt_ppw < _tt_ppw[0] else "ABOVE"),
-         "Gap": f"{tt_ppw - sum(_tt_ppw)/2:+.1f} vs mid"},
+        {"KPI": "TT Posts/Month", "Actual": f"{tt_ppm:.0f}",
+         "Target": f"{_tt_ppm[0]}-{_tt_ppm[1]}/mo",
+         "Status": "ON TRACK" if _tt_ppm[0] <= tt_ppm <= _tt_ppm[1] else ("BELOW" if tt_ppm < _tt_ppm[0] else "ABOVE"),
+         "Gap": f"{tt_ppm - sum(_tt_ppm)/2:+.0f} vs mid"},
+        _vol_row("Likes/Month", likes_pm, "likes_per_month"),
+        _vol_row("Comments/Month", comments_pm, "comments_per_month"),
+        _vol_row("Saves/Month", saves_pm, "saves_per_month"),
+        _vol_row("Shares/Month", shares_pm, "shares_per_month"),
+        _vol_row("Reel Views+Imp/Mo", reel_views_imp_pm, "reel_views_impressions_per_month"),
+        _vol_row("Carousel Imp/Mo", carousel_imp_pm, "carousel_impressions_per_month"),
+        _vol_row("Stories/Month", stories_pm, "stories_per_month"),
+        _vol_row("Story Views/Month", story_views_pm, "story_views_per_month"),
     ]
 
     sc_df = pd.DataFrame(scorecard_data)
@@ -163,7 +204,7 @@ with tab_scorecard:
 
     st.dataframe(
         sc_df.style.map(color_status, subset=["Status"]),
-        use_container_width=True, hide_index=True, height=340,
+        use_container_width=True, hide_index=True, height=560,
     )
 
     on_track = sum(1 for s in scorecard_data if s["Status"] == "ON TRACK")
@@ -551,6 +592,51 @@ with tab_platform:
                 <p style="color:#888; font-size:0.8rem; margin:0;">{info['role']}</p>
             </div>""", unsafe_allow_html=True)
 
+    # ── Content Production Needs ─────────────────────────────────────────
+    if cfg.content_production_needs:
+        st.markdown("---")
+        st.subheader("Content Production Needs")
+        st.caption("Monthly asset requirements by content type and source")
+
+        teal = "#2C5F5D"
+        gold = "#D4A843"
+        # Build HTML table
+        rows_html = ""
+        for item in cfg.content_production_needs:
+            rows_html += f"""
+            <tr>
+                <td style="padding:10px 14px; border-bottom:1px solid #E0D8D0; color:#333;">{item['type']}</td>
+                <td style="padding:10px 14px; border-bottom:1px solid #E0D8D0; color:#555;">{item['source']}</td>
+                <td style="padding:10px 14px; border-bottom:1px solid #E0D8D0; color:#555; font-weight:600;">{item['volume']}</td>
+            </tr>"""
+
+        st.markdown(f"""
+        <table style="width:100%; border-collapse:collapse; border-radius:8px; overflow:hidden; border:1px solid #E0D8D0;">
+            <thead>
+                <tr style="background:{teal};">
+                    <th style="padding:10px 14px; text-align:left; color:white; font-weight:600; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Content Type</th>
+                    <th style="padding:10px 14px; text-align:left; color:white; font-weight:600; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Source</th>
+                    <th style="padding:10px 14px; text-align:left; color:white; font-weight:600; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Volume/Mo</th>
+                </tr>
+            </thead>
+            <tbody>{rows_html}</tbody>
+        </table>
+        """, unsafe_allow_html=True)
+
+        st.markdown(f"""
+        <div style="background:{teal}; border-radius:10px; padding:20px 24px; margin-top:16px;
+                    border:2px solid {gold};">
+            <p style="color:{gold}; font-size:1.05rem; font-weight:700; margin:0 0 6px 0;">
+                Total Monthly Need: <span style="color:white; font-weight:400;">~20–25 assets across platforms, plus daily Stories</span></p>
+            <p style="color:white; font-size:0.88rem; font-style:italic; margin:0 0 4px 0;">
+                All IG Reel and TikTok content cross-pollinated into YT Shorts</p>
+            <p style="color:white; font-size:0.88rem; font-style:italic; margin:0 0 10px 0;">
+                All cocktail recipe content and aesthetic content cross-pollinated on Pinterest</p>
+            <p style="color:{gold}; font-size:1.05rem; font-weight:700; margin:0;">
+                Total 2026 (9 Month) Need: <span style="color:white; font-weight:400;">~180–225 assets across all platforms</span></p>
+        </div>
+        """, unsafe_allow_html=True)
+
     st.markdown("---")
 
     # ── Section 2: Instagram Deep Dive ──────────────────────────────────
@@ -638,7 +724,8 @@ with tab_platform:
             st.markdown("**Best Days**")
             if _best_days:
                 for d in _best_days[:3]:
-                    st.markdown(f"- {d}")
+                    day_name = d[0] if isinstance(d, (list, tuple)) else d
+                    st.markdown(f"- {day_name}")
             else:
                 st.caption("Not enough data")
 
@@ -646,7 +733,8 @@ with tab_platform:
             st.markdown("**Best Hours**")
             if _best_hours:
                 for h in _best_hours[:3]:
-                    hr = int(h) if isinstance(h, (int, float)) else h
+                    hr_val = h[0] if isinstance(h, (list, tuple)) else h
+                    hr = int(hr_val) if isinstance(hr_val, (int, float)) else hr_val
                     if isinstance(hr, int):
                         ampm = "AM" if hr < 12 else "PM"
                         display_hr = hr if hr <= 12 else hr - 12
@@ -668,42 +756,6 @@ with tab_platform:
             else:
                 st.caption("No pillar data")
 
-    st.markdown("---")
-
-    # ── Section 3: Other Platforms ──────────────────────────────────────
-    st.subheader("Other Platforms")
-
-    _other_platforms = {k: v for k, v in cfg.platform_roles.items() if k != "Instagram"}
-    _cols = st.columns(min(len(_other_platforms), 3))
-
-    for i, (plat, info) in enumerate(_other_platforms.items()):
-        with _cols[i % 3]:
-            is_primary = info["priority"] == "Primary"
-            _border_color = "#F8C090" if is_primary else "#ccc"
-            _priority_badge = f'<span style="background:#F8C090;color:#333;padding:2px 8px;border-radius:4px;font-size:0.8rem;font-weight:600;">PRIMARY</span>' if is_primary else f'<span style="background:#e8e5e0;color:#666;padding:2px 8px;border-radius:4px;font-size:0.8rem;">SECONDARY</span>'
-
-            # Check if we have data for this platform
-            _plat_key = plat.split(" /")[0].split(" ")[0]  # "TikTok", "Facebook", etc.
-            _plat_posts = len(hero_df[hero_df["platform"] == _plat_key]) if _plat_key in hero_df["platform"].values else 0
-
-            if _plat_posts > 0:
-                _status_html = f'<div style="color:#5CB85C;font-size:0.85rem;margin-top:8px;">{_plat_posts} posts tracked</div>'
-            elif is_primary:
-                _status_html = '<div style="color:#F0AD4E;font-size:0.85rem;margin-top:8px;">Data incoming</div>'
-            else:
-                _status_html = '<div style="color:#999;font-size:0.85rem;margin-top:8px;">Not yet tracked</div>'
-
-            st.markdown(f"""
-            <div style="border:1px solid #e0ddd8; border-top:4px solid {_border_color};
-                        border-radius:8px; padding:16px; margin-bottom:12px; min-height:180px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                    <strong style="font-size:1.1rem;">{plat}</strong>
-                    {_priority_badge}
-                </div>
-                <div style="color:#555;font-size:0.9rem;margin-bottom:8px;">{info['role']}</div>
-                <div style="color:#333;font-size:0.9rem;"><strong>Cadence:</strong> {info['cadence']}</div>
-                {_status_html}
-            </div>""", unsafe_allow_html=True)
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -794,6 +846,25 @@ with tab_action:
                 <p style="color:#666; font-size:0.82rem; margin:0;">{info['angle']}</p>
             </div>""", unsafe_allow_html=True)
 
+    # ── Year-Round Partner Events ────────────────────────────────────────
+    st.subheader("Year-Round Partner Events")
+    st.caption("Official brand partnerships with a recurring presence throughout the year")
+
+    partners = [
+        {"name": "NASCAR", "icon": "🏁", "desc": "Official tequila of NASCAR — on-site activations, race-day content, driver partnerships"},
+        {"name": "UFC", "icon": "🥊", "desc": "Official tequila of UFC — fight night activations, athlete content, octagon branding"},
+        {"name": "Love Island", "icon": "🏝️", "desc": "Official tequila of Love Island — in-show integration, watch party content, cast partnerships"},
+    ]
+    pcols = st.columns(len(partners))
+    for col, p in zip(pcols, partners):
+        with col:
+            st.markdown(f"""
+            <div style="background:white; border-radius:10px; padding:14px; min-height:120px;
+                        border-left:4px solid #CC0000; border:1px solid #E0D8D0;">
+                <h4 style="margin:0 0 6px 0;">{p['icon']} {p['name']}</h4>
+                <p style="color:#666; font-size:0.82rem; margin:0;">{p['desc']}</p>
+            </div>""", unsafe_allow_html=True)
+
     st.markdown("---")
 
     # ── Monthly Ramp (March-June) ───────────────────────────────────────
@@ -810,18 +881,6 @@ with tab_action:
         })
     ramp_df = pd.DataFrame(ramp_rows)
     st.dataframe(ramp_df, use_container_width=True, hide_index=True)
-
-    st.markdown("---")
-
-    # ── Testing Roadmap ─────────────────────────────────────────────────
-    st.subheader("Testing Roadmap")
-    st.caption("Monthly A/B tests to optimize content strategy")
-
-    test_rows = []
-    for month, info in cfg.testing_roadmap.items():
-        test_rows.append({"Month": month, "Test Variable": info["variable"], "What We're Learning": info["learning"]})
-    test_df = pd.DataFrame(test_rows)
-    st.dataframe(test_df, use_container_width=True, hide_index=True)
 
     st.markdown("---")
 
@@ -859,11 +918,11 @@ with tab_action:
 
     with col_o:
         st.success(f"**Opportunities for {HERO}**")
-        hero_theme_eng = hero_df.groupby("content_theme")["total_engagement"].mean() if len(hero_df) else pd.Series(dtype=float)
+        hero_theme_eng = hero_df.groupby("content_pillar")["total_engagement"].mean() if (len(hero_df) and "content_pillar" in hero_df.columns and hero_df["content_pillar"].notna().any()) else pd.Series(dtype=float)
         hero_best_theme = hero_theme_eng.idxmax() if len(hero_theme_eng) else "N/A"
         hero_best_eng = hero_theme_eng.max() if len(hero_theme_eng) else 0
         if hero_best_theme != "N/A":
-            st.markdown(f"- {HERO}'s **{hero_best_theme}** content is the top-performing theme at {hero_best_eng:,.0f} avg eng")
+            st.markdown(f"- {HERO}'s **{hero_best_theme}** content is the top-performing pillar at {hero_best_eng:,.0f} avg eng")
 
         reel_pct_opp = len(hero_df[hero_df["post_type"] == "Reel"]) / max(len(hero_df[hero_df["platform"] == "Instagram"]), 1) * 100
         if reel_pct_opp < 60:

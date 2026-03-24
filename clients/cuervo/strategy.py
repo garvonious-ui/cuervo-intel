@@ -18,14 +18,14 @@ NORTH_STAR = {
 # ── Content Pillars (2026 Social Strategy — 4 pillars from Poplife deck) ─
 
 PILLAR_MAP = {
-    "The Front Row": [
-        "Event/Activation", "Sports Tie-in", "Partner",
-    ],
     "The Ritual": [
         "Product/Lifestyle", "Cocktail Highlights", "Cultural Moment/Holiday",
     ],
     "The Pulse": [
         "Meme/Humor", "Creator Collab", "User Repost", "Giveaway/Promo",
+    ],
+    "The Front Row": [
+        "Event/Activation", "Sports Tie-in", "Partner",
     ],
     "The Craft": [
         "Brand Heritage / Culture", "Behind the Scenes",
@@ -33,9 +33,9 @@ PILLAR_MAP = {
 }
 
 PILLAR_TARGETS = {
-    "The Front Row": 35,
     "The Ritual": 35,
-    "The Pulse": 25,
+    "The Pulse": 35,
+    "The Front Row": 25,
     "The Craft": 5,
 }
 
@@ -73,16 +73,25 @@ CONTENT_MIX_COLORS = {
 # ── KPI Targets (2026 Social Brief) ─────────────────────────────────
 
 KPI_TARGETS = {
-    "engagements_per_post": 150,
+    # Per-post averages
+    "engagements_per_post": 120,
     "eng_per_1k_followers": 1.5,
     "reel_ratio": 50,
     "carousel_ratio": 30,
     "ig_posts_per_month": (12, 16),
-    "tt_posts_per_week": (3, 5),
+    "tt_posts_per_month": (12, 20),
     "save_rate": 3.0,
     "share_rate": 5.0,
-    "creator_engagements_per_post": 200,
     "creator_pct_target_june": 30,
+    # Monthly volume targets
+    "saves_per_month": 75,
+    "shares_per_month": 150,
+    "likes_per_month": 1800,
+    "comments_per_month": 120,
+    "reel_views_impressions_per_month": 2000000,
+    "carousel_impressions_per_month": 100000,
+    "stories_per_month": 90,
+    "story_views_per_month": 40000,
 }
 
 # ── Platform Cadence Targets ─────────────────────────────────────────
@@ -96,10 +105,20 @@ CADENCE_TARGETS = {
 
 IG_FORMAT_MIX = {
     "Reels": {"pct": 50, "role": "Reach + discovery"},
-    "Carousels": {"pct": 30, "role": "Engagement driver"},
+    "Carousels": {"pct": 35, "role": "Engagement driver"},
     "Stories": {"pct": 15, "role": "Community + utility"},
-    "Collabs/Lives": {"pct": 5, "role": "Creator amplification"},
 }
+
+# ── Content Production Needs ─────────────────────────────────────────
+
+CONTENT_PRODUCTION_NEEDS = [
+    {"type": "Creator Reels + Carousels", "source": "External creators", "volume": "8–10"},
+    {"type": "Cocktail recipe content", "source": "In-house or creator", "volume": "4–6"},
+    {"type": "Brand carousels/stills", "source": "In-house design", "volume": "2–4"},
+    {"type": "Event/partnership content", "source": "On-the-ground", "volume": "As events occur"},
+    {"type": "Reactive/trend content", "source": "Social team or creator", "volume": "As culture dictates"},
+    {"type": "Stories (polls, Q&As, BTS)", "source": "Social team", "volume": "Daily"},
+]
 
 # ── Platform Roles ───────────────────────────────────────────────────
 
@@ -179,7 +198,7 @@ VOICE_PRINCIPLES = [
 
 CULTURAL_CALENDAR = {
     "Q1": {"moments": "Super Bowl, Oscars, Grammys, Nat'l Margarita Day", "angle": "Game day serves, awards content, Valentine's cocktails"},
-    "Q2": {"moments": "Cinco de Mayo, Kentucky Derby, Memorial Day, NBA Finals", "angle": "Marg Season launch, cocktail culture, summer kickoff"},
+    "Q2": {"moments": "Cinco de Mayo, Kentucky Derby, Memorial Day, NBA Finals", "angle": "Summer Fridays and Marg Season launch, cocktail culture, summer kickoff"},
     "Q3": {"moments": "4th of July, Love Island, Labor Day, Mexican Independence Day", "angle": "Peak summer, RTD outdoor, reality TV tie-ins, tailgate season"},
     "Q4": {"moments": "Halloween, Day of the Dead, NFL, holiday hosting, NYE", "angle": "Holiday serves, cultural celebrations, game day"},
 }

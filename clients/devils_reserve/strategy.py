@@ -2,40 +2,52 @@
 Devils Reserve Client — Strategy Frameworks
 ==============================================
 North Star: "Raise a little hell"
-2 pillars: Chaos (Lifestyle) 75%, Flavor (Product) 25%
+4 pillars: The Diablito Made Me Do It (45%), The Sweet Heat (25%),
+           The Devil's Advocate (20%), Hell on Wheels (10%)
 Content Mediums: Events, Partnerships, Influencers/Creators, Evergreen Photoshoots
 Target: Gen Z (21-28), trend-savvy, short-form video.
 """
 
 # ── Content Pillars ──────────────────────────────────────────────────
 # North Star: "Raise a little hell"
-# 2 pillars: Chaos (Lifestyle) 75%, Flavor (Product) 25%
+# 4 pillars mapped to content themes (finalized via manual tagging sheet)
 
 PILLAR_MAP = {
-    "Chaos (Lifestyle)": [
-        "Event/Activation", "Sports Tie-in", "Cultural Moment/Holiday",
-        "Meme/Humor", "User Repost", "Creator Collab", "Partner",
-        "Giveaway/Promo", "Behind the Scenes",
+    "The Diablito Made Me Do It": [
+        "Meme/Humor", "Creator Collab", "User Repost",
+        "Behind the Scenes", "Giveaway/Promo",
     ],
-    "Flavor (Product)": [
+    "The Sweet Heat": [
         "Product/Lifestyle", "Cocktail Highlights",
         "Brand Heritage / Culture",
+    ],
+    "The Devil's Advocate": [
+        "Cultural Moment/Holiday", "Sports Tie-in",
+    ],
+    "Hell on Wheels": [
+        "Event/Activation", "Partner",
     ],
 }
 
 PILLAR_TARGETS = {
-    "Chaos (Lifestyle)": 75,
-    "Flavor (Product)": 25,
+    "The Diablito Made Me Do It": 45,
+    "The Sweet Heat": 25,
+    "The Devil's Advocate": 20,
+    "Hell on Wheels": 10,
 }
 
 PILLAR_COLORS = {
-    "Chaos (Lifestyle)": "#CC0000",    # Devil red — raise a little hell
-    "Flavor (Product)": "#F8C090",     # Warm peach — product/flavor
+    "The Diablito Made Me Do It": "#CC0000",  # Devil red — mischievous lifestyle
+    "The Sweet Heat": "#F8C090",              # Warm peach — product/flavor
+    "The Devil's Advocate": "#FFD700",        # Gold — hot takes
+    "Hell on Wheels": "#1a1a1a",              # Black — IRL activations
 }
 
 PILLAR_DESCRIPTIONS = {
-    "Chaos (Lifestyle)": "Raise a little hell — events, partnerships, creators, mischievous energy",
-    "Flavor (Product)": "Pineapple + jalapeño tequila — cocktail moments, taste reactions, product content",
+    "The Diablito Made Me Do It": "Mischievous lifestyle & social chaos — confessional POVs, chaotic photodumps, memes about 'one quick drink'",
+    "The Sweet Heat": "Product profile — sweet heat jalapeño + pineapple flavor education, cocktail recipes, product shots",
+    "The Devil's Advocate": "Cultural commentary & hot takes — spicy polls, reactive takes on dating, fashion, social etiquette",
+    "Hell on Wheels": "IRL mischief & partnerships — Branded Bronco, NASCAR, Love Island, Summer Fridays",
 }
 
 # ── SKU Strategy ──────────────────────────────────────────────────────
@@ -100,16 +112,25 @@ CONTENT_MIX_COLORS = {
 # Targets are growth-oriented for a brand in launch phase
 
 KPI_TARGETS = {
+    # Per-post averages (existing)
     "engagements_per_post": 75,         # Event content (NASCAR, Spring Break) should push averages up
-    "eng_per_1k_followers": 25.0,       # Small accounts routinely hit 20-30+; 15 was too conservative
+    "eng_per_1k_followers": 25.0,       # Small accounts routinely hit 20-30+
     "reel_ratio": 60,                   # Heavy on Reels for discovery
     "carousel_ratio": 20,              # Some carousels for engagement
     "ig_posts_per_month": (8, 12),     # Building cadence
-    "tt_posts_per_week": (5, 7),       # Need volume to break through at 21 followers
-    "save_rate": 2.0,                  # Realistic for Chaos-heavy mix (cocktail saves are 25% of content)
+    "tt_posts_per_month": (20, 28),    # Need volume to break through at 21 followers
+    "save_rate": 2.0,                  # Realistic for mix
     "share_rate": 3.0,                 # Memes drive shares but not every post
-    "creator_engagements_per_post": 150, # Creator content should 2-3x brand-owned
     "creator_pct_target_june": 30,     # Creator / influencer content share
+    # Monthly volume targets (placeholders — to be finalized)
+    "saves_per_month": 50,
+    "shares_per_month": 50,
+    "likes_per_month": 400,
+    "comments_per_month": 30,
+    "reel_views_impressions_per_month": 10000,
+    "carousel_impressions_per_month": 3000,
+    "stories_per_month": 15,
+    "story_views_per_month": 5000,
 }
 
 # ── Platform Cadence ──────────────────────────────────────────────────

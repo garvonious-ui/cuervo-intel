@@ -62,6 +62,7 @@ class ClientConfig:
     creator_archetypes: dict[str, str] = field(default_factory=dict)
     voice_principles: list[tuple[str, str]] = field(default_factory=list)
     gen_z_leaders: list[str] = field(default_factory=list)
+    content_production_needs: list[dict] = field(default_factory=list)
 
     # ── Sprout Import Config ──
     creator_program_signals: list[str] = field(default_factory=list)

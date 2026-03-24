@@ -99,7 +99,7 @@ def _sprout_fingerprint(sprout_dir: str) -> str:
     when files change OR analysis logic is updated."""
     import hashlib
     # Bump this version whenever sprout_import.py or analysis.py logic changes
-    CODE_VERSION = "v30_force_reimport"
+    CODE_VERSION = "v34_owned_only_volumes"
     entries = [CODE_VERSION]
     if os.path.isdir(sprout_dir):
         for f in sorted(os.listdir(sprout_dir)):
@@ -122,13 +122,23 @@ def load_sprout(sprout_dir: str, output_dir: str, fingerprint: str = ""):
                 benchmark_data = import_benchmark_csv(os.path.join(sprout_dir, f))
                 break  # Only one benchmark file expected
 
-    # If posts_data.csv already exists (committed with correct data),
-    # skip re-importing from Sprout CSVs to avoid overwriting manual edits.
+    # Re-import from Sprout CSVs when fingerprint changes (new data or code version bump).
+    # Store last fingerprint so we know when to reimport.
     posts_path = os.path.join(output_dir, "posts_data.csv")
-    if os.path.isfile(posts_path):
-        stats = {"skipped": True, "reason": "posts_data.csv already exists"}
+    fp_path = os.path.join(output_dir, ".fingerprint")
+    last_fp = ""
+    if os.path.isfile(fp_path):
+        with open(fp_path) as _f:
+            last_fp = _f.read().strip()
+    if os.path.isfile(posts_path) and last_fp == fingerprint:
+        stats = {"skipped": True, "reason": "posts_data.csv up to date"}
     else:
+        # Remove stale posts_data so import_sprout_directory regenerates it
+        if os.path.isfile(posts_path):
+            os.remove(posts_path)
         files, stats = import_sprout_directory(sprout_dir, output_dir)
+        with open(fp_path, "w") as _f:
+            _f.write(fingerprint)
 
     results = run_full_analysis(output_dir, benchmark=benchmark_data)
     return results, output_dir, stats
