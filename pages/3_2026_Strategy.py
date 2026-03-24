@@ -43,13 +43,11 @@ GEN_Z_LEADERS = cfg.gen_z_leaders
 _t = cfg.kpi_targets
 ENG_PER_POST_TARGET = _t["engagements_per_post"]
 
-hero_df_full = df[df["brand"] == HERO]  # Includes Edutain dupes — only for content mix funnel
+hero_df_full = df[df["brand"] == HERO]  # Stories already excluded in app.py; includes Edutain dupes for content mix funnel
 hero_df = hero_df_full[hero_df_full["_mix_weight"] >= 1.0] if "_mix_weight" in hero_df_full.columns else hero_df_full
-# Separate stories before filtering — needed for story volume KPIs
-_is_story = hero_df["is_story"].astype(str).str.lower() == "yes" if "is_story" in hero_df.columns else pd.Series(False, index=hero_df.index)
-hero_stories = hero_df[_is_story]
-# Exclude stories from feed-level analysis (stories have 0 engagement and inflate post counts)
-hero_df = hero_df[~_is_story]
+# Stories stored separately in session state for story volume KPIs
+hero_stories = st.session_state.get("stories_df", pd.DataFrame())
+hero_stories = hero_stories[hero_stories["brand"] == HERO] if len(hero_stories) else hero_stories
 # Keep unfiltered copy for collaboration breakdown sections (which intentionally show Influencer data)
 hero_df_with_influencer = hero_df.copy()
 # Exclude collab posts (Influencer + Collective) from engagement metrics (they inflate due to higher reach)

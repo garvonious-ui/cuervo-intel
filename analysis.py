@@ -321,7 +321,8 @@ def analyze_captions(posts: list[dict]) -> dict[str, Any]:
     results = {}
 
     for brand in _get_brands():
-        brand_posts = [p for p in posts if p["brand"] == brand]
+        brand_posts = [p for p in posts if p["brand"] == brand
+                       and str(p.get("is_story", "")).lower() != "yes"]
         results[brand] = {}
 
         for platform in ["Instagram", "TikTok"]:
@@ -383,7 +384,8 @@ def analyze_hashtags(posts: list[dict], hashtag_data: list[dict]) -> dict[str, A
     results = {}
 
     for brand in _get_brands():
-        brand_posts = [p for p in posts if p["brand"] == brand]
+        brand_posts = [p for p in posts if p["brand"] == brand
+                       and str(p.get("is_story", "")).lower() != "yes"]
         brand_tags = [h for h in hashtag_data if h["brand"] == brand]
 
         # Extract all hashtags from posts
@@ -421,7 +423,8 @@ def analyze_content_themes(posts: list[dict]) -> dict[str, Any]:
     results = {}
 
     for brand in _get_brands():
-        brand_posts = [p for p in posts if p["brand"] == brand]
+        brand_posts = [p for p in posts if p["brand"] == brand
+                       and str(p.get("is_story", "")).lower() != "yes"]
 
         # Theme distribution
         themes = Counter(p.get("content_theme", "Unknown") for p in brand_posts if p.get("content_theme"))
@@ -457,7 +460,8 @@ def analyze_creators(posts: list[dict], creator_data: list[dict]) -> dict[str, A
     results = {}
 
     for brand in _get_brands():
-        brand_posts = [p for p in posts if p["brand"] == brand]
+        brand_posts = [p for p in posts if p["brand"] == brand
+                       and str(p.get("is_story", "")).lower() != "yes"]
         brand_creators = [c for c in creator_data if c["brand"] == brand]
 
         # Collab posts from main posts data
