@@ -45,6 +45,10 @@ hero_df = df[df["brand"] == HERO]
 # Filter out Edutain half-row duplicates (weight=0.5) to avoid inflating stats
 if "_mix_weight" in hero_df.columns:
     hero_df = hero_df[hero_df["_mix_weight"] >= 1.0]
+# Separate stories before filtering — needed for story volume KPIs
+_is_story_p1 = hero_df["is_story"].astype(str).str.lower() == "yes" if "is_story" in hero_df.columns else pd.Series(False, index=hero_df.index)
+hero_stories = hero_df[_is_story_p1]
+hero_df = hero_df[~_is_story_p1]
 hero_ig = hero_df[hero_df["platform"] == "Instagram"]
 hero_tt = hero_df[hero_df["platform"] == "TikTok"]
 
@@ -84,10 +88,9 @@ with tab_kpi:
     IG_PPM_TARGET = _t["ig_posts_per_month"]
     TT_PPM_TARGET = _t.get("tt_posts_per_month", None) or (tuple(x * 4 for x in _t["tt_posts_per_week"]) if "tt_posts_per_week" in _t else (12, 20))
 
-    # Separate stories from feed posts
-    _is_story = hero_df["is_story"].astype(str).str.lower() == "yes" if "is_story" in hero_df.columns else pd.Series(False, index=hero_df.index)
-    _hero_feed = hero_df[~_is_story]
-    _hero_stories = hero_df[_is_story]
+    # Stories already excluded from hero_df above; use pre-saved hero_stories
+    _hero_feed = hero_df
+    _hero_stories = hero_stories
 
     # Calculate months in dataset
     if "post_date" in hero_df.columns and len(hero_df):
