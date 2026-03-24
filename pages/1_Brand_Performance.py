@@ -147,24 +147,40 @@ with tab_kpi:
     # Row 2: Monthly engagement volumes
     v1, v2, v3, v4 = st.columns(4)
     with v1:
-        st.metric("Likes/Month", f"{_likes_pm:,.0f}")
+        _likes_tgt = _t.get("likes_per_month", 0)
+        st.metric("Likes/Month", f"{_likes_pm:,.0f}",
+                  delta=f"{_likes_pm - _likes_tgt:+,.0f} vs {_likes_tgt:,} target")
     with v2:
-        st.metric("Comments/Month", f"{_comments_pm:,.0f}")
+        _comments_tgt = _t.get("comments_per_month", 0)
+        st.metric("Comments/Month", f"{_comments_pm:,.0f}",
+                  delta=f"{_comments_pm - _comments_tgt:+,.0f} vs {_comments_tgt:,} target")
     with v3:
-        st.metric("Saves/Month", f"{_saves_pm:,.0f}")
+        _saves_tgt = _t.get("saves_per_month", 0)
+        st.metric("Saves/Month", f"{_saves_pm:,.0f}",
+                  delta=f"{_saves_pm - _saves_tgt:+,.0f} vs {_saves_tgt:,} target")
     with v4:
-        st.metric("Shares/Month", f"{_shares_pm:,.0f}")
+        _shares_tgt = _t.get("shares_per_month", 0)
+        st.metric("Shares/Month", f"{_shares_pm:,.0f}",
+                  delta=f"{_shares_pm - _shares_tgt:+,.0f} vs {_shares_tgt:,} target")
 
     # Row 3: Views, impressions, stories
     v5, v6, v7, v8 = st.columns(4)
     with v5:
-        st.metric("Reel Views/Mo", f"{_reel_views:,.0f}")
+        _rv_tgt = _t.get("reel_views_per_month", 0)
+        st.metric("Reel Views/Mo", f"{_reel_views:,.0f}",
+                  delta=f"{_reel_views - _rv_tgt:+,.0f} vs {_rv_tgt:,} target")
     with v6:
-        st.metric("Carousel Imp/Mo", f"{_carousel_imp:,.0f}")
+        _ci_tgt = _t.get("carousel_impressions_per_month", 0)
+        st.metric("Carousel Imp/Mo", f"{_carousel_imp:,.0f}",
+                  delta=f"{_carousel_imp - _ci_tgt:+,.0f} vs {_ci_tgt:,} target")
     with v7:
-        st.metric("Stories/Month", f"{_stories_pm:,.0f}")
+        _st_tgt = _t.get("stories_per_month", 0)
+        st.metric("Stories/Month", f"{_stories_pm:,.0f}",
+                  delta=f"{_stories_pm - _st_tgt:+,.0f} vs {_st_tgt:,} target")
     with v8:
-        st.metric("Story Views/Month", f"{_story_views_pm:,.0f}")
+        _sv_tgt = _t.get("story_views_per_month", 0)
+        st.metric("Story Views/Month", f"{_story_views_pm:,.0f}",
+                  delta=f"{_story_views_pm - _sv_tgt:+,.0f} vs {_sv_tgt:,} target")
 
     st.caption("**Reel Views** = number of times the video was played. **Carousel/Static Impressions** = number of times the post appeared on screen. "
                "These are different metrics — impressions are typically higher than views for equivalent reach.")
