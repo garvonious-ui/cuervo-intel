@@ -484,23 +484,29 @@ with tab_content:
             hero_ctas[cta] = hero_ctas.get(cta, 0) + count
 
     if hero_ctas:
-        cta_df = pd.DataFrame(list(hero_ctas.items()), columns=["CTA", "Count"])
+        cta_df_all = pd.DataFrame(list(hero_ctas.items()), columns=["CTA", "Count"])
+        total_posts = cta_df_all["Count"].sum()
+        no_cta_count = cta_df_all[cta_df_all["CTA"].str.lower().isin(["none", "no cta"])]["Count"].sum()
+        no_cta_pct = no_cta_count / max(total_posts, 1) * 100
+
+        # Show only posts with a CTA (exclude None/No CTA — inflated by stories)
+        cta_df = cta_df_all[~cta_df_all["CTA"].str.lower().isin(["none", "no cta"])]
         cta_df = cta_df.sort_values("Count", ascending=True)
-        cta_df["Pct"] = (cta_df["Count"] / cta_df["Count"].sum() * 100).round(1)
+        cta_df["Pct"] = (cta_df["Count"] / cta_df["Count"].sum() * 100).round(1) if cta_df["Count"].sum() > 0 else 0
 
-        fig_cta = px.bar(cta_df, x="Count", y="CTA", orientation="h",
-                         color_discrete_sequence=["#F8C090"],
-                         labels={"Count": "# Posts", "CTA": ""},
-                         template=CHART_TEMPLATE,
-                         text=cta_df["Pct"].apply(lambda x: f"{x:.0f}%"))
-        fig_cta.update_layout(font=CHART_FONT, height=max(250, len(cta_df) * 40), showlegend=False)
-        st.plotly_chart(fig_cta, use_container_width=True)
+        if len(cta_df):
+            fig_cta = px.bar(cta_df, x="Count", y="CTA", orientation="h",
+                             color_discrete_sequence=["#F8C090"],
+                             labels={"Count": "# Posts", "CTA": ""},
+                             template=CHART_TEMPLATE,
+                             text=cta_df["Pct"].apply(lambda x: f"{x:.0f}%"))
+            fig_cta.update_layout(font=CHART_FONT, height=max(250, len(cta_df) * 40), showlegend=False)
+            st.plotly_chart(fig_cta, use_container_width=True)
 
-        top_cta = cta_df.iloc[-1]
-        no_cta_pct = cta_df[cta_df["CTA"].str.lower().isin(["none", "no cta"])]["Pct"].sum()
-        if no_cta_pct > 30:
-            st.info(f"**Most used CTA: {top_cta['CTA']}** ({top_cta['Pct']:.0f}%). "
-                    f"**Watch:** {no_cta_pct:.0f}% of posts have no clear CTA — missed conversion opportunities.")
+        top_cta = cta_df.iloc[-1] if len(cta_df) else None
+        if top_cta is not None and no_cta_pct > 30:
+            st.info(f"**Most used CTA: {top_cta['CTA']}** ({top_cta['Pct']:.0f}% of posts with a CTA). "
+                    f"**Watch:** {no_cta_pct:.0f}% of feed posts have no clear CTA — missed conversion opportunities.")
         else:
             st.info(f"**Most used CTA: {top_cta['CTA']}** ({top_cta['Pct']:.0f}%). "
                     f"Good CTA coverage — keep testing engagement-driving CTAs like 'Tag a friend' or 'Share to story'.")
