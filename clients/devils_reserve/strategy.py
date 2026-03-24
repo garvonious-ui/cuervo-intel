@@ -127,7 +127,7 @@ KPI_TARGETS = {
     "shares_per_month": 50,
     "likes_per_month": 400,
     "comments_per_month": 30,
-    "reel_views_impressions_per_month": 10000,
+    "reel_views_per_month": 10000,
     "carousel_impressions_per_month": 3000,
     "stories_per_month": 15,
     "story_views_per_month": 5000,

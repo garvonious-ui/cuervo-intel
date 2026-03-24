@@ -117,7 +117,7 @@ with tab_kpi:
     _shares_pm = pd.to_numeric(_owned_feed["shares"], errors="coerce").fillna(0).sum() / _n_months if "shares" in _owned_feed.columns else 0
 
     _owned_reels = _owned_feed[_owned_feed["post_type"].isin(["Reel", "Video"])]
-    _reel_views_imp = (pd.to_numeric(_owned_reels["views"], errors="coerce").fillna(0).sum() + pd.to_numeric(_owned_reels["impressions"], errors="coerce").fillna(0).sum()) / _n_months if len(_owned_reels) else 0
+    _reel_views = pd.to_numeric(_owned_reels["views"], errors="coerce").fillna(0).sum() / _n_months if len(_owned_reels) else 0
 
     _owned_static = _owned_feed[~_owned_feed["post_type"].isin(["Reel", "Video"])]
     _carousel_imp = pd.to_numeric(_owned_static["impressions"], errors="coerce").fillna(0).sum() / _n_months if "impressions" in _owned_static.columns and len(_owned_static) else 0
@@ -158,7 +158,7 @@ with tab_kpi:
     # Row 3: Views, impressions, stories
     v5, v6, v7, v8 = st.columns(4)
     with v5:
-        st.metric("Reel Views+Imp/Mo", f"{_reel_views_imp:,.0f}")
+        st.metric("Reel Views/Mo", f"{_reel_views:,.0f}")
     with v6:
         st.metric("Carousel Imp/Mo", f"{_carousel_imp:,.0f}")
     with v7:
