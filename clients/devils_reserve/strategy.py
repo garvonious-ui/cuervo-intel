@@ -112,16 +112,25 @@ CONTENT_MIX_COLORS = {
 # Targets are growth-oriented for a brand in launch phase
 
 KPI_TARGETS = {
+    # Per-post averages (existing)
     "engagements_per_post": 75,         # Event content (NASCAR, Spring Break) should push averages up
-    "eng_per_1k_followers": 25.0,       # Small accounts routinely hit 20-30+; 15 was too conservative
+    "eng_per_1k_followers": 25.0,       # Small accounts routinely hit 20-30+
     "reel_ratio": 60,                   # Heavy on Reels for discovery
     "carousel_ratio": 20,              # Some carousels for engagement
     "ig_posts_per_month": (8, 12),     # Building cadence
-    "tt_posts_per_week": (5, 7),       # Need volume to break through at 21 followers
-    "save_rate": 2.0,                  # Realistic for Chaos-heavy mix (cocktail saves are 25% of content)
+    "tt_posts_per_month": (20, 28),    # Need volume to break through at 21 followers
+    "save_rate": 2.0,                  # Realistic for mix
     "share_rate": 3.0,                 # Memes drive shares but not every post
-    "creator_engagements_per_post": 150, # Creator content should 2-3x brand-owned
     "creator_pct_target_june": 30,     # Creator / influencer content share
+    # Monthly volume targets (placeholders — to be finalized)
+    "saves_per_month": 50,
+    "shares_per_month": 50,
+    "likes_per_month": 400,
+    "comments_per_month": 30,
+    "reel_views_impressions_per_month": 10000,
+    "carousel_impressions_per_month": 3000,
+    "stories_per_month": 15,
+    "story_views_per_month": 5000,
 }
 
 # ── Platform Cadence ──────────────────────────────────────────────────

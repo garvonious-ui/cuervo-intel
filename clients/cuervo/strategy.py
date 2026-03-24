@@ -73,16 +73,25 @@ CONTENT_MIX_COLORS = {
 # ── KPI Targets (2026 Social Brief) ─────────────────────────────────
 
 KPI_TARGETS = {
+    # Per-post averages (existing)
     "engagements_per_post": 150,
     "eng_per_1k_followers": 1.5,
     "reel_ratio": 50,
     "carousel_ratio": 30,
     "ig_posts_per_month": (12, 16),
-    "tt_posts_per_week": (3, 5),
+    "tt_posts_per_month": (12, 20),
     "save_rate": 3.0,
     "share_rate": 5.0,
-    "creator_engagements_per_post": 200,
     "creator_pct_target_june": 30,
+    # Monthly volume targets (placeholders — to be finalized)
+    "saves_per_month": 200,
+    "shares_per_month": 150,
+    "likes_per_month": 1500,
+    "comments_per_month": 100,
+    "reel_views_impressions_per_month": 50000,
+    "carousel_impressions_per_month": 10000,
+    "stories_per_month": 20,
+    "story_views_per_month": 10000,
 }
 
 # ── Platform Cadence Targets ─────────────────────────────────────────

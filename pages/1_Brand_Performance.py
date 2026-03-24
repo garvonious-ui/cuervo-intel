@@ -92,7 +92,7 @@ with tab_kpi:
     ENG_PER_POST_TARGET = _t["engagements_per_post"]
     REEL_RATIO_TARGET = _t["reel_ratio"]
     IG_PPM_TARGET = _t["ig_posts_per_month"]
-    TT_PPW_TARGET = _t["tt_posts_per_week"]
+    TT_PPM_TARGET = _t.get("tt_posts_per_month", None) or (tuple(x * 4 for x in _t["tt_posts_per_week"]) if "tt_posts_per_week" in _t else (12, 20))
 
     # ── Engagement metrics (brand-owned posts only) ─────
     avg_eng_per_post = hero_owned["total_engagement"].mean() if len(hero_owned) else 0
@@ -283,6 +283,94 @@ with tab_kpi:
                     f"**Watch:** {worst_signal[0]} rate {'trails' if worst_signal[1] < worst_signal[2] else 'leads'} by {abs(worst_signal[1] - worst_signal[2]):.1f}pp.")
     else:
         st.info(_perf.get("no_posts", f"No {HERO} posts in the dataset."))
+
+    st.markdown("---")
+
+    # ── Monthly Volume Metrics ────────────────────────────────────────
+    st.subheader("Monthly Volume Metrics")
+    st.caption(f"Total monthly volumes for {HERO} — averaged across all months in the dataset")
+
+    if len(hero_owned):
+        # Separate stories from feed posts
+        _is_story = hero_df["is_story"].astype(str).str.lower() == "yes" if "is_story" in hero_df.columns else pd.Series(False, index=hero_df.index)
+        _hero_feed = hero_df[~_is_story]
+        _hero_stories = hero_df[_is_story]
+
+        # Calculate months in dataset
+        if "post_date" in hero_df.columns and len(hero_df):
+            _date_range = (hero_df["post_date"].max() - hero_df["post_date"].min()).days
+            _n_months = max(_date_range / 30.44, 1)
+        else:
+            _n_months = 1
+
+        _likes_pm = _hero_feed["likes"].sum() / _n_months
+        _comments_pm = _hero_feed["comments"].sum() / _n_months
+        _saves_pm = _hero_feed["saves"].sum() / _n_months if "saves" in _hero_feed.columns else 0
+        _shares_pm = _hero_feed["shares"].sum() / _n_months if "shares" in _hero_feed.columns else 0
+
+        _hero_reels = _hero_feed[_hero_feed["post_type"].isin(["Reel", "Video"])]
+        _reel_views_imp = (_hero_reels["views"].sum() + _hero_reels["impressions"].sum()) / _n_months if len(_hero_reels) else 0
+
+        _hero_static = _hero_feed[~_hero_feed["post_type"].isin(["Reel", "Video"])]
+        _carousel_imp = _hero_static["impressions"].sum() / _n_months if "impressions" in _hero_static.columns and len(_hero_static) else 0
+
+        _stories_pm = len(_hero_stories) / _n_months
+        _story_views_pm = _hero_stories["impressions"].sum() / _n_months if "impressions" in _hero_stories.columns and len(_hero_stories) else 0
+
+        v1, v2, v3, v4 = st.columns(4)
+        with v1:
+            st.metric("Likes/Month", f"{_likes_pm:,.0f}")
+            st.metric("Comments/Month", f"{_comments_pm:,.0f}")
+        with v2:
+            st.metric("Saves/Month", f"{_saves_pm:,.0f}")
+            st.metric("Shares/Month", f"{_shares_pm:,.0f}")
+        with v3:
+            st.metric("Reel Views+Imp/Mo", f"{_reel_views_imp:,.0f}")
+            st.metric("Carousel Imp/Mo", f"{_carousel_imp:,.0f}")
+        with v4:
+            st.metric("Stories/Month", f"{_stories_pm:,.0f}")
+            st.metric("Story Views/Month", f"{_story_views_pm:,.0f}")
+
+        # Monthly trend chart
+        if "post_date" in _hero_feed.columns and len(_hero_feed):
+            _hero_feed = _hero_feed.copy()
+            _hero_feed["month"] = pd.to_datetime(_hero_feed["post_date"]).dt.to_period("M").astype(str)
+            _monthly = _hero_feed.groupby("month").agg(
+                Likes=("likes", "sum"),
+                Comments=("comments", "sum"),
+                Saves=("saves", "sum"),
+                Shares=("shares", "sum"),
+            ).reset_index()
+
+            _monthly_long = _monthly.melt(id_vars="month", var_name="Metric", value_name="Total")
+            fig_monthly = px.bar(_monthly_long, x="month", y="Total", color="Metric",
+                                 barmode="group", template=CHART_TEMPLATE,
+                                 title="Monthly Engagement Breakdown")
+            fig_monthly.update_layout(font=CHART_FONT, height=380,
+                                      xaxis_title="Month", yaxis_title="Total",
+                                      legend=dict(orientation="h", y=-0.15))
+            st.plotly_chart(fig_monthly, use_container_width=True)
+
+        # Story & Views trend
+        if len(_hero_stories) and "post_date" in _hero_stories.columns:
+            _hero_stories = _hero_stories.copy()
+            _hero_stories["month"] = pd.to_datetime(_hero_stories["post_date"]).dt.to_period("M").astype(str)
+            _story_monthly = _hero_stories.groupby("month").agg(
+                Stories=("post_date", "count"),
+                Story_Views=("impressions", "sum") if "impressions" in _hero_stories.columns else ("post_date", "count"),
+            ).reset_index()
+
+            sc1, sc2 = st.columns(2)
+            with sc1:
+                fig_stories = px.bar(_story_monthly, x="month", y="Stories",
+                                     template=CHART_TEMPLATE, title="Stories per Month")
+                fig_stories.update_layout(font=CHART_FONT, height=320)
+                st.plotly_chart(fig_stories, use_container_width=True)
+            with sc2:
+                fig_sv = px.bar(_story_monthly, x="month", y="Story_Views",
+                                template=CHART_TEMPLATE, title="Story Views per Month")
+                fig_sv.update_layout(font=CHART_FONT, height=320)
+                st.plotly_chart(fig_sv, use_container_width=True)
 
 
 # ══════════════════════════════════════════════════════════════════════

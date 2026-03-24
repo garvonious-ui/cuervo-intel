@@ -104,28 +104,57 @@ with tab_scorecard:
     save_rate = (hero_df["saves"].sum() / total_eng * 100) if "saves" in hero_df.columns else 0
     share_rate = (hero_df["shares"].sum() / total_eng * 100) if "shares" in hero_df.columns else 0
 
-    # Creator content %
-    creator_posts = hero_df[hero_df["has_creator_collab"].astype(str).str.lower() == "yes"] if "has_creator_collab" in hero_df.columns else pd.DataFrame()
-    creator_pct = len(creator_posts) / max(len(hero_df), 1) * 100
-    creator_avg_eng = creator_posts["total_engagement"].mean() if len(creator_posts) else 0
-    creator_avg_eng = 0 if pd.isna(creator_avg_eng) else creator_avg_eng
-
     freq = results["frequency"].get(HERO, {})
     ig_ppm = freq.get("Instagram", {}).get("posts_per_week", 0) * 4.33  # Convert to monthly
     tt_ppw = freq.get("TikTok", {}).get("posts_per_week", 0)
+    tt_ppm = tt_ppw * 4.33
+
+    # ── Monthly volume metrics ────────────────────────────────────────
+    # Separate stories from feed posts
+    is_story_col = hero_df["is_story"].astype(str).str.lower() == "yes" if "is_story" in hero_df.columns else pd.Series(False, index=hero_df.index)
+    hero_feed = hero_df[~is_story_col]
+    hero_stories = hero_df[is_story_col]
+
+    # Calculate months in dataset for averaging
+    if len(hero_df) and "post_date" in hero_df.columns:
+        date_range = (hero_df["post_date"].max() - hero_df["post_date"].min()).days
+        n_months = max(date_range / 30.44, 1)
+    else:
+        n_months = 1
+
+    # Monthly totals (averaged across months in dataset)
+    saves_pm = hero_feed["saves"].sum() / n_months if "saves" in hero_feed.columns else 0
+    shares_pm = hero_feed["shares"].sum() / n_months if "shares" in hero_feed.columns else 0
+    likes_pm = hero_feed["likes"].sum() / n_months if "likes" in hero_feed.columns else 0
+    comments_pm = hero_feed["comments"].sum() / n_months if "comments" in hero_feed.columns else 0
+
+    # Reel/Video views + impressions per month
+    hero_reels = hero_feed[hero_feed["post_type"].isin(["Reel", "Video"])]
+    reel_views_imp_pm = (hero_reels["views"].sum() + hero_reels["impressions"].sum()) / n_months if len(hero_reels) else 0
+
+    # Carousel/Static impressions per month
+    hero_static = hero_feed[~hero_feed["post_type"].isin(["Reel", "Video"])]
+    carousel_imp_pm = hero_static["impressions"].sum() / n_months if "impressions" in hero_static.columns and len(hero_static) else 0
+
+    # Stories per month
+    stories_pm = len(hero_stories) / n_months
+    story_views_pm = hero_stories["impressions"].sum() / n_months if "impressions" in hero_stories.columns and len(hero_stories) else 0
 
     # Scorecard table (targets from kpi_targets in client config)
     _ig_ppm = _t["ig_posts_per_month"]
-    _tt_ppw = _t["tt_posts_per_week"]
+    _tt_ppm = _t.get("tt_posts_per_month", None) or (tuple(x * 4 for x in _t["tt_posts_per_week"]) if "tt_posts_per_week" in _t else (12, 20))
+
+    def _vol_row(kpi, actual, target_key):
+        tgt = _t.get(target_key, 0)
+        return {"KPI": kpi, "Actual": f"{actual:,.0f}", "Target": f"{tgt:,}/mo",
+                "Status": "ON TRACK" if actual >= tgt else "BELOW",
+                "Gap": f"{actual - tgt:+,.0f}"}
+
     scorecard_data = [
         {"KPI": "Avg Eng/Post", "Actual": f"{avg_eng_per_post:,.0f}",
          "Target": f"{_t['engagements_per_post']:,}+",
          "Status": "ON TRACK" if avg_eng_per_post >= _t["engagements_per_post"] else "BELOW",
          "Gap": f"{avg_eng_per_post - _t['engagements_per_post']:+,.0f}"},
-        {"KPI": "Creator Avg Eng", "Actual": f"{creator_avg_eng:,.0f}",
-         "Target": f"{_t['creator_engagements_per_post']:,}+",
-         "Status": "ON TRACK" if creator_avg_eng >= _t["creator_engagements_per_post"] else "BELOW",
-         "Gap": f"{creator_avg_eng - _t['creator_engagements_per_post']:+,.0f}"},
         {"KPI": "Save Rate", "Actual": f"{save_rate:.1f}%",
          "Target": f"{_t['save_rate']}%+",
          "Status": "ON TRACK" if save_rate >= _t["save_rate"] else "BELOW",
@@ -142,10 +171,18 @@ with tab_scorecard:
          "Target": f"{_ig_ppm[0]}-{_ig_ppm[1]}/mo",
          "Status": "ON TRACK" if _ig_ppm[0] <= ig_ppm <= _ig_ppm[1] else ("BELOW" if ig_ppm < _ig_ppm[0] else "ABOVE"),
          "Gap": f"{ig_ppm - sum(_ig_ppm)/2:+.0f} vs mid"},
-        {"KPI": "TT Posts/Week", "Actual": f"{tt_ppw:.1f}",
-         "Target": f"{_tt_ppw[0]}-{_tt_ppw[1]}/wk",
-         "Status": "ON TRACK" if _tt_ppw[0] <= tt_ppw <= _tt_ppw[1] else ("BELOW" if tt_ppw < _tt_ppw[0] else "ABOVE"),
-         "Gap": f"{tt_ppw - sum(_tt_ppw)/2:+.1f} vs mid"},
+        {"KPI": "TT Posts/Month", "Actual": f"{tt_ppm:.0f}",
+         "Target": f"{_tt_ppm[0]}-{_tt_ppm[1]}/mo",
+         "Status": "ON TRACK" if _tt_ppm[0] <= tt_ppm <= _tt_ppm[1] else ("BELOW" if tt_ppm < _tt_ppm[0] else "ABOVE"),
+         "Gap": f"{tt_ppm - sum(_tt_ppm)/2:+.0f} vs mid"},
+        _vol_row("Likes/Month", likes_pm, "likes_per_month"),
+        _vol_row("Comments/Month", comments_pm, "comments_per_month"),
+        _vol_row("Saves/Month", saves_pm, "saves_per_month"),
+        _vol_row("Shares/Month", shares_pm, "shares_per_month"),
+        _vol_row("Reel Views+Imp/Mo", reel_views_imp_pm, "reel_views_impressions_per_month"),
+        _vol_row("Carousel Imp/Mo", carousel_imp_pm, "carousel_impressions_per_month"),
+        _vol_row("Stories/Month", stories_pm, "stories_per_month"),
+        _vol_row("Story Views/Month", story_views_pm, "story_views_per_month"),
     ]
 
     sc_df = pd.DataFrame(scorecard_data)
@@ -163,7 +200,7 @@ with tab_scorecard:
 
     st.dataframe(
         sc_df.style.map(color_status, subset=["Status"]),
-        use_container_width=True, hide_index=True, height=340,
+        use_container_width=True, hide_index=True, height=560,
     )
 
     on_track = sum(1 for s in scorecard_data if s["Status"] == "ON TRACK")

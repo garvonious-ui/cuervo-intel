@@ -463,9 +463,7 @@ def import_sprout_posts(csv_path: str) -> list[dict]:
         raw_content_type = str(row.get(col_map.get("content_type", ""), ""))
         post_type = _resolve_post_type(raw_type, platform, raw_content_type)
 
-        # Skip Stories — ephemeral, different metrics, not available for competitors
-        if post_type == "Story":
-            continue
+        is_story = post_type == "Story"
 
         caption = str(row.get(col_map.get("caption_text", ""), ""))
         if caption in ("nan", "None", ""):
@@ -543,6 +541,7 @@ def import_sprout_posts(csv_path: str) -> list[dict]:
             "caption_word_count": word_count,
             "mentions_count": mentions_count,
             "is_paid_partnership": "Yes" if is_paid else "No",
+            "is_story": "Yes" if is_story else "No",
             "notes": f"Imported from Sprout Social — {os.path.basename(csv_path)}",
         })
 
