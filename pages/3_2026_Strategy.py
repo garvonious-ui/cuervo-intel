@@ -238,20 +238,25 @@ with tab_frameworks:
 
     pillar_data = []
     for pillar_name, themes in cfg.pillar_map.items():
-        # Use direct content_pillar column if available, fall back to theme-based lookup
+        # Distribution % from all posts (owned + collab)
         if "content_pillar" in _pillar_base.columns:
-            matching = _pillar_base[_pillar_base["content_pillar"].astype(str).str.strip() == pillar_name]
+            matching_all = _pillar_base[_pillar_base["content_pillar"].astype(str).str.strip() == pillar_name]
         else:
-            matching = _pillar_base[_pillar_base["content_theme"].isin(themes)]
-        pct = len(matching) / max(len(_pillar_base), 1) * 100
-        avg_eng = matching["total_engagement"].mean() if len(matching) else 0
+            matching_all = _pillar_base[_pillar_base["content_theme"].isin(themes)]
+        pct = len(matching_all) / max(len(_pillar_base), 1) * 100
+        # Avg engagement from owned-only (collab posts inflate engagement)
+        if "content_pillar" in hero_df.columns:
+            matching_owned = hero_df[hero_df["content_pillar"].astype(str).str.strip() == pillar_name]
+        else:
+            matching_owned = hero_df[hero_df["content_theme"].isin(themes)]
+        avg_eng = matching_owned["total_engagement"].mean() if len(matching_owned) else 0
         avg_eng = 0 if pd.isna(avg_eng) else avg_eng
         pillar_data.append({
             "Pillar": pillar_name,
             "Actual %": round(pct, 1),
             "Target %": cfg.pillar_targets[pillar_name],
             "Avg Eng": round(avg_eng, 0),
-            "Posts": len(matching),
+            "Posts": len(matching_all),
             "desc": cfg.pillar_descriptions.get(pillar_name, ""),
         })
 
