@@ -228,17 +228,20 @@ with tab_frameworks:
     _render_north_star()
 
     # ── Content Pillars (4 pillars from 2026 deck) ──────────────────────
+    # NOTE: Pillar distribution uses ALL posts (owned + collab) to reflect total content strategy mix.
+    # This may change to owned-only in a future revision.
+    _pillar_base = hero_df_with_influencer
     st.subheader("Content Pillars")
     st.caption("4 pillars from the 2026 Social Strategy — SKU-aligned content territories")
 
     pillar_data = []
     for pillar_name, themes in cfg.pillar_map.items():
         # Use direct content_pillar column if available, fall back to theme-based lookup
-        if "content_pillar" in hero_df.columns:
-            matching = hero_df[hero_df["content_pillar"].astype(str).str.strip() == pillar_name]
+        if "content_pillar" in _pillar_base.columns:
+            matching = _pillar_base[_pillar_base["content_pillar"].astype(str).str.strip() == pillar_name]
         else:
-            matching = hero_df[hero_df["content_theme"].isin(themes)]
-        pct = len(matching) / max(len(hero_df), 1) * 100
+            matching = _pillar_base[_pillar_base["content_theme"].isin(themes)]
+        pct = len(matching) / max(len(_pillar_base), 1) * 100
         avg_eng = matching["total_engagement"].mean() if len(matching) else 0
         avg_eng = 0 if pd.isna(avg_eng) else avg_eng
         pillar_data.append({
@@ -382,6 +385,7 @@ with tab_frameworks:
         st.markdown("---")
 
     # ── Best Performing Pillar ──────────────────────────────────────────
+    # Uses owned-only posts (collab filtered out) for engagement comparison
     if cfg.themes_ready:
         _has_pillar_col = "content_pillar" in hero_df.columns and hero_df["content_pillar"].notna().any()
         if _has_pillar_col:
