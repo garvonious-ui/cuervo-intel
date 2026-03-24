@@ -174,10 +174,11 @@ def analyze_posting_frequency(posts: list[dict]) -> dict[str, Any]:
         results[brand] = {}
 
         for platform in ["Instagram", "TikTok"]:
-            plat_posts = [p for p in brand_posts if p["platform"] == platform]
+            plat_posts = [p for p in brand_posts if p["platform"] == platform
+                          and str(p.get("is_story", "")).lower() != "yes"]
             total = len(plat_posts)
 
-            # Posts per week based on actual date range of data
+            # Posts per week based on actual date range of data (excludes stories)
             per_week = round(total / weeks_in_span, 1) if total > 0 else 0
 
             # By day of week
@@ -240,7 +241,8 @@ def analyze_engagement(posts: list[dict], profiles: list[dict],
         results[brand] = {}
 
         for platform in ["Instagram", "TikTok"]:
-            plat_posts = [p for p in brand_posts if p["platform"] == platform]
+            plat_posts = [p for p in brand_posts if p["platform"] == platform
+                          and str(p.get("is_story", "")).lower() != "yes"]
             followers = follower_map.get((brand, platform), 0)
 
             # Exclude collab posts (Influencer + Collective inflate metrics due to higher reach)
