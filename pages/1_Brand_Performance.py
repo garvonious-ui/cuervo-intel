@@ -106,17 +106,18 @@ with tab_kpi:
 
     reel_ratio = len(hero_ig_owned[hero_ig_owned["post_type"] == "Reel"]) / max(len(hero_ig_owned), 1) * 100
 
-    # Monthly volume metrics
-    _likes_pm = pd.to_numeric(_hero_feed["likes"], errors="coerce").fillna(0).sum() / _n_months
-    _comments_pm = pd.to_numeric(_hero_feed["comments"], errors="coerce").fillna(0).sum() / _n_months
-    _saves_pm = pd.to_numeric(_hero_feed["saves"], errors="coerce").fillna(0).sum() / _n_months if "saves" in _hero_feed.columns else 0
-    _shares_pm = pd.to_numeric(_hero_feed["shares"], errors="coerce").fillna(0).sum() / _n_months if "shares" in _hero_feed.columns else 0
+    # Monthly volume metrics (owned posts only — excludes Influencer, Collective)
+    _owned_feed = _hero_feed[_hero_feed.index.isin(hero_owned.index)]
+    _likes_pm = pd.to_numeric(_owned_feed["likes"], errors="coerce").fillna(0).sum() / _n_months
+    _comments_pm = pd.to_numeric(_owned_feed["comments"], errors="coerce").fillna(0).sum() / _n_months
+    _saves_pm = pd.to_numeric(_owned_feed["saves"], errors="coerce").fillna(0).sum() / _n_months if "saves" in _owned_feed.columns else 0
+    _shares_pm = pd.to_numeric(_owned_feed["shares"], errors="coerce").fillna(0).sum() / _n_months if "shares" in _owned_feed.columns else 0
 
-    _hero_reels = _hero_feed[_hero_feed["post_type"].isin(["Reel", "Video"])]
-    _reel_views_imp = (pd.to_numeric(_hero_reels["views"], errors="coerce").fillna(0).sum() + pd.to_numeric(_hero_reels["impressions"], errors="coerce").fillna(0).sum()) / _n_months if len(_hero_reels) else 0
+    _owned_reels = _owned_feed[_owned_feed["post_type"].isin(["Reel", "Video"])]
+    _reel_views_imp = (pd.to_numeric(_owned_reels["views"], errors="coerce").fillna(0).sum() + pd.to_numeric(_owned_reels["impressions"], errors="coerce").fillna(0).sum()) / _n_months if len(_owned_reels) else 0
 
-    _hero_static = _hero_feed[~_hero_feed["post_type"].isin(["Reel", "Video"])]
-    _carousel_imp = pd.to_numeric(_hero_static["impressions"], errors="coerce").fillna(0).sum() / _n_months if "impressions" in _hero_static.columns and len(_hero_static) else 0
+    _owned_static = _owned_feed[~_owned_feed["post_type"].isin(["Reel", "Video"])]
+    _carousel_imp = pd.to_numeric(_owned_static["impressions"], errors="coerce").fillna(0).sum() / _n_months if "impressions" in _owned_static.columns and len(_owned_static) else 0
 
     _stories_pm = len(_hero_stories) / _n_months
     _story_views_pm = pd.to_numeric(_hero_stories["impressions"], errors="coerce").fillna(0).sum() / _n_months if "impressions" in _hero_stories.columns and len(_hero_stories) else 0

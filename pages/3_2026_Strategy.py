@@ -109,11 +109,15 @@ with tab_scorecard:
     tt_ppw = freq.get("TikTok", {}).get("posts_per_week", 0)
     tt_ppm = tt_ppw * 4.33
 
-    # ── Monthly volume metrics ────────────────────────────────────────
+    # ── Monthly volume metrics (owned posts only) ──────────────────────
     # Separate stories from feed posts
     is_story_col = hero_df["is_story"].astype(str).str.lower() == "yes" if "is_story" in hero_df.columns else pd.Series(False, index=hero_df.index)
     hero_feed = hero_df[~is_story_col]
     hero_stories = hero_df[is_story_col]
+
+    # Filter to owned posts for volume metrics
+    from config import split_owned_collab
+    _hero_owned_sc, _ = split_owned_collab(hero_feed)
 
     # Calculate months in dataset for averaging
     if len(hero_df) and "post_date" in hero_df.columns:
@@ -122,21 +126,21 @@ with tab_scorecard:
     else:
         n_months = 1
 
-    # Monthly totals (averaged across months in dataset)
-    saves_pm = pd.to_numeric(hero_feed["saves"], errors="coerce").fillna(0).sum() / n_months if "saves" in hero_feed.columns else 0
-    shares_pm = pd.to_numeric(hero_feed["shares"], errors="coerce").fillna(0).sum() / n_months if "shares" in hero_feed.columns else 0
-    likes_pm = pd.to_numeric(hero_feed["likes"], errors="coerce").fillna(0).sum() / n_months if "likes" in hero_feed.columns else 0
-    comments_pm = pd.to_numeric(hero_feed["comments"], errors="coerce").fillna(0).sum() / n_months if "comments" in hero_feed.columns else 0
+    # Monthly totals (owned feed posts, averaged across months)
+    saves_pm = pd.to_numeric(_hero_owned_sc["saves"], errors="coerce").fillna(0).sum() / n_months if "saves" in _hero_owned_sc.columns else 0
+    shares_pm = pd.to_numeric(_hero_owned_sc["shares"], errors="coerce").fillna(0).sum() / n_months if "shares" in _hero_owned_sc.columns else 0
+    likes_pm = pd.to_numeric(_hero_owned_sc["likes"], errors="coerce").fillna(0).sum() / n_months if "likes" in _hero_owned_sc.columns else 0
+    comments_pm = pd.to_numeric(_hero_owned_sc["comments"], errors="coerce").fillna(0).sum() / n_months if "comments" in _hero_owned_sc.columns else 0
 
-    # Reel/Video views + impressions per month
-    hero_reels = hero_feed[hero_feed["post_type"].isin(["Reel", "Video"])]
+    # Reel/Video views + impressions per month (owned only)
+    hero_reels = _hero_owned_sc[_hero_owned_sc["post_type"].isin(["Reel", "Video"])]
     reel_views_imp_pm = (pd.to_numeric(hero_reels["views"], errors="coerce").fillna(0).sum() + pd.to_numeric(hero_reels["impressions"], errors="coerce").fillna(0).sum()) / n_months if len(hero_reels) else 0
 
-    # Carousel/Static impressions per month
-    hero_static = hero_feed[~hero_feed["post_type"].isin(["Reel", "Video"])]
+    # Carousel/Static impressions per month (owned only)
+    hero_static = _hero_owned_sc[~_hero_owned_sc["post_type"].isin(["Reel", "Video"])]
     carousel_imp_pm = pd.to_numeric(hero_static["impressions"], errors="coerce").fillna(0).sum() / n_months if "impressions" in hero_static.columns and len(hero_static) else 0
 
-    # Stories per month
+    # Stories per month (all stories — not filtered by owned since stories are always brand-posted)
     stories_pm = len(hero_stories) / n_months
     story_views_pm = pd.to_numeric(hero_stories["impressions"], errors="coerce").fillna(0).sum() / n_months if "impressions" in hero_stories.columns and len(hero_stories) else 0
 
