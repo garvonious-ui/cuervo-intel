@@ -45,6 +45,9 @@ ENG_PER_POST_TARGET = _t["engagements_per_post"]
 
 hero_df_full = df[df["brand"] == HERO]  # Includes Edutain dupes — only for content mix funnel
 hero_df = hero_df_full[hero_df_full["_mix_weight"] >= 1.0] if "_mix_weight" in hero_df_full.columns else hero_df_full
+# Exclude stories from feed-level analysis (stories have 0 engagement and inflate post counts)
+if "is_story" in hero_df.columns:
+    hero_df = hero_df[hero_df["is_story"].astype(str).str.lower() != "yes"]
 # Keep unfiltered copy for collaboration breakdown sections (which intentionally show Influencer data)
 hero_df_with_influencer = hero_df.copy()
 # Exclude collab posts (Influencer + Collective) from engagement metrics (they inflate due to higher reach)
