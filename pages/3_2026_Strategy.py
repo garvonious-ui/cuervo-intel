@@ -468,8 +468,10 @@ with tab_frameworks:
     st.caption(f"Grab attention first ({_mix_cats[0]} {cfg.content_mix_targets[_mix_cats[0]]}%), then guide to action ({_mix_cats[-1]} {cfg.content_mix_targets[_mix_cats[-1]]}%)")
 
     hero_mix_data = []
-    # Use hero_df_full (includes Edutain dupes with _mix_weight=0.5)
+    # Use hero_df_full but exclude stories (includes Edutain dupes with _mix_weight=0.5)
     _mix_src = hero_df_full if "hero_df_full" in dir() else hero_df
+    if "is_story" in _mix_src.columns:
+        _mix_src = _mix_src[_mix_src["is_story"].astype(str).str.lower() != "yes"]
     has_weight = "_mix_weight" in _mix_src.columns
     total_weight = _mix_src["_mix_weight"].sum() if has_weight else len(_mix_src)
     for cat in _mix_cats:
