@@ -45,9 +45,11 @@ ENG_PER_POST_TARGET = _t["engagements_per_post"]
 
 hero_df_full = df[df["brand"] == HERO]  # Includes Edutain dupes — only for content mix funnel
 hero_df = hero_df_full[hero_df_full["_mix_weight"] >= 1.0] if "_mix_weight" in hero_df_full.columns else hero_df_full
+# Separate stories before filtering — needed for story volume KPIs
+_is_story = hero_df["is_story"].astype(str).str.lower() == "yes" if "is_story" in hero_df.columns else pd.Series(False, index=hero_df.index)
+hero_stories = hero_df[_is_story]
 # Exclude stories from feed-level analysis (stories have 0 engagement and inflate post counts)
-if "is_story" in hero_df.columns:
-    hero_df = hero_df[hero_df["is_story"].astype(str).str.lower() != "yes"]
+hero_df = hero_df[~_is_story]
 # Keep unfiltered copy for collaboration breakdown sections (which intentionally show Influencer data)
 hero_df_with_influencer = hero_df.copy()
 # Exclude collab posts (Influencer + Collective) from engagement metrics (they inflate due to higher reach)
@@ -113,10 +115,7 @@ with tab_scorecard:
     tt_ppm = tt_ppw * 4.33
 
     # ── Monthly volume metrics (owned posts only) ──────────────────────
-    # Separate stories from feed posts
-    is_story_col = hero_df["is_story"].astype(str).str.lower() == "yes" if "is_story" in hero_df.columns else pd.Series(False, index=hero_df.index)
-    hero_feed = hero_df[~is_story_col]
-    hero_stories = hero_df[is_story_col]
+    hero_feed = hero_df  # Stories already excluded from hero_df above
 
     # Filter to owned posts for volume metrics
     from config import split_owned_collab
