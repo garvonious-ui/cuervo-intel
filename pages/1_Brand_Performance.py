@@ -652,15 +652,17 @@ with tab_content:
         st.info(_perf.get("no_posts", f"No {HERO} posts in the dataset."))
 
     # ── Collaboration Type Breakdown ──────────────────────────────────
-    if "collaboration" in hero_df.columns and hero_df["collaboration"].notna().any():
+    # Use feed posts only (exclude stories)
+    _hero_feed_collab = hero_df[hero_df["is_story"].astype(str).str.lower() != "yes"] if "is_story" in hero_df.columns else hero_df
+    if "collaboration" in _hero_feed_collab.columns and _hero_feed_collab["collaboration"].notna().any():
         st.divider()
         st.subheader("Collaboration Type Breakdown")
         st.caption("Who's creating the content — brand-owned vs. partners, influencers, and collective")
 
         collab_data = []
-        for collab_type in hero_df["collaboration"].dropna().unique():
-            collab_posts = hero_df[hero_df["collaboration"] == collab_type]
-            collab_pct = len(collab_posts) / max(len(hero_df), 1) * 100
+        for collab_type in _hero_feed_collab["collaboration"].dropna().unique():
+            collab_posts = _hero_feed_collab[_hero_feed_collab["collaboration"] == collab_type]
+            collab_pct = len(collab_posts) / max(len(_hero_feed_collab), 1) * 100
             avg_eng = collab_posts["total_engagement"].mean() if len(collab_posts) else 0
             avg_eng = 0 if pd.isna(avg_eng) else avg_eng
             collab_data.append({
