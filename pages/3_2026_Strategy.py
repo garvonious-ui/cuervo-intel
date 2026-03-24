@@ -123,22 +123,22 @@ with tab_scorecard:
         n_months = 1
 
     # Monthly totals (averaged across months in dataset)
-    saves_pm = hero_feed["saves"].sum() / n_months if "saves" in hero_feed.columns else 0
-    shares_pm = hero_feed["shares"].sum() / n_months if "shares" in hero_feed.columns else 0
-    likes_pm = hero_feed["likes"].sum() / n_months if "likes" in hero_feed.columns else 0
-    comments_pm = hero_feed["comments"].sum() / n_months if "comments" in hero_feed.columns else 0
+    saves_pm = pd.to_numeric(hero_feed["saves"], errors="coerce").fillna(0).sum() / n_months if "saves" in hero_feed.columns else 0
+    shares_pm = pd.to_numeric(hero_feed["shares"], errors="coerce").fillna(0).sum() / n_months if "shares" in hero_feed.columns else 0
+    likes_pm = pd.to_numeric(hero_feed["likes"], errors="coerce").fillna(0).sum() / n_months if "likes" in hero_feed.columns else 0
+    comments_pm = pd.to_numeric(hero_feed["comments"], errors="coerce").fillna(0).sum() / n_months if "comments" in hero_feed.columns else 0
 
     # Reel/Video views + impressions per month
     hero_reels = hero_feed[hero_feed["post_type"].isin(["Reel", "Video"])]
-    reel_views_imp_pm = (hero_reels["views"].sum() + hero_reels["impressions"].sum()) / n_months if len(hero_reels) else 0
+    reel_views_imp_pm = (pd.to_numeric(hero_reels["views"], errors="coerce").fillna(0).sum() + pd.to_numeric(hero_reels["impressions"], errors="coerce").fillna(0).sum()) / n_months if len(hero_reels) else 0
 
     # Carousel/Static impressions per month
     hero_static = hero_feed[~hero_feed["post_type"].isin(["Reel", "Video"])]
-    carousel_imp_pm = hero_static["impressions"].sum() / n_months if "impressions" in hero_static.columns and len(hero_static) else 0
+    carousel_imp_pm = pd.to_numeric(hero_static["impressions"], errors="coerce").fillna(0).sum() / n_months if "impressions" in hero_static.columns and len(hero_static) else 0
 
     # Stories per month
     stories_pm = len(hero_stories) / n_months
-    story_views_pm = hero_stories["impressions"].sum() / n_months if "impressions" in hero_stories.columns and len(hero_stories) else 0
+    story_views_pm = pd.to_numeric(hero_stories["impressions"], errors="coerce").fillna(0).sum() / n_months if "impressions" in hero_stories.columns and len(hero_stories) else 0
 
     # Scorecard table (targets from kpi_targets in client config)
     _ig_ppm = _t["ig_posts_per_month"]

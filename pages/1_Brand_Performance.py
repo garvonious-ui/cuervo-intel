@@ -303,19 +303,19 @@ with tab_kpi:
         else:
             _n_months = 1
 
-        _likes_pm = _hero_feed["likes"].sum() / _n_months
-        _comments_pm = _hero_feed["comments"].sum() / _n_months
-        _saves_pm = _hero_feed["saves"].sum() / _n_months if "saves" in _hero_feed.columns else 0
-        _shares_pm = _hero_feed["shares"].sum() / _n_months if "shares" in _hero_feed.columns else 0
+        _likes_pm = pd.to_numeric(_hero_feed["likes"], errors="coerce").fillna(0).sum() / _n_months
+        _comments_pm = pd.to_numeric(_hero_feed["comments"], errors="coerce").fillna(0).sum() / _n_months
+        _saves_pm = pd.to_numeric(_hero_feed["saves"], errors="coerce").fillna(0).sum() / _n_months if "saves" in _hero_feed.columns else 0
+        _shares_pm = pd.to_numeric(_hero_feed["shares"], errors="coerce").fillna(0).sum() / _n_months if "shares" in _hero_feed.columns else 0
 
         _hero_reels = _hero_feed[_hero_feed["post_type"].isin(["Reel", "Video"])]
-        _reel_views_imp = (_hero_reels["views"].sum() + _hero_reels["impressions"].sum()) / _n_months if len(_hero_reels) else 0
+        _reel_views_imp = (pd.to_numeric(_hero_reels["views"], errors="coerce").fillna(0).sum() + pd.to_numeric(_hero_reels["impressions"], errors="coerce").fillna(0).sum()) / _n_months if len(_hero_reels) else 0
 
         _hero_static = _hero_feed[~_hero_feed["post_type"].isin(["Reel", "Video"])]
-        _carousel_imp = _hero_static["impressions"].sum() / _n_months if "impressions" in _hero_static.columns and len(_hero_static) else 0
+        _carousel_imp = pd.to_numeric(_hero_static["impressions"], errors="coerce").fillna(0).sum() / _n_months if "impressions" in _hero_static.columns and len(_hero_static) else 0
 
         _stories_pm = len(_hero_stories) / _n_months
-        _story_views_pm = _hero_stories["impressions"].sum() / _n_months if "impressions" in _hero_stories.columns and len(_hero_stories) else 0
+        _story_views_pm = pd.to_numeric(_hero_stories["impressions"], errors="coerce").fillna(0).sum() / _n_months if "impressions" in _hero_stories.columns and len(_hero_stories) else 0
 
         v1, v2, v3, v4 = st.columns(4)
         with v1:
