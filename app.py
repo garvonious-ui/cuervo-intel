@@ -99,7 +99,7 @@ def _sprout_fingerprint(sprout_dir: str) -> str:
     when files change OR analysis logic is updated."""
     import hashlib
     # Bump this version whenever sprout_import.py or analysis.py logic changes
-    CODE_VERSION = "v35_owned_targets_reset"
+    CODE_VERSION = "v36_stories_excluded_globally"
     entries = [CODE_VERSION]
     if os.path.isdir(sprout_dir):
         for f in sorted(os.listdir(sprout_dir)):
@@ -274,6 +274,15 @@ else:
 
 df = results_to_df(results)
 
+# Separate stories from feed posts — stories are kept in session state for
+# story-specific KPIs (Pages 1 & 3) but excluded from the main df so they
+# don't pollute engagement metrics, theme distributions, and format charts.
+if "is_story" in df.columns:
+    stories_df = df[df["is_story"].astype(str).str.lower() == "yes"].copy()
+    df = df[df["is_story"].astype(str).str.lower() != "yes"].copy()
+else:
+    stories_df = df.iloc[0:0].copy()
+
 # ── Global Filters ────────────────────────────────────────────────────
 
 st.sidebar.markdown("---")
@@ -303,6 +312,7 @@ if filtered_df.empty:
     st.session_state["results"] = results
     st.session_state["df"] = df
     st.session_state["filtered_df"] = filtered_df
+    st.session_state["stories_df"] = stories_df
     st.session_state["sel_brands"] = sel_brands
     st.session_state["sel_platforms"] = sel_platforms
     st.session_state["data_dir"] = data_dir
@@ -313,6 +323,7 @@ if filtered_df.empty:
 st.session_state["results"] = results
 st.session_state["df"] = df
 st.session_state["filtered_df"] = filtered_df
+st.session_state["stories_df"] = stories_df
 st.session_state["sel_brands"] = sel_brands
 st.session_state["sel_platforms"] = sel_platforms
 st.session_state["data_dir"] = data_dir

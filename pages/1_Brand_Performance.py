@@ -41,14 +41,13 @@ results = st.session_state["results"]
 df = st.session_state["df"]  # Unfiltered
 
 HERO = cfg.hero_brand
-hero_df = df[df["brand"] == HERO]
+hero_df = df[df["brand"] == HERO]  # Stories already excluded in app.py
 # Filter out Edutain half-row duplicates (weight=0.5) to avoid inflating stats
 if "_mix_weight" in hero_df.columns:
     hero_df = hero_df[hero_df["_mix_weight"] >= 1.0]
-# Separate stories before filtering — needed for story volume KPIs
-_is_story_p1 = hero_df["is_story"].astype(str).str.lower() == "yes" if "is_story" in hero_df.columns else pd.Series(False, index=hero_df.index)
-hero_stories = hero_df[_is_story_p1]
-hero_df = hero_df[~_is_story_p1]
+# Stories stored separately in session state for story volume KPIs
+hero_stories = st.session_state.get("stories_df", pd.DataFrame())
+hero_stories = hero_stories[hero_stories["brand"] == HERO] if len(hero_stories) else hero_stories
 hero_ig = hero_df[hero_df["platform"] == "Instagram"]
 hero_tt = hero_df[hero_df["platform"] == "TikTok"]
 
