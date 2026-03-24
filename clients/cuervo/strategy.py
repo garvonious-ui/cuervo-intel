@@ -73,32 +73,32 @@ CONTENT_MIX_COLORS = {
 # ── KPI Targets (2026 Social Brief) ─────────────────────────────────
 
 KPI_TARGETS = {
-    # Per-post averages
-    "engagements_per_post": 120,
+    # Per-post averages (owned-only baseline: 85 avg eng, 3.3% save, 7.7% share)
+    "engagements_per_post": 100,
     "eng_per_1k_followers": 1.5,
-    "reel_ratio": 50,
+    "reel_ratio": 40,
     "carousel_ratio": 30,
-    "ig_posts_per_month": (12, 16),
-    "tt_posts_per_month": (12, 20),
+    "ig_posts_per_month": (10, 14),
+    "tt_posts_per_month": (8, 12),
     "save_rate": 3.0,
     "share_rate": 5.0,
     "creator_pct_target_june": 30,
-    # Monthly volume targets
-    "saves_per_month": 75,
-    "shares_per_month": 150,
-    "likes_per_month": 1800,
-    "comments_per_month": 120,
-    "reel_views_impressions_per_month": 2000000,
-    "carousel_impressions_per_month": 100000,
+    # Monthly volume targets (owned-only — 15-35% growth over current actuals)
+    "saves_per_month": 35,
+    "shares_per_month": 80,
+    "likes_per_month": 800,
+    "comments_per_month": 65,
+    "reel_views_impressions_per_month": 50000,
+    "carousel_impressions_per_month": 80000,
     "stories_per_month": 90,
-    "story_views_per_month": 40000,
+    "story_views_per_month": 35000,
 }
 
 # ── Platform Cadence Targets ─────────────────────────────────────────
 
 CADENCE_TARGETS = {
-    "Instagram": {"low": 12, "high": 16},
-    "TikTok": {"low": 12, "high": 20},
+    "Instagram": {"low": 10, "high": 14},
+    "TikTok": {"low": 8, "high": 12},
 }
 
 # ── IG Format Mix ────────────────────────────────────────────────────
@@ -142,10 +142,10 @@ CONTENT_SOURCE_MIX = {
 # ── Monthly Ramp Targets (March-June 2026) ───────────────────────────
 
 MONTHLY_RAMP = {
-    "March": {"creator_pct": "20%+", "er_target": "100+", "proactive_comments_wk": "15-20"},
-    "April": {"creator_pct": "23%+", "er_target": "120+", "proactive_comments_wk": "20-25"},
-    "May": {"creator_pct": "27%+", "er_target": "140+", "proactive_comments_wk": "25-30"},
-    "June": {"creator_pct": "30%", "er_target": "150+", "proactive_comments_wk": "30+"},
+    "March": {"creator_pct": "20%+", "er_target": "85+", "proactive_comments_wk": "15-20"},
+    "April": {"creator_pct": "23%+", "er_target": "90+", "proactive_comments_wk": "20-25"},
+    "May": {"creator_pct": "27%+", "er_target": "95+", "proactive_comments_wk": "25-30"},
+    "June": {"creator_pct": "30%", "er_target": "100+", "proactive_comments_wk": "30+"},
 }
 
 # ── Testing Roadmap ──────────────────────────────────────────────────
