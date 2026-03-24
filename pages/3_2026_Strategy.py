@@ -875,7 +875,7 @@ with tab_action:
 
     with col_o:
         st.success(f"**Opportunities for {HERO}**")
-        hero_theme_eng = hero_df.groupby("content_pillar")["total_engagement"].mean() if len(hero_df) else pd.Series(dtype=float)
+        hero_theme_eng = hero_df.groupby("content_pillar")["total_engagement"].mean() if (len(hero_df) and "content_pillar" in hero_df.columns and hero_df["content_pillar"].notna().any()) else pd.Series(dtype=float)
         hero_best_theme = hero_theme_eng.idxmax() if len(hero_theme_eng) else "N/A"
         hero_best_eng = hero_theme_eng.max() if len(hero_theme_eng) else 0
         if hero_best_theme != "N/A":
