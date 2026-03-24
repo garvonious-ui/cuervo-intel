@@ -837,9 +837,12 @@ def import_sprout_directory(sprout_dir: str, output_dir: str) -> tuple[list[str]
                         manual_df["caption_tone"] = manual_df[caption_col].fillna("").apply(classify_tone)
                     if "cta_type" not in manual_df.columns or manual_df["cta_type"].isna().all():
                         manual_df["cta_type"] = manual_df[caption_col].fillna("").apply(classify_cta)
-                # Remove Sprout rows for brands that exist in the manual CSV
+                # Remove non-story Sprout rows for brands in the manual CSV
+                # (keep Sprout stories since the manual sheet only has feed posts)
                 manual_brands = set(manual_df["brand"].dropna().unique())
-                posts_df = posts_df[~posts_df["brand"].isin(manual_brands)]
+                is_hero = posts_df["brand"].isin(manual_brands)
+                is_story = posts_df["is_story"].astype(str).str.lower() == "yes" if "is_story" in posts_df.columns else pd.Series(False, index=posts_df.index)
+                posts_df = posts_df[~is_hero | is_story]
                 # Append manual posts
                 posts_df = pd.concat([manual_df, posts_df], ignore_index=True)
             except Exception:
