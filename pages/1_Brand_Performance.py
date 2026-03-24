@@ -534,38 +534,6 @@ with tab_content:
 
     st.markdown("---")
 
-    # ── Caption Tone Distribution ────────────────────────────────────
-    st.subheader("Caption Tone Distribution")
-    st.caption(_perf.get("tone_caption", f"How {HERO}'s captions sound — the voice behind the brand"))
-
-    # Combine tones across platforms for hero brand
-    hero_tones = {}
-    for plat in ["Instagram", "TikTok"]:
-        plat_tones = results["captions"].get(HERO, {}).get(plat, {}).get("tone_distribution", {})
-        for tone, count in plat_tones.items():
-            hero_tones[tone] = hero_tones.get(tone, 0) + count
-
-    if hero_tones:
-        tone_df = pd.DataFrame(list(hero_tones.items()), columns=["Tone", "Count"])
-        tone_df = tone_df.sort_values("Count", ascending=True)
-        tone_df["Pct"] = (tone_df["Count"] / tone_df["Count"].sum() * 100).round(1)
-
-        fig_tone = px.bar(tone_df, x="Count", y="Tone", orientation="h",
-                          color_discrete_sequence=["#2ea3f2"],
-                          labels={"Count": "# Posts", "Tone": ""},
-                          template=CHART_TEMPLATE,
-                          text=tone_df["Pct"].apply(lambda x: f"{x:.0f}%"))
-        fig_tone.update_layout(font=CHART_FONT, height=max(250, len(tone_df) * 40), showlegend=False)
-        st.plotly_chart(fig_tone, use_container_width=True)
-
-        top_tone = tone_df.iloc[-1]  # Last row is highest after ascending sort
-        st.info(f"**{HERO}'s voice leans {top_tone['Tone']}** — {top_tone['Pct']:.0f}% of posts. "
-                f"Consider diversifying to connect with different audience moods.")
-    else:
-        st.info(_perf.get("no_tone_data", f"No caption tone data available for {HERO}."))
-
-    st.markdown("---")
-
     # ── CTA Distribution ────────────────────────────────────────────
     st.subheader("CTA Distribution")
     st.caption(_perf.get("cta_caption", f"What {HERO} asks its audience to do — are we driving action?"))
