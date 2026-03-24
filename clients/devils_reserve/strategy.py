@@ -2,40 +2,52 @@
 Devils Reserve Client — Strategy Frameworks
 ==============================================
 North Star: "Raise a little hell"
-2 pillars: Chaos (Lifestyle) 75%, Flavor (Product) 25%
+4 pillars: The Diablito Made Me Do It (45%), The Sweet Heat (25%),
+           The Devil's Advocate (20%), Hell on Wheels (10%)
 Content Mediums: Events, Partnerships, Influencers/Creators, Evergreen Photoshoots
 Target: Gen Z (21-28), trend-savvy, short-form video.
 """
 
 # ── Content Pillars ──────────────────────────────────────────────────
 # North Star: "Raise a little hell"
-# 2 pillars: Chaos (Lifestyle) 75%, Flavor (Product) 25%
+# 4 pillars mapped to content themes (finalized via manual tagging sheet)
 
 PILLAR_MAP = {
-    "Chaos (Lifestyle)": [
-        "Event/Activation", "Sports Tie-in", "Cultural Moment/Holiday",
-        "Meme/Humor", "User Repost", "Creator Collab", "Partner",
-        "Giveaway/Promo", "Behind the Scenes",
+    "The Diablito Made Me Do It": [
+        "Meme/Humor", "Creator Collab", "User Repost",
+        "Behind the Scenes", "Giveaway/Promo",
     ],
-    "Flavor (Product)": [
+    "The Sweet Heat": [
         "Product/Lifestyle", "Cocktail Highlights",
         "Brand Heritage / Culture",
+    ],
+    "The Devil's Advocate": [
+        "Cultural Moment/Holiday", "Sports Tie-in",
+    ],
+    "Hell on Wheels": [
+        "Event/Activation", "Partner",
     ],
 }
 
 PILLAR_TARGETS = {
-    "Chaos (Lifestyle)": 75,
-    "Flavor (Product)": 25,
+    "The Diablito Made Me Do It": 45,
+    "The Sweet Heat": 25,
+    "The Devil's Advocate": 20,
+    "Hell on Wheels": 10,
 }
 
 PILLAR_COLORS = {
-    "Chaos (Lifestyle)": "#CC0000",    # Devil red — raise a little hell
-    "Flavor (Product)": "#F8C090",     # Warm peach — product/flavor
+    "The Diablito Made Me Do It": "#CC0000",  # Devil red — mischievous lifestyle
+    "The Sweet Heat": "#F8C090",              # Warm peach — product/flavor
+    "The Devil's Advocate": "#FFD700",        # Gold — hot takes
+    "Hell on Wheels": "#1a1a1a",              # Black — IRL activations
 }
 
 PILLAR_DESCRIPTIONS = {
-    "Chaos (Lifestyle)": "Raise a little hell — events, partnerships, creators, mischievous energy",
-    "Flavor (Product)": "Pineapple + jalapeño tequila — cocktail moments, taste reactions, product content",
+    "The Diablito Made Me Do It": "Mischievous lifestyle & social chaos — confessional POVs, chaotic photodumps, memes about 'one quick drink'",
+    "The Sweet Heat": "Product profile — sweet heat jalapeño + pineapple flavor education, cocktail recipes, product shots",
+    "The Devil's Advocate": "Cultural commentary & hot takes — spicy polls, reactive takes on dating, fashion, social etiquette",
+    "Hell on Wheels": "IRL mischief & partnerships — Branded Bronco, NASCAR, Love Island, Summer Fridays",
 }
 
 # ── SKU Strategy ──────────────────────────────────────────────────────
