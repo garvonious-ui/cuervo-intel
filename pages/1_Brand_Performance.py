@@ -166,6 +166,9 @@ with tab_kpi:
     with v8:
         st.metric("Story Views/Month", f"{_story_views_pm:,.0f}")
 
+    st.caption("**Reel Views** = number of times the video was played. **Carousel/Static Impressions** = number of times the post appeared on screen. "
+               "These are different metrics — impressions are typically higher than views for equivalent reach.")
+
     # ── "So What" Narrative ────────────────────────────────────────────
     hits = []
     misses = []
