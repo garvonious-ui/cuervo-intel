@@ -291,28 +291,25 @@ with tab_overview:
     dynamic_types = ["Reel", "Video"]
     static_types = ["Static Image", "Carousel"]
 
-    # Hero brand metrics (owned only)
-    _hero_df = df[df["brand"] == HERO]
-    if "collaboration" in _hero_df.columns:
-        _hero_df = _hero_df[~_hero_df["collaboration"].str.strip().str.lower().isin(COLLAB_AMPLIFIED_TYPES)]
-    dyn_posts = _hero_df[_hero_df["post_type"].isin(dynamic_types)]
-    stat_posts = _hero_df[_hero_df["post_type"].isin(static_types)]
-    total_ds = len(dyn_posts) + len(stat_posts) or 1
-    dyn_pct = len(dyn_posts) / total_ds * 100
-    stat_pct = len(stat_posts) / total_ds * 100
-    dyn_eng = dyn_posts["total_engagement"].mean() if len(dyn_posts) else 0
-    stat_eng = stat_posts["total_engagement"].mean() if len(stat_posts) else 0
+    # Category-wide metrics (all brands in competitive set)
+    _all_dyn = df[df["post_type"].isin(dynamic_types)]
+    _all_stat = df[df["post_type"].isin(static_types)]
+    _all_total = len(_all_dyn) + len(_all_stat) or 1
+    dyn_pct = len(_all_dyn) / _all_total * 100
+    stat_pct = len(_all_stat) / _all_total * 100
+    dyn_eng = _all_dyn["total_engagement"].mean() if len(_all_dyn) else 0
+    stat_eng = _all_stat["total_engagement"].mean() if len(_all_stat) else 0
     dyn_eng = 0 if pd.isna(dyn_eng) else dyn_eng
     stat_eng = 0 if pd.isna(stat_eng) else stat_eng
 
     ds1, ds2, ds3, ds4 = st.columns(4)
     with ds1:
-        st.metric("Dynamic %", f"{dyn_pct:.0f}%", help="Reels + Video")
+        st.metric("Dynamic %", f"{dyn_pct:.0f}%", help="Reels + Video — category average across all brands")
     with ds2:
         st.metric("Dynamic Avg Eng", f"{dyn_eng:,.0f}",
                   delta=f"{dyn_eng - stat_eng:+,.0f} vs Static" if stat_eng > 0 else None)
     with ds3:
-        st.metric("Static %", f"{stat_pct:.0f}%", help="Static Image + Carousel")
+        st.metric("Static %", f"{stat_pct:.0f}%", help="Static Image + Carousel — category average across all brands")
     with ds4:
         st.metric("Static Avg Eng", f"{stat_eng:,.0f}")
 
