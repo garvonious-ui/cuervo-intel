@@ -134,9 +134,9 @@ with tab_scorecard:
     likes_pm = pd.to_numeric(_hero_owned_sc["likes"], errors="coerce").fillna(0).sum() / n_months if "likes" in _hero_owned_sc.columns else 0
     comments_pm = pd.to_numeric(_hero_owned_sc["comments"], errors="coerce").fillna(0).sum() / n_months if "comments" in _hero_owned_sc.columns else 0
 
-    # Reel/Video views + impressions per month (owned only)
+    # Reel/Video views per month (owned only — use views, not impressions, to avoid double-counting)
     hero_reels = _hero_owned_sc[_hero_owned_sc["post_type"].isin(["Reel", "Video"])]
-    reel_views_imp_pm = (pd.to_numeric(hero_reels["views"], errors="coerce").fillna(0).sum() + pd.to_numeric(hero_reels["impressions"], errors="coerce").fillna(0).sum()) / n_months if len(hero_reels) else 0
+    reel_views_pm = pd.to_numeric(hero_reels["views"], errors="coerce").fillna(0).sum() / n_months if len(hero_reels) else 0
 
     # Carousel/Static impressions per month (owned only)
     hero_static = _hero_owned_sc[~_hero_owned_sc["post_type"].isin(["Reel", "Video"])]
@@ -185,7 +185,7 @@ with tab_scorecard:
         _vol_row("Comments/Month", comments_pm, "comments_per_month"),
         _vol_row("Saves/Month", saves_pm, "saves_per_month"),
         _vol_row("Shares/Month", shares_pm, "shares_per_month"),
-        _vol_row("Reel Views+Imp/Mo", reel_views_imp_pm, "reel_views_impressions_per_month"),
+        _vol_row("Reel Views/Mo", reel_views_pm, "reel_views_per_month"),
         _vol_row("Carousel Imp/Mo", carousel_imp_pm, "carousel_impressions_per_month"),
         _vol_row("Stories/Month", stories_pm, "stories_per_month"),
         _vol_row("Story Views/Month", story_views_pm, "story_views_per_month"),
