@@ -282,6 +282,31 @@ with tab_kpi:
 
 with tab_content:
 
+    # ── Monthly Engagement Trend ──────────────────────────────────────
+    st.subheader("Monthly Engagement Trend")
+    st.caption(f"{HERO} owned IG feed posts — monthly totals and averages")
+
+    if len(hero_ig_owned) and "post_date" in hero_ig_owned.columns:
+        _monthly = hero_ig_owned.copy()
+        _monthly["post_date"] = pd.to_datetime(_monthly["post_date"], errors="coerce")
+        _monthly["Month"] = _monthly["post_date"].dt.to_period("M").astype(str)
+        _month_agg = _monthly.groupby("Month").agg(
+            Posts=("total_engagement", "size"),
+            Likes=("likes", "sum"),
+            Comments=("comments", "sum"),
+            Shares=("shares", "sum"),
+            Saves=("saves", "sum"),
+            Total_Eng=("total_engagement", "sum"),
+            Avg_Eng=("total_engagement", "mean"),
+        ).reset_index()
+        _month_agg["Avg_Eng"] = _month_agg["Avg_Eng"].round(0).astype(int)
+        _month_agg.columns = ["Month", "Posts", "Likes", "Comments", "Shares", "Saves", "Total Eng", "Avg Eng/Post"]
+        st.dataframe(_month_agg, use_container_width=True, hide_index=True)
+    else:
+        st.info("No post data available for monthly breakdown.")
+
+    st.markdown("---")
+
     # ── Format Breakdown ───────────────────────────────────────────────
     st.subheader("Content Format Breakdown")
     st.caption(_perf.get("format_caption", f"{HERO}'s format mix on Instagram — reach vs engagement by format"))
