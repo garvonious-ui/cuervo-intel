@@ -112,32 +112,32 @@ CONTENT_MIX_COLORS = {
 # Targets are growth-oriented for a brand in launch phase
 
 KPI_TARGETS = {
-    # Per-post averages (existing)
-    "engagements_per_post": 75,         # Event content (NASCAR, Spring Break) should push averages up
-    "eng_per_1k_followers": 25.0,       # Small accounts routinely hit 20-30+
-    "reel_ratio": 60,                   # Heavy on Reels for discovery
-    "carousel_ratio": 20,              # Some carousels for engagement
-    "ig_posts_per_month": (8, 12),     # Building cadence
-    "tt_posts_per_month": (20, 28),    # Need volume to break through at 21 followers
-    "save_rate": 2.0,                  # Realistic for mix
-    "share_rate": 3.0,                 # Memes drive shares but not every post
+    # Per-post averages — actuals: avg 99.3 eng/post (IG feed), 48.8 eng/1K
+    "engagements_per_post": 100,        # Current avg 99.3 — maintain with event content push
+    "eng_per_1k_followers": 40.0,       # Current 48.8 — conservative target (will decrease as followers grow)
+    "reel_ratio": 60,                   # Current 54.8% — slight push toward more Reels
+    "carousel_ratio": 20,              # Current ~23% — on track
+    "ig_posts_per_month": (8, 12),     # Current 7.8/mo — slight ramp
+    "tt_posts_per_month": (4, 8),      # Current 2.8/mo — realistic ramp (was 20-28, unrealistic)
+    "save_rate": 15.0,                 # Current 18.1% — strong, maintain floor
+    "share_rate": 5.0,                 # Current 6.7% — strong, maintain floor
     "creator_pct_target_june": 30,     # Creator / influencer content share
-    # Monthly volume targets (placeholders — to be finalized)
-    "saves_per_month": 50,
-    "shares_per_month": 50,
-    "likes_per_month": 400,
-    "comments_per_month": 30,
-    "reel_views_per_month": 10000,
-    "carousel_impressions_per_month": 3000,
-    "stories_per_month": 15,
-    "story_views_per_month": 5000,
+    # Monthly volume targets — based on 4-month actuals (Nov 25 – Feb 26)
+    "saves_per_month": 140,            # Current avg ~139/mo — maintain
+    "shares_per_month": 52,            # Current avg ~52/mo — maintain
+    "likes_per_month": 565,            # Current avg ~565/mo — maintain
+    "comments_per_month": 13,          # Current avg ~13/mo — grow
+    "reel_views_per_month": 50000,     # Baseline ~30-40K/mo excl. 2 viral hits; 50K as stretch
+    "carousel_impressions_per_month": 3200,  # Current avg ~3,162/mo — slight growth
+    "stories_per_month": 20,           # Current avg 21/mo — maintain (was 15)
+    "story_views_per_month": 2500,     # Current avg ~2,369/mo — slight growth (was 5K)
 }
 
 # ── Platform Cadence ──────────────────────────────────────────────────
 
 CADENCE_TARGETS = {
     "Instagram": {"low": 8, "high": 12},
-    "TikTok": {"low": 20, "high": 28},
+    "TikTok": {"low": 4, "high": 8},
 }
 
 # ── IG Format Mix ─────────────────────────────────────────────────────
