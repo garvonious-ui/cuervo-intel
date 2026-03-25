@@ -291,17 +291,23 @@ with tab_content:
         _monthly["post_date"] = pd.to_datetime(_monthly["post_date"], errors="coerce")
         _monthly["Month"] = _monthly["post_date"].dt.to_period("M").astype(str)
         _month_agg = _monthly.groupby("Month").agg(
-            Posts=("total_engagement", "size"),
             Likes=("likes", "sum"),
             Comments=("comments", "sum"),
             Shares=("shares", "sum"),
             Saves=("saves", "sum"),
-            Total_Eng=("total_engagement", "sum"),
-            Avg_Eng=("total_engagement", "mean"),
         ).reset_index()
-        _month_agg["Avg_Eng"] = _month_agg["Avg_Eng"].round(0).astype(int)
-        _month_agg.columns = ["Month", "Posts", "Likes", "Comments", "Shares", "Saves", "Total Eng", "Avg Eng/Post"]
-        st.dataframe(_month_agg, use_container_width=True, hide_index=True)
+
+        # Stacked bar chart for engagement components
+        _month_melt = _month_agg.melt(id_vars="Month", value_vars=["Likes", "Comments", "Shares", "Saves"],
+                                       var_name="Metric", value_name="Count")
+        fig_trend = px.bar(_month_melt, x="Month", y="Count", color="Metric",
+                           color_discrete_map={"Likes": "#F8C090", "Comments": "#2ea3f2",
+                                               "Shares": "#7B6B63", "Saves": "#66BB6A"},
+                           template=CHART_TEMPLATE, text_auto=False)
+        fig_trend.update_layout(font=CHART_FONT, height=400, barmode="stack",
+                                xaxis_title="", yaxis_title="Total Engagements",
+                                legend_title_text="", xaxis_tickangle=-45)
+        st.plotly_chart(fig_trend, use_container_width=True)
     else:
         st.info("No post data available for monthly breakdown.")
 
