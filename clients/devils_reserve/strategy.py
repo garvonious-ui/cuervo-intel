@@ -112,25 +112,25 @@ CONTENT_MIX_COLORS = {
 # Targets are growth-oriented for a brand in launch phase
 
 KPI_TARGETS = {
-    # Per-post averages — actuals: avg 99.3 eng/post (IG feed), 48.8 eng/1K
-    "engagements_per_post": 100,        # Current avg 99.3 — maintain with event content push
-    "eng_per_1k_followers": 40.0,       # Current 48.8 — conservative target (will decrease as followers grow)
-    "reel_ratio": 60,                   # Current 54.8% — slight push toward more Reels
-    "carousel_ratio": 20,              # Current ~23% — on track
-    "ig_posts_per_month": (8, 12),     # Current 7.8/mo — slight ramp
-    "tt_posts_per_month": (4, 8),      # Current 2.8/mo — realistic ramp (was 20-28, unrealistic)
-    "save_rate": 15.0,                 # Current 18.1% — strong, maintain floor
-    "share_rate": 5.0,                 # Current 6.7% — strong, maintain floor
+    # Per-post averages — 14-month actuals (Feb 25 – Mar 26): 121 IG feed posts
+    "engagements_per_post": 85,         # 14mo avg 84.3 — maintain; Reels avg 103, Static avg 38
+    "eng_per_1k_followers": 40.0,       # Current 48.8 — will decrease as followers grow
+    "reel_ratio": 50,                   # 14mo avg 43% — push toward 50% (was 60%, unrealistic)
+    "carousel_ratio": 25,              # 14mo avg 34% — carousels performing well (92.7 avg eng)
+    "ig_posts_per_month": (8, 12),     # 14mo avg 8.6/mo — on track
+    "tt_posts_per_month": (4, 8),      # 14mo avg 2.1/mo — ramp target
+    "save_rate": 7.0,                  # 14mo avg 7.1% — maintain (4mo was inflated by Jan/Feb)
+    "share_rate": 8.0,                 # 14mo avg 8.1% — maintain
     "creator_pct_target_june": 30,     # Creator / influencer content share
-    # Monthly volume targets — based on 4-month actuals (Nov 25 – Feb 26)
-    "saves_per_month": 140,            # Current avg ~139/mo — maintain
-    "shares_per_month": 52,            # Current avg ~52/mo — maintain
-    "likes_per_month": 565,            # Current avg ~565/mo — maintain
-    "comments_per_month": 13,          # Current avg ~13/mo — grow
-    "reel_views_per_month": 50000,     # Baseline ~30-40K/mo excl. 2 viral hits; 50K as stretch
-    "carousel_impressions_per_month": 3200,  # Current avg ~3,162/mo — slight growth
-    "stories_per_month": 20,           # Current avg 21/mo — maintain (was 15)
-    "story_views_per_month": 2500,     # Current avg ~2,369/mo — slight growth (was 5K)
+    # Monthly volume targets — 14-month actuals (Feb 25 – Mar 26)
+    "saves_per_month": 55,             # 14mo avg 52/mo (excl Oct outlier)
+    "shares_per_month": 60,            # 14mo avg 59/mo — maintain
+    "likes_per_month": 500,            # 14mo avg 462/mo — slight growth target
+    "comments_per_month": 30,          # 14mo median ~25/mo (Oct 1,892 is outlier, avg 156 skewed)
+    "reel_views_per_month": 30000,     # 14mo avg 30,848/mo — maintain baseline
+    "carousel_impressions_per_month": 16000,  # 14mo avg 15,777/mo — maintain
+    "stories_per_month": 35,           # 14mo avg 36.5/mo — maintain
+    "story_views_per_month": 30000,    # 14mo avg 30,405/mo — maintain
 }
 
 # ── Platform Cadence ──────────────────────────────────────────────────
