@@ -35,7 +35,7 @@ NAV_TABLE = """
 
 NARRATIVE = {
     "performance": {
-        "cadence_caption": "Poplife targets: Instagram 10-14 assets/month, TikTok 8-12 assets/month",
+        "cadence_caption": "Poplife targets: Instagram 12-16 assets/month, TikTok 12-20 assets/month",
         "heatmap_caption": "When Cuervo posts across the week — find gaps and peak windows",
         "signals_caption": "Beyond likes — saves, shares, and comments indicate deeper audience connection",
         "format_caption": "Cuervo's format mix on Instagram — reach vs engagement by format",
