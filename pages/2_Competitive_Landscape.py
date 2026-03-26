@@ -48,6 +48,7 @@ with tab_overview:
 
     # ── Comparison Table ───────────────────────────────────────────────
     st.subheader("Side-by-Side Metrics")
+    st.caption("Includes all post types (owned + collab/influencer) for apples-to-apples competitive comparison.")
 
     benchmark = results.get("benchmark", {})
     has_bench = bool(benchmark)
@@ -55,9 +56,6 @@ with tab_overview:
     rows = []
     for brand in order:
         plat_df = df[df["brand"] == brand]
-        # Exclude collab posts (Influencer + Collective) to match engagement methodology
-        if "collaboration" in plat_df.columns:
-            plat_df = plat_df[~plat_df["collaboration"].str.strip().str.lower().isin(COLLAB_AMPLIFIED_TYPES)]
         eng = results["engagement"].get(brand, {})
         freq_b = results["frequency"].get(brand, {})
         followers = sum(eng.get(p, {}).get("followers", 0) for p in ["Instagram", "TikTok"])

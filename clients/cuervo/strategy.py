@@ -123,8 +123,8 @@ CONTENT_PRODUCTION_NEEDS = [
 # ── Platform Roles ───────────────────────────────────────────────────
 
 PLATFORM_ROLES = {
-    "Instagram": {"role": "The Main Stage — curated, social-first", "priority": "Primary", "cadence": "12-16/mo"},
-    "TikTok": {"role": "The Culture Lab — reactive, entertainment", "priority": "Primary", "cadence": "3-5x/week"},
+    "Instagram": {"role": "The Main Stage — curated, social-first", "priority": "Primary", "cadence": "10-14/mo"},
+    "TikTok": {"role": "The Culture Lab — reactive, entertainment", "priority": "Primary", "cadence": "8-12/mo"},
     "Facebook": {"role": "Syndicate top IG posts", "priority": "Secondary", "cadence": "Maintain presence"},
     "X / Threads": {"role": "The Listener — reactive community", "priority": "Secondary", "cadence": "Real time relevance"},
     "YouTube Shorts": {"role": "Reel & TikTok syndication", "priority": "Secondary", "cadence": "3-5x/week"},
