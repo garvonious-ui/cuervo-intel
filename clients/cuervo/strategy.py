@@ -112,19 +112,31 @@ IG_FORMAT_MIX = {
 # ── Content Production Needs ─────────────────────────────────────────
 
 CONTENT_PRODUCTION_NEEDS = [
-    {"type": "Creator Reels + Carousels", "source": "External creators", "volume": "8–10"},
-    {"type": "Cocktail recipe content", "source": "In-house or creator", "volume": "4–6"},
-    {"type": "Brand carousels/stills", "source": "In-house design", "volume": "2–4"},
-    {"type": "Event/partnership content", "source": "On-the-ground", "volume": "As events occur"},
-    {"type": "Reactive/trend content", "source": "Social team or creator", "volume": "As culture dictates"},
-    {"type": "Stories (polls, Q&As, BTS)", "source": "Social team", "volume": "Daily"},
+    {"type": "Creator Reels + Carousels", "source": "Influencer (31%)", "sku": "Especial + RTD", "volume": "8-10"},
+    {"type": "Memes + Graphics", "source": "In-house design", "sku": "Especial + RTD", "volume": "4-6"},
+    {"type": "Brand Reels", "source": "In-house / Agency", "sku": "Especial + RTD", "volume": "3-5"},
+    {"type": "Brand Carousels + Stills", "source": "In-house design", "sku": "All SKUs", "volume": "2-3"},
+    {"type": "Event / Partnership", "source": "Partner (7%)", "sku": "Especial + RTD", "volume": "As events occur"},
+    {"type": "Reactive / Trend Content", "source": "Social team / Creator", "sku": "Especial + RTD", "volume": "As culture dictates"},
+    {"type": "Stories (polls, Q&As, BTS)", "source": "Social team", "sku": "All SKUs", "volume": "Daily"},
+    {"type": "Collective / Crew Content", "source": "Collective (10%)", "sku": "Especial", "volume": "2-4"},
 ]
+
+# Source mix target percentages for the production needs stacked bar
+SOURCE_MIX_TARGET = {"Brand": 52, "Influencer": 31, "Collective": 10, "Partner": 7}
+
+# Monthly total and annual projections
+PRODUCTION_SUMMARY = {
+    "monthly_low": 23, "monthly_high": 32,
+    "monthly_note": "across IG + TikTok + secondary\nplus daily Stories",
+    "annual_months": 9, "annual_low": 207, "annual_high": 288,
+}
 
 # ── Platform Roles ───────────────────────────────────────────────────
 
 PLATFORM_ROLES = {
-    "Instagram": {"role": "The Main Stage — curated, social-first", "priority": "Primary", "cadence": "12-16/mo"},
-    "TikTok": {"role": "The Culture Lab — reactive, entertainment", "priority": "Primary", "cadence": "3-5x/week"},
+    "Instagram": {"role": "The Main Stage — curated, social-first", "priority": "Primary", "cadence": "10-14/mo"},
+    "TikTok": {"role": "The Culture Lab — reactive, entertainment", "priority": "Primary", "cadence": "8-12/mo"},
     "Facebook": {"role": "Syndicate top IG posts", "priority": "Secondary", "cadence": "Maintain presence"},
     "X / Threads": {"role": "The Listener — reactive community", "priority": "Secondary", "cadence": "Real time relevance"},
     "YouTube Shorts": {"role": "Reel & TikTok syndication", "priority": "Secondary", "cadence": "3-5x/week"},

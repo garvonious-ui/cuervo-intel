@@ -610,46 +610,86 @@ with tab_platform:
     if cfg.content_production_needs:
         st.markdown("---")
         st.subheader("Content Production Needs")
-        st.caption("Monthly asset requirements by content type and source")
+        st.caption("Monthly asset requirements by content type, source, and SKU focus")
 
         teal = "#2C5F5D"
         gold = "#D4A843"
-        # Build HTML table
-        rows_html = ""
-        for item in cfg.content_production_needs:
-            rows_html += f"""
-            <tr>
-                <td style="padding:10px 14px; border-bottom:1px solid #E0D8D0; color:#333;">{item['type']}</td>
-                <td style="padding:10px 14px; border-bottom:1px solid #E0D8D0; color:#555;">{item['source']}</td>
-                <td style="padding:10px 14px; border-bottom:1px solid #E0D8D0; color:#555; font-weight:600;">{item['volume']}</td>
-            </tr>"""
 
-        st.markdown(f"""
-        <table style="width:100%; border-collapse:collapse; border-radius:8px; overflow:hidden; border:1px solid #E0D8D0;">
-            <thead>
-                <tr style="background:{teal};">
-                    <th style="padding:10px 14px; text-align:left; color:white; font-weight:600; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Content Type</th>
-                    <th style="padding:10px 14px; text-align:left; color:white; font-weight:600; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Source</th>
-                    <th style="padding:10px 14px; text-align:left; color:white; font-weight:600; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Volume/Mo</th>
-                </tr>
-            </thead>
-            <tbody>{rows_html}</tbody>
-        </table>
-        """, unsafe_allow_html=True)
+        # Two-column layout: table on left, summary sidebar on right
+        col_table, col_summary = st.columns([3, 2])
 
-        st.markdown(f"""
-        <div style="background:{teal}; border-radius:10px; padding:20px 24px; margin-top:16px;
-                    border:2px solid {gold};">
-            <p style="color:{gold}; font-size:1.05rem; font-weight:700; margin:0 0 6px 0;">
-                Total Monthly Need: <span style="color:white; font-weight:400;">~20–25 assets across platforms, plus daily Stories</span></p>
-            <p style="color:white; font-size:0.88rem; font-style:italic; margin:0 0 4px 0;">
-                All IG Reel and TikTok content cross-pollinated into YT Shorts</p>
-            <p style="color:white; font-size:0.88rem; font-style:italic; margin:0 0 10px 0;">
-                All cocktail recipe content and aesthetic content cross-pollinated on Pinterest</p>
-            <p style="color:{gold}; font-size:1.05rem; font-weight:700; margin:0;">
-                Total 2026 (9 Month) Need: <span style="color:white; font-weight:400;">~180–225 assets across all platforms</span></p>
-        </div>
-        """, unsafe_allow_html=True)
+        with col_table:
+            # Build HTML table with 4 columns matching the deck
+            rows_html = ""
+            for i, item in enumerate(cfg.content_production_needs):
+                row_bg = "#ffffff" if i % 2 == 0 else "#f9f7f4"
+                bold = "font-weight:700;" if item["volume"] not in ("As events occur", "As culture dictates", "Daily") else ""
+                rows_html += f"""
+                <tr style="background:{row_bg};">
+                    <td style="padding:10px 14px; border-bottom:1px solid #E0D8D0; color:#333; font-weight:600;">{item['type']}</td>
+                    <td style="padding:10px 14px; border-bottom:1px solid #E0D8D0; color:#555;">{item['source']}</td>
+                    <td style="padding:10px 14px; border-bottom:1px solid #E0D8D0; color:#555;">{item.get('sku', '')}</td>
+                    <td style="padding:10px 14px; border-bottom:1px solid #E0D8D0; color:#333; {bold}">{item['volume']}</td>
+                </tr>"""
+
+            st.markdown(f"""
+            <table style="width:100%; border-collapse:collapse; border-radius:8px; overflow:hidden; border:1px solid #E0D8D0;">
+                <thead>
+                    <tr style="background:{teal};">
+                        <th style="padding:10px 14px; text-align:left; color:white; font-weight:600; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Content Type</th>
+                        <th style="padding:10px 14px; text-align:left; color:white; font-weight:600; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Source</th>
+                        <th style="padding:10px 14px; text-align:left; color:white; font-weight:600; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">SKU Focus</th>
+                        <th style="padding:10px 14px; text-align:left; color:white; font-weight:600; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Volume/Mo</th>
+                    </tr>
+                </thead>
+                <tbody>{rows_html}</tbody>
+            </table>
+            """, unsafe_allow_html=True)
+
+            # Source Mix Target bar
+            if cfg.source_mix_target:
+                mix_colors = {"Brand": teal, "Influencer": "#D4A843", "Collective": "#8B7355", "Partner": "#C4956A"}
+                bar_html = ""
+                for label, pct in cfg.source_mix_target.items():
+                    bg = mix_colors.get(label, "#888")
+                    bar_html += f'<div style="width:{pct}%; background:{bg}; padding:8px 6px; text-align:center; color:white; font-size:0.78rem; font-weight:600;">{label} {pct}%</div>'
+                st.markdown(f"""
+                <p style="font-weight:700; margin:16px 0 6px 0; font-size:0.9rem; text-transform:uppercase;">Source Mix Target</p>
+                <div style="display:flex; border-radius:6px; overflow:hidden;">{bar_html}</div>
+                <p style="color:#888; font-size:0.8rem; margin-top:6px;">SKU Split: Especial 60% | RTD 35% | Tradicional 5%</p>
+                """, unsafe_allow_html=True)
+
+        with col_summary:
+            ps = cfg.production_summary
+            if ps:
+                st.markdown(f"""
+                <div style="background:{teal}; border-radius:10px; padding:20px 24px; border:2px solid {gold};">
+                    <p style="color:white; font-size:0.9rem; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin:0 0 8px 0;">Monthly Total</p>
+                    <p style="color:white; font-size:2.2rem; font-weight:700; margin:0 0 4px 0;">~{ps['monthly_low']}-{ps['monthly_high']} assets</p>
+                    <p style="color:#ccc; font-size:0.85rem; margin:0 0 20px 0;">{ps['monthly_note']}</p>
+                    <div style="border-top:1px solid {gold}; padding-top:14px; margin-top:6px;">
+                        <p style="color:{gold}; font-size:0.85rem; margin:0;">2026 ({ps['annual_months']}-Month) Need:</p>
+                        <p style="color:white; font-size:1.3rem; font-weight:700; margin:4px 0 0 0;">~{ps['annual_low']}-{ps['annual_high']} assets</p>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            # Cadence Targets sidebar
+            ct = cfg.cadence_targets
+            if ct:
+                _ct_rows = ""
+                for plat, vals in ct.items():
+                    _ct_rows += f'<tr><td style="padding:6px 0; color:#333;">{plat}</td><td style="padding:6px 0; color:{teal}; font-weight:700; text-align:right;">{vals["low"]}-{vals["high"]}/mo</td></tr>'
+                # Add reel ratio and cross-pollinate
+                reel_target = cfg.kpi_targets.get("reel_ratio", 50)
+                _ct_rows += f'<tr><td style="padding:6px 0; color:#333;">Reel Ratio (IG)</td><td style="padding:6px 0; color:{teal}; font-weight:700; text-align:right;">{reel_target}%</td></tr>'
+                _ct_rows += f'<tr><td style="padding:6px 0; color:#333;">Cross-pollinate</td><td style="padding:6px 0; color:{teal}; font-weight:700; text-align:right;">YT Shorts + Pinterest</td></tr>'
+                st.markdown(f"""
+                <div style="background:#f9f7f4; border-radius:10px; padding:16px 20px; margin-top:16px; border:1px solid #E0D8D0;">
+                    <p style="font-weight:700; font-size:0.9rem; text-transform:uppercase; letter-spacing:0.5px; margin:0 0 10px 0;">Cadence Targets</p>
+                    <table style="width:100%;">{_ct_rows}</table>
+                </div>
+                """, unsafe_allow_html=True)
 
     st.markdown("---")
 

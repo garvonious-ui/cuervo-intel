@@ -20,7 +20,7 @@ from clients.cuervo.strategy import (
     CONTENT_SOURCE_MIX, MONTHLY_RAMP, TESTING_ROADMAP,
     CULTURAL_CALENDAR, SKU_STRATEGY, EXECUTION_ENGINES,
     CREATOR_ARCHETYPES, VOICE_PRINCIPLES, GEN_Z_LEADERS,
-    CONTENT_PRODUCTION_NEEDS,
+    CONTENT_PRODUCTION_NEEDS, SOURCE_MIX_TARGET, PRODUCTION_SUMMARY,
 )
 from clients.cuervo.copy import (
     PAGE_HEADERS, PAGE_CAPTIONS, NAV_TABLE, NARRATIVE,
@@ -162,6 +162,8 @@ def get_config() -> ClientConfig:
         sku_strategy=SKU_STRATEGY,
         execution_engines=EXECUTION_ENGINES,
         content_production_needs=CONTENT_PRODUCTION_NEEDS,
+        source_mix_target=SOURCE_MIX_TARGET,
+        production_summary=PRODUCTION_SUMMARY,
         creator_archetypes=CREATOR_ARCHETYPES,
         voice_principles=VOICE_PRINCIPLES,
         gen_z_leaders=GEN_Z_LEADERS,
