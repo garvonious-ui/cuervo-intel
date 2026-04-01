@@ -8,7 +8,7 @@
 - Added .claude/rules/ (pages.md, clients.md, data-layer.md)
 - Absorbed HANDOFF.md content into docs/ files and removed it
 - Cleaned up fully-merged Claude Code branches (cool-dubinsky, elegant-hypatia, jolly-poitras)
-- Flagged claude/reverent-borg for manual review (1 unmerged Strategy page commit, will conflict)
+- Deleted claude/reverent-borg (1 unmerged Strategy page commit — stale, conflicts with main, discarded)
 
 ### Historical Summary (pre-structure, 293 commits)
 - Initial build: single-client Cuervo competitive dashboard

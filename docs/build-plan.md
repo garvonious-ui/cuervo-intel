@@ -12,7 +12,7 @@
 ### Known Issues
 - [ ] TikTok sections show zeros when no TikTok post data in Sprout exports — add graceful empty state
 - [ ] Content theme classifier is keyword-based (~80-85% accuracy) — evaluate improvement options
-- [ ] Review unmerged branch `claude/reverent-borg` (Strategy page restructure) — merge or discard
+- [x] Review unmerged branch `claude/reverent-borg` (Strategy page restructure) — discarded (stale, conflicts with main)
 
 ### Code Quality
 - [ ] Add TODO/FIXME comments where known issues exist in code
