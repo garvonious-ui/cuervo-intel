@@ -77,6 +77,14 @@ st.markdown(cfg.custom_css, unsafe_allow_html=True)
 # Store config in session state for pages
 st.session_state["client_config"] = cfg
 
+# ── Dev Controls Visibility ───────────────────────────────────────────
+# Client-facing views (when ?client=X is set in URL) hide dev-only sidebar
+# controls: data source radio, import status messages, filters, autostrat
+# PDF import button. The internal Poplife view (no ?client= param) always
+# shows everything. Add ?dev=1 to any client URL to restore dev controls
+# on that specific client's dashboard without switching views.
+show_dev_controls = str(st.query_params.get("dev", "")).lower() in ("1", "true", "yes")
+
 
 # ── Data Loading ──────────────────────────────────────────────────────
 
@@ -242,7 +250,13 @@ if has_sprout:
 
 # Default to Sprout if available, persist selection across page navigation
 default_idx = 1 if has_sprout else 0
-data_mode = st.sidebar.radio("Data source", data_options, index=default_idx, key="data_source")
+
+if show_dev_controls:
+    # Internal Poplife view (or ?dev=1 escape hatch) — show full data source UI
+    data_mode = st.sidebar.radio("Data source", data_options, index=default_idx, key="data_source")
+else:
+    # Client-facing view — silently pick the best available data source
+    data_mode = data_options[default_idx]
 
 if data_mode == "Demo Data":
     results, data_dir = load_demo(cfg.client_id)
@@ -251,19 +265,20 @@ elif data_mode == "Sprout Social Import":
         SPROUT_INPUT_DIR, SPROUT_OUTPUT_DIR,
         fingerprint=_sprout_fingerprint(SPROUT_INPUT_DIR)
     )
-    if sprout_stats.get("skipped"):
-        st.sidebar.success("Loaded data from posts_data.csv")
-    else:
-        st.sidebar.success(
-            f"Imported {sprout_stats.get('total_posts', '?')} posts from "
-            f"{sprout_stats.get('files_imported', '?')} file(s)"
-        )
-        if sprout_stats.get("brands_found"):
-            st.sidebar.caption(f"Brands: {', '.join(sprout_stats['brands_found'])}")
-    # Show benchmark status
-    benchmark = results.get("benchmark", {})
-    if benchmark:
-        st.sidebar.caption(f"Benchmark: {len(benchmark)} brands (ER by Views)")
+    if show_dev_controls:
+        if sprout_stats.get("skipped"):
+            st.sidebar.success("Loaded data from posts_data.csv")
+        else:
+            st.sidebar.success(
+                f"Imported {sprout_stats.get('total_posts', '?')} posts from "
+                f"{sprout_stats.get('files_imported', '?')} file(s)"
+            )
+            if sprout_stats.get("brands_found"):
+                st.sidebar.caption(f"Brands: {', '.join(sprout_stats['brands_found'])}")
+        # Show benchmark status
+        benchmark = results.get("benchmark", {})
+        if benchmark:
+            st.sidebar.caption(f"Benchmark: {len(benchmark)} brands (ER by Views)")
 else:
     data_dir = st.sidebar.text_input("Path to CSV folder")
     if not data_dir or not os.path.isdir(data_dir):
@@ -284,21 +299,33 @@ else:
     stories_df = df.iloc[0:0].copy()
 
 # ── Global Filters ────────────────────────────────────────────────────
-
-st.sidebar.markdown("---")
-st.sidebar.subheader("Filters")
-
-hero_only = st.sidebar.checkbox(f"{cfg.hero_brand} only")
-if hero_only:
-    sel_brands = [cfg.hero_brand]
-else:
-    sel_brands = st.sidebar.multiselect("Brands", cfg.brand_order, default=cfg.brand_order)
-
-sel_platforms = st.sidebar.multiselect("Platforms", ["Instagram", "TikTok"],
-                                       default=["Instagram", "TikTok"])
+# Filters actively affect Page 2 (Competitive Landscape) and Page 4
+# (Inspiration & Explorer). They're ignored on Pages 1, 3, 5 per
+# docs/page-specs.md. In client-facing views they're hidden entirely and
+# we populate session state with "everything selected" defaults so the
+# downstream pages that DO consume these values keep working.
 
 content_types = sorted(df["post_type"].dropna().unique().tolist()) if len(df) else []
-sel_types = st.sidebar.multiselect("Content types", content_types, default=content_types)
+
+if show_dev_controls:
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("Filters")
+
+    hero_only = st.sidebar.checkbox(f"{cfg.hero_brand} only")
+    if hero_only:
+        sel_brands = [cfg.hero_brand]
+    else:
+        sel_brands = st.sidebar.multiselect("Brands", cfg.brand_order, default=cfg.brand_order)
+
+    sel_platforms = st.sidebar.multiselect("Platforms", ["Instagram", "TikTok"],
+                                           default=["Instagram", "TikTok"])
+
+    sel_types = st.sidebar.multiselect("Content types", content_types, default=content_types)
+else:
+    # Client-facing view — no filter UI, include everything by default
+    sel_brands = list(cfg.brand_order)
+    sel_platforms = ["Instagram", "TikTok"]
+    sel_types = content_types
 
 # Apply filters
 mask = (
@@ -334,31 +361,32 @@ from autostrat_loader import load_all_autostrat, has_autostrat_data
 autostrat = load_all_autostrat()
 st.session_state["autostrat"] = autostrat
 
-# PDF import sidebar section
-st.sidebar.markdown("---")
-st.sidebar.subheader("Autostrat Intel")
-if st.sidebar.button("Import PDFs"):
-    from autostrat_parser import parse_all_pdfs
-    import_results = parse_all_pdfs()
-    ok = [r for r in import_results if not r["error"]]
-    errors = [r for r in import_results if r["error"]]
-    if ok:
-        st.sidebar.success(f"Imported {len(ok)} report(s)")
-        for r in ok:
-            st.sidebar.caption(f"{r['report_type']}: {r['identifier']}")
-        autostrat = load_all_autostrat()
-        st.session_state["autostrat"] = autostrat
-    if errors:
-        for r in errors:
-            st.sidebar.error(f"{r['pdf']}: {r['error']}")
-    if not import_results:
-        st.sidebar.info("No PDFs found in autostrat/pdfs/")
+# PDF import sidebar section — dev only (internal Poplife view or ?dev=1)
+if show_dev_controls:
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("Autostrat Intel")
+    if st.sidebar.button("Import PDFs"):
+        from autostrat_parser import parse_all_pdfs
+        import_results = parse_all_pdfs()
+        ok = [r for r in import_results if not r["error"]]
+        errors = [r for r in import_results if r["error"]]
+        if ok:
+            st.sidebar.success(f"Imported {len(ok)} report(s)")
+            for r in ok:
+                st.sidebar.caption(f"{r['report_type']}: {r['identifier']}")
+            autostrat = load_all_autostrat()
+            st.session_state["autostrat"] = autostrat
+        if errors:
+            for r in errors:
+                st.sidebar.error(f"{r['pdf']}: {r['error']}")
+        if not import_results:
+            st.sidebar.info("No PDFs found in autostrat/pdfs/")
 
-if has_autostrat_data(autostrat):
-    from autostrat_loader import get_report_counts
-    counts = get_report_counts(autostrat)
-    total = sum(counts.values())
-    st.sidebar.caption(f"{total} autostrat report(s) loaded")
+    if has_autostrat_data(autostrat):
+        from autostrat_loader import get_report_counts
+        counts = get_report_counts(autostrat)
+        total = sum(counts.values())
+        st.sidebar.caption(f"{total} autostrat report(s) loaded")
 
 # ── Home Page ─────────────────────────────────────────────────────────
 
