@@ -23,15 +23,23 @@ CHART_TEMPLATE = "plotly_white"
 CHART_FONT = dict(family="Barlow Condensed, Helvetica, Arial, sans-serif")
 
 # ── Collaboration type classification ──
-COLLAB_OWNED_TYPES = {"cuervo", "partner"}        # brand-account posts
-COLLAB_AMPLIFIED_TYPES = {"influencer", "collective"}  # other-account posts
+# Owned = the hero brand's own organic content (posts authored solely by the
+# brand account; untagged rows default here).
+# Amplified = any post whose reach is NOT purely the hero brand's own audience.
+# Partner, Collective, and Influencer all get amplification from another
+# account's following (co-authored IG Collab Posts, creator reposts, event
+# activations, etc.) and are excluded from hero KPI averages so the scorecard
+# reflects organic brand content performance.
+COLLAB_OWNED_TYPES = {"cuervo"}
+COLLAB_AMPLIFIED_TYPES = {"partner", "influencer", "collective"}
 
 
 def split_owned_collab(df):
     """Split a DataFrame into owned and collab subsets based on collaboration column.
 
-    Owned = Cuervo + Partner (brand-account posts).
-    Collab = Influencer + Collective (other-account posts with inflated reach).
+    Owned = hero brand's own organic posts (tagged "Cuervo" or untagged).
+    Collab = Partner + Influencer + Collective — any post whose reach is
+             amplified by another account's audience.
     Returns (owned_df, collab_df). If no collaboration column, returns (df, empty_df).
     """
     if "collaboration" not in df.columns:

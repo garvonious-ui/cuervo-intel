@@ -346,7 +346,7 @@ with tab_content:
             fig_eng.update_layout(font=CHART_FONT, height=350, showlegend=False)
             st.plotly_chart(fig_eng, use_container_width=True)
 
-        st.caption("Total engagements = likes + comments + shares + saves. Metrics reflect brand-owned posts (Cuervo + Partner).")
+        st.caption(f"Total engagements = likes + comments + shares + saves. Metrics reflect {HERO}'s organic brand-owned posts (excludes Partner, Influencer, and Collective posts).")
 
         # Format KPIs
         reel_pct = len(hero_ig_owned[hero_ig_owned["post_type"] == "Reel"]) / max(len(hero_ig_owned), 1) * 100
@@ -382,8 +382,8 @@ with tab_content:
 
     # ── Collaboration Amplification ──────────────────────────────────────
     st.subheader("Collaboration Amplification")
-    st.caption(f"Owned posts reflect {HERO}'s organic audience. Collab posts (Influencer + Collective) "
-               "are posted by partner accounts and reflect their larger reach.")
+    st.caption(f"Owned posts reflect {HERO}'s organic audience. Collab posts (Partner + Influencer + Collective) "
+               "are amplified by another account's audience and reflect their combined reach.")
 
     if len(hero_collab):
         owned_avg = hero_owned["total_engagement"].mean() if len(hero_owned) else 0
@@ -395,10 +395,10 @@ with tab_content:
         ca1, ca2, ca3 = st.columns(3)
         with ca1:
             st.metric("Owned Avg Eng", f"{owned_avg:,.0f}",
-                      help=f"{HERO} + Partner posts ({len(hero_owned)} posts)")
+                      help=f"{HERO} organic posts only ({len(hero_owned)} posts)")
         with ca2:
             st.metric("Collab Avg Eng", f"{collab_avg:,.0f}",
-                      help=f"Influencer + Collective posts ({len(hero_collab)} posts)")
+                      help=f"Partner + Influencer + Collective posts ({len(hero_collab)} posts)")
         with ca3:
             st.metric("Collab Lift", f"{lift:.1f}x",
                       help="How much more engagement collab posts generate vs owned")

@@ -54,4 +54,4 @@ cfg = get_client()
 - `st.logo(cfg.logo_path)` and `st.markdown(cfg.custom_css)` called on every page
 - Cache busting: `_sprout_fingerprint()` includes `CODE_VERSION` string
 - Python 3.9 compat: `_schema.py` uses `from __future__ import annotations` for `X | None` syntax
-- Collaboration type split: owned (cuervo + partner) vs amplified (influencer + collective)
+- Collaboration type split: owned (cuervo only — organic brand posts) vs amplified (partner + influencer + collective — anything with reach from another account's audience)
