@@ -37,6 +37,7 @@ Multi-tenant competitive social media intelligence dashboard for Poplife agency.
 - Session history: @docs/changelog.md
 - Design system: @docs/design-system.md
 - New client setup: @docs/onboarding-client.md
+- Key decisions: @docs/decisions.md
 
 ## Commands
 - `python3 -m streamlit run app.py --server.headless true` — start dev server (port 8501)

@@ -111,6 +111,7 @@ with tab_scorecard:
     ig_ppm = freq.get("Instagram", {}).get("posts_per_week", 0) * 4.33  # Convert to monthly
     tt_ppw = freq.get("TikTok", {}).get("posts_per_week", 0)
     tt_ppm = tt_ppw * 4.33
+    # TODO: TikTok metrics show zeros when no TikTok data in Sprout exports — add graceful empty state
 
     # ── Monthly volume metrics (owned posts only) ──────────────────────
     hero_feed = hero_df  # Stories already excluded from hero_df above

@@ -336,6 +336,7 @@ CTA_KEYWORDS = {
 
 def classify_theme(caption: str) -> str:
     """Classify content theme from caption text using keyword matching."""
+    # FIXME: deprecated — keyword classifier too inaccurate. Replaced by manual content_pillar + content_mix tagging (hero brand only)
     if not caption:
         return "Other"
     text = caption.lower()
@@ -349,6 +350,7 @@ def classify_theme(caption: str) -> str:
 
 def classify_tone(caption: str) -> str:
     """Classify caption tone from text."""
+    # FIXME: deprecated — same as classify_theme, replaced by manual tagging
     if not caption:
         return "Casual / Conversational"
     text = caption.lower()

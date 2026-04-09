@@ -2,6 +2,10 @@
 
 ## Phase 1 — Stabilization & Cleanup (Current)
 
+### Data Imports
+- [ ] Import updated Sprout CSVs + manually tagged content sheets for Cuervo (extended date range)
+- [ ] Import updated Sprout CSVs + manually tagged content sheets for Devils Reserve (extended date range)
+
 ### Devils Reserve Completion
 - [ ] Parse Devils Reserve autostrat PDFs (click "Import PDFs" in sidebar)
 - [ ] Import Devils Reserve's own autostrat hashtag report
@@ -11,17 +15,17 @@
 
 ### Known Issues
 - [ ] TikTok sections show zeros when no TikTok post data in Sprout exports — add graceful empty state
-- [ ] Content theme classifier is keyword-based (~80-85% accuracy) — evaluate improvement options
+- [x] Content theme classifier is keyword-based (~80-85% accuracy) — **decision: dropping auto-classifiers, using manual content_pillar + content_mix tagging instead (hero brand only)**
 - [x] Review unmerged branch `claude/reverent-borg` (Strategy page restructure) — discarded (stale, conflicts with main)
 
 ### Code Quality
-- [ ] Add TODO/FIXME comments where known issues exist in code
-- [ ] Verify Python 3.9 compatibility across all files
+- [x] Add TODO/FIXME comments where known issues exist in code
+- [x] Verify Python 3.9 compatibility across all files
 
 ## Phase 2 — Feature Enhancements
 
 ### Data & Analysis
-- [ ] Improve content theme classifier accuracy (ML or LLM-based?)
+- [x] ~~Improve content theme classifier accuracy~~ — replaced by manual pillar/funnel tagging
 - [ ] Add TikTok-specific metrics and analysis sections
 - [ ] Benchmark CSV auto-import improvements
 

@@ -51,9 +51,10 @@ BRAND_HASHTAGS = {
     "cazadores_tequila": "cazadores tequila (keyword)",
 }
 
+# TODO: verify these IDs match actual autostrat report filenames once DR hashtag reports are imported
 HERO_HASHTAG_IDS = {"devils_reserve", "devilsreserve"}
 
-CATEGORY_HASHTAGS = {}  # Will be populated with category conversations
+CATEGORY_HASHTAGS = {}  # TODO: populate with category conversation hashtag IDs once reports are imported
 
 # ── Sprout Social Handle Mapping ─────────────────────────────────────
 # Maps Sprout CSV "Profile" column values to our canonical brand names

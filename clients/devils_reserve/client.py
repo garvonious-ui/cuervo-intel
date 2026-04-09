@@ -121,7 +121,7 @@ def get_config() -> ClientConfig:
         hero_brand="Devils Reserve",
         agency_name="Poplife",
         industry="tequila",
-        themes_ready=False,  # Hide theme/content-source sections until manual post tagging is complete
+        themes_ready=False,  # TODO: set True once manual content theme tagging is complete for DR posts
 
         # Brands
         brands=BRANDS,
@@ -177,6 +177,7 @@ def get_config() -> ClientConfig:
         custom_css=CUSTOM_CSS,
 
         # Assets (relative to clients/devils_reserve/assets/)
+        # TODO: create custom Devils Reserve logo assets — currently using placeholder/defaults
         logo_path="logo.png",
         favicon_path="favicon.png",
         app_logo_path="app_logo.png",

@@ -50,6 +50,7 @@ hero_stories = st.session_state.get("stories_df", pd.DataFrame())
 hero_stories = hero_stories[hero_stories["brand"] == HERO] if len(hero_stories) else hero_stories
 hero_ig = hero_df[hero_df["platform"] == "Instagram"]
 hero_tt = hero_df[hero_df["platform"] == "TikTok"]
+# TODO: TikTok sections show zeros when no TikTok post data in Sprout exports — add graceful empty state
 
 # Segment owned vs collab posts
 hero_owned, hero_collab = split_owned_collab(hero_df)
