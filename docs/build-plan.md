@@ -3,14 +3,14 @@
 ## Phase 1 — Stabilization & Cleanup (Current)
 
 ### Data Imports
-- [ ] Import updated Sprout CSVs + manually tagged content sheets for Cuervo (extended date range)
+- [x] Import updated Sprout CSVs + manually tagged content sheets for Cuervo (extended date range) — swapped to Feb 1 2025 – Apr 9 2026 window (14 months), enriched `manual_posts.csv` to 179 hero posts with 100% caption coverage (2026-04-09)
 - [ ] Import updated Sprout CSVs + manually tagged content sheets for Devils Reserve (extended date range)
 
 ### Devils Reserve Completion
-- [ ] Parse Devils Reserve autostrat PDFs (click "Import PDFs" in sidebar)
-- [ ] Import Devils Reserve's own autostrat hashtag report
+- [x] Parse Devils Reserve autostrat PDFs — 6 PDFs parsed into 1 IG hashtag + 5 IG keyword reports (2026-04-09)
+- [x] Import Devils Reserve's own autostrat hashtag report — `instagram_hashtags/devilsreserve.json` + `instagram_keywords/devils_reserve.json` both parsing and rendering on Page 5
+- [x] Populate `hero_hashtag_ids` in DR config — already set to `{"devils_reserve", "devilsreserve"}`; verified against parsed filenames (2026-04-09)
 - [ ] Create custom Devils Reserve logo assets (logo.png, favicon.png, app_logo.png)
-- [ ] Populate `hero_hashtag_ids` in DR config once report is imported
 - [ ] Complete manual content theme tagging for DR posts, then set `themes_ready=True`
 
 ### Known Issues
