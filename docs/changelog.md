@@ -27,9 +27,38 @@
 - DR custom logo assets — waiting on design team.
 - TikTok empty-state handling — still open, deferred from this session.
 
-### Commits
+### Sidebar cleanup (client-facing views)
+- Hidden dev-only sidebar controls (data source radio, import status messages, filter widgets, autostrat Import PDFs button) whenever a `?client=X` URL parameter is present. Clients viewing the dashboard now see only page navigation in the sidebar — no dev clutter.
+- Internal Poplife view (bare URL → client picker) keeps everything visible.
+- `?client=X&dev=1` escape hatch restores all dev controls on a specific client dashboard without switching to the internal view.
+- Filter session state (`sel_brands`, `sel_platforms`, `sel_types`) is still populated with all-selected defaults when the filter UI is hidden so Pages 2 (Competitive Landscape) and 4 (Inspiration & Explorer) keep working correctly.
+
+### Partner posts → amplified collab bucket
+- After a meeting with the social team, decided to move Partner posts from the owned bucket to the amplified bucket (alongside Influencer + Collective). Rationale: Partner posts include IG Collab Posts and sponsored event activations that get amplification from the partner's audience, which was inflating the hero KPI scorecard with non-organic reach.
+- `config.py`: `COLLAB_OWNED_TYPES = {"cuervo"}`, `COLLAB_AMPLIFIED_TYPES = {"partner", "influencer", "collective"}`. Docstring updated.
+- `pages/1_Brand_Performance.py`: scorecard caption and Collab Amplification tooltips updated to reflect new split.
+- `docs/architecture.md` + `.claude/rules/data-layer.md`: split descriptions updated.
+- No data changes — the "Partner" tag stays on the same posts in `manual_posts.csv`; only its routing through `split_owned_collab()` changed.
+- Cuervo scorecard impact on the 159-post Page-1 view (Edutain-excluded):
+  - Avg Eng/Post:    172 → **116**  (was 29% inflated)
+  - Avg Eng/Reel:    220 → **103**
+  - Likes/Month:    1,222 → **802**
+  - Shares/Month:    302 → **101**
+  - Reel Views/Mo: 26,728 → **21,268**
+- Honest Cuervo-organic baseline now beats 9 of 12 scorecard targets; Comments/Month (-9) and Reel Views/Mo (-3,732) flip to under-target, revealing that Partner activations were doing the work on those metrics.
+
+### Deploy
+- All session work pushed to `origin/main` as of commit `caca90f`. Streamlit Community Cloud rebuilt within ~60 seconds of each push.
+
+### Commits (chronological)
+- `eb498bb` chore: sync build-plan checkboxes, add decisions.md, annotate deferred work (pre-session cleanup)
+- `e7ae642` chore: remove completed REFACTOR_PLAN.md (pre-session cleanup)
+- `71df6fd` chore: gitignore .claude/projects/ (pre-session cleanup)
 - `66aa849` Refresh Devils Reserve autostrat reports from source PDFs
 - `a618bb4` Refresh Cuervo Sprout exports + enrich manual_posts.csv to 179 posts
+- `892c8e0` Add Session 1 changelog entry
+- `764e1ed` Hide dev sidebar controls in client-facing views
+- `caca90f` Move Partner posts from owned to amplified collaboration bucket
 
 ## 2026-04-01 — Session 0 (Baseline)
 - Project restructured to follow Claude Code Project Structure Guide
