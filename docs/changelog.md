@@ -50,15 +50,34 @@
 ### Deploy
 - All session work pushed to `origin/main` as of commit `caca90f`. Streamlit Community Cloud rebuilt within ~60 seconds of each push.
 
+### Docs updates (post-meeting)
+- `docs/decisions.md`: Recorded the Partner-to-amplified decision with full rationale, scorecard impact, and guidance for future clients. Updated the April 1 "imports pending" entry to mark Cuervo complete.
+- `docs/schemas.md`: Added Manual Posts Schema section documenting `manual_posts.csv` columns and the `collaboration` column taxonomy (Cuervo / Partner / Influencer / Collective) with owned-vs-amplified routing.
+- `docs/onboarding-client.md`: Added collab taxonomy gotcha for new client setups.
+
+### UI Phase 1 work (afternoon)
+- Fetched `poplife99.com` for brand DNA grounding. Key findings: dark-first editorial aesthetic, Cubano headline font, peach (#F8C090) + teal/cyan (#7EBEC5) accents on dark, bold uppercase typography, hover micro-interactions. "Music festival meets creative agency" — not corporate, not minimal.
+- Produced comprehensive UI/UX audit covering typography, KPI scorecard, charts, cards, page heroes, sidebar, and UX/IA findings. Full audit doc NOT committed (lives in conversation history) — the actionable outputs are below.
+- **Shipped**: Branded Poplife Plotly chart template (`c8f08f1`). Registered `pio.templates["poplife"]` with peach-teal-blue-sage colorway, warm gridlines, Barlow Condensed everywhere, dark hover tooltips with peach border. All 26 existing usage sites in pages/ continue to work without changes. Charts with explicit `color_discrete_sequence` / `color_discrete_map` (like Page 2 competitive charts) keep their explicit colors — the template only fills in defaults. Added supporting constants `POPLIFE_TEAL`, `POPLIFE_BORDER`, `POPLIFE_GRID`, `POPLIFE_MUTED` to `config.py` for future component CSS work. Smoke-tested: 21 Plotly charts across pages 1-3 render with peach as primary, zero server errors.
+- Built three KPI card HTML prototypes for visual direction decision:
+  - `~/Downloads/kpi_prototype_A_editorial_light.html` (all light)
+  - `~/Downloads/kpi_prototype_B_editorial_dark.html` (all dark)
+  - `~/Downloads/kpi_prototype_C_mixed.html` (dark hero + light cards — picked)
+- **Direction locked**: Treatment C (mixed dark hero + light cards). Implementation deferred to a fresh session because it's a ~4-hour focused block of work on the Page 1 scorecard. Full implementation handoff doc at `docs/ui-phase-1-handoff.md` — next session can pick up cleanly from there.
+
 ### Commits (chronological)
 - `eb498bb` chore: sync build-plan checkboxes, add decisions.md, annotate deferred work (pre-session cleanup)
 - `e7ae642` chore: remove completed REFACTOR_PLAN.md (pre-session cleanup)
 - `71df6fd` chore: gitignore .claude/projects/ (pre-session cleanup)
 - `66aa849` Refresh Devils Reserve autostrat reports from source PDFs
 - `a618bb4` Refresh Cuervo Sprout exports + enrich manual_posts.csv to 179 posts
-- `892c8e0` Add Session 1 changelog entry
+- `892c8e0` Add Session 1 changelog entry (initial entry, later extended)
 - `764e1ed` Hide dev sidebar controls in client-facing views
 - `caca90f` Move Partner posts from owned to amplified collaboration bucket
+- `dcf77c6` Extend Session 1 changelog with sidebar cleanup + Partner split
+- `5d4f0db` Document Partner-to-amplified decision + collab taxonomy
+- `c8f08f1` Add branded Poplife Plotly chart template
+- `<this commit>` Session 1 wrap: extend changelog + UI Phase 1 handoff doc
 
 ## 2026-04-01 — Session 0 (Baseline)
 - Project restructured to follow Claude Code Project Structure Guide
