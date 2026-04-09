@@ -1,6 +1,7 @@
 __pycache__/
 *.pyc
 .DS_Store
+.claude/projects/
 cuervo_demo/
 cuervo_data/
 data/sprout_imported/
