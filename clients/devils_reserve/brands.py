@@ -51,7 +51,6 @@ BRAND_HASHTAGS = {
     "cazadores_tequila": "cazadores tequila (keyword)",
 }
 
-# TODO: verify these IDs match actual autostrat report filenames once DR hashtag reports are imported
 HERO_HASHTAG_IDS = {"devils_reserve", "devilsreserve"}
 
 CATEGORY_HASHTAGS = {}  # TODO: populate with category conversation hashtag IDs once reports are imported
