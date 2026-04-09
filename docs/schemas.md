@@ -88,6 +88,25 @@ Expected CSV exports in `data/{client_id}/sprout/`:
 
 Key columns: Profile, Date, Impressions, Engagements, Likes, Comments, Shares, Saves, Video Views, Post Type, Content Type, Permalink, Caption
 
+## Manual Posts Schema (`manual_posts.csv`)
+Lives at `data/{client_id}/sprout/manual_posts.csv`. Replaces the hero brand's Sprout-derived rows during import (see `sprout_import.py:816-851`). Used so the hero brand's posts carry manually-curated tags (pillar, funnel, collab type) that Sprout doesn't provide, and so posts Sprout missed can still be captured.
+
+**Required columns:** `brand`, `platform`, `post_date`, `post_type`, `post_url`, `content_pillar`, `content_mix_funnel`, `collaboration`, `likes`, `comments`, `shares`, `saves`, `views`
+
+**Important optional columns** (carried forward from Sprout exports when merged): `caption_text`, `hashtags`, `post_time`, `video_length_seconds`, `impressions`, `total_engagement`, `caption_word_count`, `creator_handle`, `has_creator_collab`, `is_paid_partnership`
+
+**`collaboration` column values** (drives the owned vs amplified split — see `config.py split_owned_collab()` and `docs/decisions.md`):
+- **`<hero_brand>`** (e.g. `Cuervo`) — the hero brand's own organic posts. These count as **owned** and flow into the hero KPI scorecard on Page 1.
+- **`Partner`** — posts that involve a business/brand partnership. Treated as **amplified** because the Partner tag covers IG Collab Posts and event activations that get reach from the partner's audience.
+- **`Influencer`** — paid creator posts (one-off creator partnerships). **Amplified.**
+- **`Collective`** — recurring "Cuervo Collective" creator program posts. **Amplified.**
+
+Amplified posts are excluded from hero KPIs on Pages 1 and 3, shown separately in Page 1's Collab Amplification section, and filtered out of Page 2's competitive comparisons for apples-to-apples brand benchmarking.
+
+**`content_pillar` values** (must match `cfg.pillar_map.keys()` for the active client): For Cuervo: `The Ritual`, `The Pulse`, `The Front Row`, `The Craft`.
+
+**`content_mix_funnel` values** (must match `cfg.content_mix_targets.keys()`, plus the special `Edutain` value): For Cuervo: `Convince`, `Educate`, `Entertain`, plus `Edutain` (which gets split 0.5/0.5 into Educate and Entertain at load time via `app.py:209-225`).
+
 ## Autostrat Report Types
 7 directories under `data/{client_id}/autostrat/`:
 - `instagram_profiles/` — IG brand profile analysis

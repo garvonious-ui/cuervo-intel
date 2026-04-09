@@ -23,3 +23,4 @@
 - `FALLBACK_FOLLOWERS` provides follower counts when no Benchmark CSV is present
 - Set `themes_ready=False` in `client.py` until all posts have been manually content-theme tagged
 - Autostrat report IDs in `brands.py` must match the JSON filenames (without .json extension)
+- **Collaboration column taxonomy** (`manual_posts.csv` → `collaboration` column): Use the hero brand's name (e.g. `Cuervo`) for organic posts, and `Partner` / `Influencer` / `Collective` for posts whose reach is amplified by another account. Only posts tagged with the hero brand name go into the owned bucket used by the KPI scorecard on Page 1 — everything else gets filtered to the amplified bucket. See `docs/schemas.md` for the full column spec and `docs/decisions.md` (2026-04-09 entry) for the rationale. If your new client needs a different taxonomy, update `COLLAB_OWNED_TYPES` / `COLLAB_AMPLIFIED_TYPES` in `config.py` — or better, lift those sets into `ClientConfig` so they're per-client.
