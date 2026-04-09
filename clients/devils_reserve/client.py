@@ -5,6 +5,7 @@ Assembles all Devils Reserve-specific config into a ClientConfig instance.
 """
 
 from clients._schema import ClientConfig
+from config import POPLIFE_TREATMENT_C_CSS
 from clients.devils_reserve.brands import (
     BRANDS, BRAND_ORDER, BRAND_COLORS, BRAND_MAP, FALLBACK_FOLLOWERS,
     REFERENCE_BRANDS, REFERENCE_BRAND_LABELS,
@@ -24,25 +25,12 @@ from clients.devils_reserve.copy import (
     PAGE_HEADERS, PAGE_CAPTIONS, NAV_TABLE, NARRATIVE,
 )
 
-# ── Devils Reserve themed CSS ─────────────────────────────────────────
-# Devil red (#CC0000) as accent, dark sidebar, Barlow Condensed font
+# ── Devils Reserve-specific client CSS (devil red accent, dark sidebar) ──
+# All shared Treatment C styles come from POPLIFE_TREATMENT_C_CSS in config.py.
+# This block only contains DR overrides (red buttons, dark sidebar theme).
 
-CUSTOM_CSS = """
+_DR_CLIENT_CSS = """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&display=swap');
-
-    .block-container { padding-top: 3rem; }
-
-    /* Headings */
-    h1, h2, h3 { color: #1a1a1a; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; }
-
-    /* Metrics */
-    [data-testid="stMetricValue"] { font-size: 1.8rem; font-weight: 700; color: #1a1a1a; }
-    [data-testid="stMetricDelta"] { font-size: 0.9rem; }
-
-    /* Tabs */
-    .stTabs [data-baseweb="tab"] { font-weight: 600; font-family: 'Barlow Condensed', sans-serif; }
-
     /* Sidebar */
     [data-testid="stSidebar"] {
         background-color: #1a1a1a;
@@ -110,6 +98,9 @@ CUSTOM_CSS = """
                  background: #FFF0F0; border-radius: 0 8px 8px 0; }
 </style>
 """
+
+# Concatenate shared Treatment C CSS + DR-specific overrides.
+CUSTOM_CSS = POPLIFE_TREATMENT_C_CSS + _DR_CLIENT_CSS
 
 
 def get_config() -> ClientConfig:

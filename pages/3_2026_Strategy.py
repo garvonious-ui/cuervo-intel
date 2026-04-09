@@ -19,9 +19,15 @@ from autostrat_loader import (
     get_all_strategic_actions, get_all_sponsorship_suggestions,
 )
 from autostrat_components import (
-    render_section_label, render_territory_cards, render_nopd_cards,
-    render_narrative_card, render_creator_archetype,
-    render_sponsorship_card, render_verbatim_quotes,
+    render_narrative_card, render_creator_archetype, render_sponsorship_card,
+)
+from ui_components import (
+    render_page_hero, render_kpi_section_label, render_poplife_note,
+    render_north_star, render_sku_card, render_engine_card, render_voice_card,
+    render_ig_format_card, render_partner_event, render_quarter_card,
+    render_swot_card, render_connect_callout,
+    render_pillar_card, render_content_card_open, render_content_card_close,
+    render_kpi_card, render_nopd_grid, render_territory_list,
 )
 
 if "results" not in st.session_state:
@@ -32,8 +38,6 @@ cfg = get_client()
 
 st.logo(cfg.app_logo_path)
 st.markdown(cfg.custom_css, unsafe_allow_html=True)
-st.header(cfg.page_headers["strategy"])
-st.caption(cfg.page_captions["strategy"])
 
 results = st.session_state["results"]
 df = st.session_state["df"]  # Unfiltered
@@ -58,26 +62,32 @@ if "collaboration" in leader_df.columns:
     leader_df = leader_df[~leader_df["collaboration"].str.strip().str.lower().isin(COLLAB_AMPLIFIED_TYPES)]
 
 def _render_north_star():
-    """Display the brand North Star banner if configured."""
+    """Render the brand North Star dark callout if configured."""
     ns = cfg.north_star
     if not ns:
         return
-    st.markdown(f"""
-    <div style="background-color:#3D6B7E; border-radius:10px; padding:28px 32px; margin-bottom:24px;">
-        <div style="font-size:0.85rem; font-weight:700; letter-spacing:2px; color:#E8E0D4; text-transform:uppercase; margin-bottom:6px;">
-            Our North Star
-        </div>
-        <div style="font-size:1.6rem; font-weight:800; color:#D4A843; text-transform:uppercase; margin-bottom:10px;">
-            {ns.get("title", "")}
-        </div>
-        <div style="font-size:1.05rem; color:#E8E0D4; font-weight:600; margin-bottom:4px;">
-            {ns.get("tagline", "")}
-        </div>
-        <div style="font-size:0.95rem; color:#C8C0B4; line-height:1.5;">
-            {ns.get("description", "")}
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    render_north_star(
+        title=ns.get("title", ""),
+        tagline=ns.get("tagline", ""),
+        body=ns.get("description", ""),
+    )
+
+
+# ── Page hero ─────────────────────────────────────────────────────────
+render_page_hero(
+    title="The Playbook",
+    kicker=f"{HERO} · 2026 Strategy",
+    subtitle=cfg.page_captions.get(
+        "strategy",
+        f"The {HERO} Social Brief playbook — sidebar filters do not apply here.",
+    ),
+    stats=[
+        {"value": str(len(cfg.pillar_map)), "label": "Content pillars"},
+        {"value": str(len(cfg.content_mix_targets)), "label": "Funnel stages"},
+        {"value": str(len(cfg.kpi_targets)), "label": "KPI targets"},
+        {"value": str(len(cfg.platform_roles)), "label": "Platforms"},
+    ],
+)
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 tab_scorecard, tab_frameworks, tab_platform, tab_action = st.tabs([
@@ -93,7 +103,7 @@ with tab_scorecard:
     _render_north_star()
 
     # ── Expanded KPI Scorecard ─────────────────────────────────────────
-    st.subheader("Social Brief KPI Scorecard")
+    render_kpi_section_label("KPI scorecard")
     st.caption("Current performance vs 2026 Social Brief targets")
 
     hero_ig = hero_df[hero_df["platform"] == "Instagram"]
@@ -210,8 +220,17 @@ with tab_scorecard:
 
     on_track = sum(1 for s in scorecard_data if s["Status"] == "ON TRACK")
     total = len(scorecard_data)
-    st.info(f"**{on_track}/{total} KPIs on track.** "
-            f"{'Strong position — maintain momentum.' if on_track >= 4 else 'Focus areas identified below.' if on_track >= 2 else 'Significant gaps — prioritize the Action Plan tab.'}")
+    _summary = (
+        "Strong position — maintain momentum."
+        if on_track >= 4
+        else "Focus areas identified below."
+        if on_track >= 2
+        else "Significant gaps — prioritize the Action Plan tab."
+    )
+    render_poplife_note(
+        f"<strong>{on_track}/{total} KPIs on track.</strong> {_summary}",
+        variant="success" if on_track >= 4 else "default",
+    )
 
     st.caption("**Reel Views** = number of times the video was played. **Carousel/Static Impressions** = number of times the post appeared on screen. "
                "These are different metrics — impressions are typically higher than views for equivalent reach.")
@@ -220,8 +239,12 @@ with tab_scorecard:
 
     if not cfg.themes_ready:
         st.markdown("---")
-        st.info(f"**Content source mix & theme analysis hidden** — post-level theme tagging is not yet complete for {HERO}. "
-                f"These sections will appear once all posts have been manually reviewed and tagged.")
+        render_poplife_note(
+            f"<strong>Content source mix & theme analysis hidden</strong> — post-level theme "
+            f"tagging is not yet complete for {HERO}. These sections will appear once all "
+            f"posts have been manually reviewed and tagged.",
+            variant="warning",
+        )
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -235,7 +258,7 @@ with tab_frameworks:
     # NOTE: Pillar distribution uses ALL posts (owned + collab) to reflect total content strategy mix.
     # This may change to owned-only in a future revision.
     _pillar_base = hero_df_with_influencer
-    st.subheader("Content Pillars")
+    render_kpi_section_label("Content pillars")
     st.caption("4 pillars from the 2026 Social Strategy — SKU-aligned content territories")
 
     pillar_data = []
@@ -264,26 +287,17 @@ with tab_frameworks:
 
     pillar_df = pd.DataFrame(pillar_data)
 
-    # Pillar detail cards
+    # Pillar detail cards (Treatment C with per-pillar accent colors)
     for _, row in pillar_df.iterrows():
-        gap = row["Actual %"] - row["Target %"]
-        color = cfg.pillar_colors[row["Pillar"]]
-        desc = row["desc"]
-        st.markdown(f"""
-        <div style="background:white; border-radius:10px; padding:18px 22px; margin-bottom:14px;
-                    border-left:5px solid {color}; border:1px solid #E0D8D0;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <h4 style="margin:0; color:#333;">{row['Pillar']}</h4>
-                <span style="background:{color}; color:white; padding:4px 12px; border-radius:20px;
-                             font-weight:600; font-size:0.85rem;">{row['Actual %']:.0f}% actual / {row['Target %']}% target</span>
-            </div>
-            <p style="color:#666; margin:4px 0 8px 0; font-size:0.9rem;">{desc}</p>
-            <div style="display:flex; gap:24px; font-size:0.88rem;">
-                <span><strong>{row['Posts']}</strong> posts</span>
-                <span><strong>{row['Avg Eng']:,.0f}</strong> avg eng</span>
-                <span style="color:{'#2E7D32' if abs(gap) < 10 else '#C62828'};">{gap:+.0f}pp gap</span>
-            </div>
-        </div>""", unsafe_allow_html=True)
+        render_pillar_card(
+            name=row["Pillar"],
+            actual_pct=row["Actual %"],
+            target_pct=row["Target %"],
+            description=row["desc"],
+            post_count=int(row["Posts"]),
+            avg_eng=row["Avg Eng"],
+            accent_color=cfg.pillar_colors[row["Pillar"]],
+        )
 
     col_pd1, col_pd2 = st.columns(2)
     with col_pd1:
@@ -314,46 +328,34 @@ with tab_frameworks:
     st.markdown("---")
 
     # ── SKU Strategy ────────────────────────────────────────────────────
-    st.subheader("SKU Strategy")
+    render_kpi_section_label("SKU strategy")
     st.caption("Each SKU has a distinct energy and occasion — content should match")
 
     sku_cols = st.columns(len(cfg.sku_strategy))
-    sku_colors = {"Especial": "#F8C090", "Tradicional": "#C9A87E", "RTD": "#2ea3f2"}
     for col, (sku, info) in zip(sku_cols, cfg.sku_strategy.items()):
         with col:
-            c = sku_colors.get(sku, "#999")
-            st.markdown(f"""
-            <div style="background:white; border-radius:10px; padding:16px; text-align:center;
-                        border-top:4px solid {c}; border:1px solid #E0D8D0;">
-                <h4 style="margin:0 0 6px 0; color:{c};">{sku}</h4>
-                <p style="font-weight:600; margin:4px 0; color:#333;">{info['energy']}</p>
-                <p style="color:#666; font-size:0.85rem; margin:0;">{info['occasions']}</p>
-            </div>""", unsafe_allow_html=True)
+            render_sku_card(
+                name=sku,
+                energy=info.get("energy", ""),
+                occasions=info.get("occasions", ""),
+            )
 
     st.markdown("---")
 
     # ── 4 Execution Engines ─────────────────────────────────────────────
-    st.subheader("The 4 Execution Engines")
+    render_kpi_section_label("The 4 execution engines")
     st.caption("How content gets made across both pillars")
 
-    engine_colors = ["#2ea3f2", "#F8C090", "#C9A87E", "#66BB6A"]
     eng_cols = st.columns(2)
     for i, (engine, desc) in enumerate(cfg.execution_engines.items()):
         with eng_cols[i % 2]:
-            c = engine_colors[i]
-            st.markdown(f"""
-            <div style="background:white; border-radius:10px; padding:16px 18px; margin-bottom:12px;
-                        border-top:4px solid {c}; border:1px solid #E0D8D0; min-height:120px;">
-                <h4 style="margin:0 0 8px 0; color:{c}; font-size:0.95rem;">{engine.upper()}</h4>
-                <p style="color:#555; font-size:0.88rem; line-height:1.5; margin:0;">{desc}</p>
-            </div>""", unsafe_allow_html=True)
+            render_engine_card(name=engine, description=desc)
 
     st.markdown("---")
 
     # ── Collaboration Mix ──────────────────────────────────────────────
     if cfg.themes_ready and "collaboration" in hero_df_with_influencer.columns and hero_df_with_influencer["collaboration"].notna().any():
-        st.subheader("Collaboration Mix")
-        st.caption(f"Who is creating {HERO}'s content — based on manual post tagging")
+        render_kpi_section_label("Collaboration mix")
 
         collab_total = max(len(hero_df_with_influencer[hero_df_with_influencer["collaboration"].notna()]), 1)
         collab_colors = {"Cuervo": "#2ea3f2", "Partner": "#66BB6A", "Influencer": "#F8C090", "Collective": "#C9A87E"}
@@ -370,26 +372,38 @@ with tab_frameworks:
             })
         src_data = pd.DataFrame(src_rows).sort_values("% of Content", ascending=False)
 
-        col_src1, col_src2 = st.columns(2)
+        render_content_card_open(
+            title=f"{HERO} collaboration breakdown",
+            caption="Who is creating the brand's content — based on manual post tagging",
+        )
+        col_src1, col_src2 = st.columns([1.3, 1])
         with col_src1:
-            st.markdown(f"**{HERO} Collaboration Breakdown**")
             fig_src = px.bar(src_data, x="Source", y="% of Content",
                              color="Source", color_discrete_map=collab_colors,
                              text="% of Content", template=CHART_TEMPLATE,
                              labels={"% of Content": "% of Content", "Source": ""})
             fig_src.update_traces(texttemplate="%{text:.0f}%", textposition="outside")
-            fig_src.update_layout(font=CHART_FONT, height=380, showlegend=False,
-                                  yaxis_title="% of Content")
+            fig_src.update_layout(font=CHART_FONT, height=360, showlegend=False,
+                                  yaxis_title="% of Content",
+                                  margin=dict(l=10, r=10, t=20, b=10))
             st.plotly_chart(fig_src, use_container_width=True)
 
         with col_src2:
-            st.markdown("**Collaboration Scorecard**")
             for _, row in src_data.iterrows():
-                st.markdown(f"**{row['Source']}**: {row['Posts']} posts ({row['% of Content']:.0f}%) — "
-                            f"Avg Eng: {row['Avg Eng']:,.0f}")
-            best_collab = src_data.iloc[0]
-            st.info(f"**Top collaboration type: {best_collab['Source']}** at {best_collab['% of Content']:.0f}% of content "
-                    f"with {best_collab['Avg Eng']:,.0f} avg engagements.")
+                render_kpi_card(
+                    label=row["Source"],
+                    value=f"{row['% of Content']:.0f}%",
+                    meta=f"{int(row['Posts'])} posts · {row['Avg Eng']:,.0f} avg eng",
+                )
+        render_content_card_close()
+
+        best_collab = src_data.iloc[0]
+        render_poplife_note(
+            f"<strong>Top collaboration type: {best_collab['Source']}</strong> at "
+            f"{best_collab['% of Content']:.0f}% of content with {best_collab['Avg Eng']:,.0f} "
+            f"avg engagements.",
+            variant="success",
+        )
 
         st.markdown("---")
 
@@ -398,7 +412,7 @@ with tab_frameworks:
     if cfg.themes_ready:
         _has_pillar_col = "content_pillar" in hero_df.columns and hero_df["content_pillar"].notna().any()
         if _has_pillar_col:
-            st.subheader("Best Performing Content Pillar")
+            render_kpi_section_label("Best performing content pillar")
             st.caption(f"Which content pillar drives the highest engagement for {HERO}")
 
             pillar_perf = (hero_df[hero_df["content_pillar"].notna()]
@@ -430,14 +444,19 @@ with tab_frameworks:
                                  showlegend=False)
             st.plotly_chart(fig_bt, use_container_width=True)
 
-            st.info(f"**Best pillar: {best_pillar['content_pillar']}** at {best_pillar['avg_eng']:,.0f} avg engagements — lean into this for upcoming content. "
-                    f"Pillars above the {ENG_PER_POST_TARGET} eng target are proven winners worth scaling.")
+            render_poplife_note(
+                f"<strong>Best pillar: {best_pillar['content_pillar']}</strong> at "
+                f"{best_pillar['avg_eng']:,.0f} avg engagements — lean into this for upcoming "
+                f"content. Pillars above the {ENG_PER_POST_TARGET} eng target are proven winners "
+                f"worth scaling.",
+                variant="success",
+            )
 
         st.markdown("---")
 
     # ── The Creator Crew (Creator Archetypes) ────────────────────────
     _crew_header = cfg.narrative.get("strategy", {}).get("crew_header", f"The {HERO} Crew — Creator Archetypes")
-    st.subheader(_crew_header)
+    render_kpi_section_label(_crew_header)
     st.caption("Creators embedded in the brand — not hired talent. iPhone-first. Social-native.")
 
     # Prefer autostrat-derived archetypes (richer: description, appeal, examples)
@@ -466,7 +485,7 @@ with tab_frameworks:
 
     # ── Content Mix Funnel ─────────────────────────────────────────────
     _mix_cats = list(cfg.content_mix_targets.keys())
-    st.subheader(f"Content Mix Funnel — {' / '.join(_mix_cats)} / Connect")
+    render_kpi_section_label(f"Content mix funnel — {' / '.join(_mix_cats)} / Connect")
     st.caption(f"Grab attention first ({_mix_cats[0]} {cfg.content_mix_targets[_mix_cats[0]]}%), then guide to action ({_mix_cats[-1]} {cfg.content_mix_targets[_mix_cats[-1]]}%)")
 
     hero_mix_data = []
@@ -498,9 +517,12 @@ with tab_frameworks:
 
     mix_df = pd.DataFrame(hero_mix_data)
 
-    col_mix1, col_mix2 = st.columns(2)
+    render_content_card_open(
+        title=f"{HERO} content mix: actual vs Poplife target",
+        caption="Funnel logic — Entertain grabs attention → Educate builds relevance → Connect fosters relationships → Convince drives action",
+    )
+    col_mix1, col_mix2 = st.columns([1.3, 1])
     with col_mix1:
-        st.markdown(f"**{HERO} Content Mix: Actual vs Poplife Target**")
         fig_mix = go.Figure()
         fig_mix.add_trace(go.Bar(x=mix_df["Category"], y=mix_df["Actual %"],
                                  name="Actual", marker_color=[cfg.content_mix_colors.get(c, "#999999") for c in mix_df["Category"]],
@@ -509,47 +531,43 @@ with tab_frameworks:
                                      name="Poplife Target", mode="markers+lines",
                                      marker=dict(size=12, color="#333333", symbol="diamond"),
                                      line=dict(color="#333333", width=2, dash="dash")))
-        fig_mix.update_layout(template=CHART_TEMPLATE, font=CHART_FONT, height=380,
-                              yaxis_title="% of Content", legend=dict(orientation="h", y=-0.15))
+        fig_mix.update_layout(template=CHART_TEMPLATE, font=CHART_FONT, height=360,
+                              yaxis_title="% of Content",
+                              legend=dict(orientation="h", y=-0.15),
+                              margin=dict(l=10, r=10, t=20, b=10))
         st.plotly_chart(fig_mix, use_container_width=True)
 
     with col_mix2:
-        st.markdown("**Content Mix Scorecard**")
         for _, row in mix_df.iterrows():
             direction = "MORE" if row["Gap"] < -5 else ("LESS" if row["Gap"] > 5 else "ON TRACK")
+            _body = (
+                f"<strong>{row['Category']}</strong>: {row['Actual %']:.0f}% actual / "
+                f"{row['Target %']}% target ({row['Gap']:+.0f}%)"
+            )
             if direction == "ON TRACK":
-                st.success(f"**{row['Category']}**: {row['Actual %']:.0f}% actual / {row['Target %']}% target ({row['Gap']:+.0f}%)")
+                render_poplife_note(_body, variant="success")
             elif direction == "MORE":
-                st.error(f"**{row['Category']}**: {row['Actual %']:.0f}% actual / {row['Target %']}% target ({row['Gap']:+.0f}%) — Need MORE")
+                render_poplife_note(_body + " — Need MORE", variant="danger")
             else:
-                st.warning(f"**{row['Category']}**: {row['Actual %']:.0f}% actual / {row['Target %']}% target ({row['Gap']:+.0f}%) — Need LESS")
-        st.markdown("")
-        st.info("**Funnel logic**: Entertain grabs attention → Educate builds relevance → Connect fosters relationships → Convince drives action")
+                render_poplife_note(_body + " — Need LESS", variant="warning")
+    render_content_card_close()
 
-    st.markdown("""
-    <div style="border-left: 4px solid #2ea3f2; background: linear-gradient(135deg, #f0f7fc 0%, #e8f4f8 100%); border-radius: 0 8px 8px 0; padding: 20px 24px; margin: 16px 0 24px 0;">
-        <div style="display: flex; align-items: center; margin-bottom: 8px;">
-            <span style="font-size: 1.1rem; font-weight: 700; color: #2ea3f2; letter-spacing: 1px; text-transform: uppercase;">Connect — Always On</span>
-        </div>
-        <div style="font-size: 0.95rem; color: #444; line-height: 1.6;">
-            Connection isn't a content category — it's how we show up every day. Replying to comments, engaging in DMs, reposting fan content, and jumping into conversations in the feed. This layer runs underneath everything and turns passive followers into active community.
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    render_connect_callout(
+        "Connect — Always On",
+        "Connection isn't a content category — it's how we show up every day. Replying to "
+        "comments, engaging in DMs, reposting fan content, and jumping into conversations in "
+        "the feed. This layer runs underneath everything and turns passive followers into "
+        "active community.",
+    )
 
     st.markdown("---")
 
     # ── Voice Principles ────────────────────────────────────────────────
-    st.subheader("Tone of Voice — The Life of the Party")
+    render_kpi_section_label("Tone of voice — The Life of the Party")
     st.caption(f"{HERO}'s social voice: lively, approachable, human-forward, extroverted")
 
     for principle, detail in cfg.voice_principles:
-        st.markdown(f"""
-        <div style="background:white; border-radius:8px; padding:12px 18px; margin-bottom:8px;
-                    border-left:4px solid #F8C090; border:1px solid #E0D8D0;">
-            <strong style="color:#333;">{principle}</strong>
-            <span style="color:#888; margin-left:12px;">{detail}</span>
-        </div>""", unsafe_allow_html=True)
+        render_voice_card(name=principle, detail=detail)
 
 
 
@@ -560,148 +578,155 @@ with tab_frameworks:
 with tab_platform:
 
     # ── Section 1: Platform Roles at a Glance ──────────────────────────
-    st.subheader("Platform Roles at a Glance")
+    render_kpi_section_label("Platform roles at a glance")
 
-    _header_bg = "#4A6B7A"
-    _row_bg = "#F9F7F4"
-    _primary_color = "#333333"
-    _secondary_color = "#888888"
-
+    # Build Treatment C styled platform roles table in a content-card wrapper
     _rows_html = ""
-    for i, (plat, info) in enumerate(cfg.platform_roles.items()):
+    for plat, info in cfg.platform_roles.items():
         is_primary = info["priority"] == "Primary"
-        name_style = f"font-weight:700; color:{_primary_color}" if is_primary else f"color:{_secondary_color}"
-        row_bg = "#ffffff" if i % 2 == 0 else _row_bg
+        name_cell = (
+            f'<strong>{plat}</strong>' if is_primary
+            else f'<span style="color:#8A817C;">{plat}</span>'
+        )
+        role_cell = (
+            info["role"] if is_primary
+            else f'<span style="color:#8A817C;">{info["role"]}</span>'
+        )
+        cadence_cell = (
+            info["cadence"] if is_primary
+            else f'<span style="color:#8A817C;">{info["cadence"]}</span>'
+        )
+        priority_chip_style = (
+            'background:rgba(248,192,144,0.2); color:#1A1A1A; font-weight:700;'
+            if is_primary
+            else ''
+        )
         _rows_html += (
-            f'<tr style="background:{row_bg}; border-bottom:1px solid #e0ddd8;">'
-            f'<td style="padding:10px 16px; {name_style}">{plat}</td>'
-            f'<td style="padding:10px 16px;">{info["role"]}</td>'
-            f'<td style="padding:10px 16px;">{info["priority"]}</td>'
-            f'<td style="padding:10px 16px;">{info["cadence"]}</td>'
+            f'<tr>'
+            f'<td>{name_cell}</td>'
+            f'<td>{role_cell}</td>'
+            f'<td><span class="meta-chip" style="{priority_chip_style}">{info["priority"]}</span></td>'
+            f'<td>{cadence_cell}</td>'
             f'</tr>'
         )
-    _table_html = (
-        f'<table style="width:100%; border-collapse:collapse; font-family:Barlow Condensed, Helvetica, Arial, sans-serif; font-size:0.95rem;">'
-        f'<thead><tr style="background:{_header_bg}; color:white;">'
-        f'<th style="padding:12px 16px; text-align:left; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Platform</th>'
-        f'<th style="padding:12px 16px; text-align:left; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Role</th>'
-        f'<th style="padding:12px 16px; text-align:left; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Priority</th>'
-        f'<th style="padding:12px 16px; text-align:left; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Cadence</th>'
-        f'</tr></thead><tbody>{_rows_html}</tbody></table>'
+
+    _plat_html = (
+        f'<div class="content-card">'
+        f'<h3>Where {HERO} plays — all {len(cfg.platform_roles)} platforms</h3>'
+        f'<div class="card-caption">Primary platforms get the budget. Secondary maintain brand presence and syndicate top content.</div>'
+        f'<table>'
+        f'<thead><tr><th>Platform</th><th>Role</th><th>Priority</th><th>Cadence</th></tr></thead>'
+        f'<tbody>{_rows_html}</tbody>'
+        f'</table>'
+        f'</div>'
     )
-    st.markdown(_table_html, unsafe_allow_html=True)
+    st.markdown(_plat_html, unsafe_allow_html=True)
 
     # ── Instagram Format Mix ─────────────────────────────────────────
-    st.markdown("")
-    st.markdown("**Instagram Format Mix**")
+    render_kpi_section_label("Instagram format mix")
     fmt_cols = st.columns(len(cfg.ig_format_mix))
-    fmt_colors = ["#2ea3f2", "#F8C090", "#C9A87E", "#66BB6A"]
+    _fmt_variants = {"Reel": "reels", "Reels": "reels",
+                     "Carousel": "carousel", "Carousels": "carousel",
+                     "Static": "static", "Static Image": "static",
+                     "Story": "story", "Stories": "story"}
     for i, (fmt, info) in enumerate(cfg.ig_format_mix.items()):
         with fmt_cols[i]:
-            c = fmt_colors[i]
-            st.markdown(f"""
-            <div style="text-align:center; background:white; border-radius:8px; padding:12px;
-                        border-top:3px solid {c}; border:1px solid #E0D8D0;">
-                <p style="font-size:1.4rem; font-weight:700; color:{c}; margin:0;">{info['pct']}%</p>
-                <p style="font-weight:600; margin:2px 0; color:#333;">{fmt}</p>
-                <p style="color:#888; font-size:0.8rem; margin:0;">{info['role']}</p>
-            </div>""", unsafe_allow_html=True)
+            render_ig_format_card(
+                pct=info["pct"],
+                name=fmt,
+                role=info.get("role", ""),
+                variant=_fmt_variants.get(fmt, "reels"),
+            )
 
     # ── Content Production Needs ─────────────────────────────────────────
     if cfg.content_production_needs:
-        st.markdown("---")
-        st.subheader("Content Production Needs")
-        st.caption("Monthly asset requirements by content type, source, and SKU focus")
+        render_kpi_section_label("Content production needs")
 
-        teal = "#2C5F5D"
-        gold = "#D4A843"
+        # Build the CPN table rows
+        cpn_rows_html = ""
+        for item in cfg.content_production_needs:
+            vol = item["volume"]
+            is_numeric = vol not in ("As events occur", "As culture dictates", "Daily")
+            vol_cell = f"<strong>{vol}</strong>" if is_numeric else vol
+            cpn_rows_html += (
+                f"<tr>"
+                f"<td>{item['type']}</td>"
+                f"<td>{item['source']}</td>"
+                f"<td>{item.get('sku', '')}</td>"
+                f"<td>{vol_cell}</td>"
+                f"</tr>"
+            )
 
-        # Two-column layout: table on left, summary sidebar on right
-        col_table, col_summary = st.columns([3, 2])
+        # Build source mix bar
+        source_mix_html = ""
+        if cfg.source_mix_target:
+            _seg_class = {"Brand": "brand", "Influencer": "influencer",
+                          "Collective": "collective", "Partner": "partner"}
+            for label, pct in cfg.source_mix_target.items():
+                cls = _seg_class.get(label, "brand")
+                source_mix_html += f'<div class="seg {cls}" style="width:{pct}%;">{label} {pct}%</div>'
 
-        with col_table:
-            # Build HTML table with 4 columns matching the deck
-            rows_html = ""
-            for i, item in enumerate(cfg.content_production_needs):
-                row_bg = "#ffffff" if i % 2 == 0 else "#f9f7f4"
-                bold = "font-weight:700;" if item["volume"] not in ("As events occur", "As culture dictates", "Daily") else ""
-                rows_html += f"""
-                <tr style="background:{row_bg};">
-                    <td style="padding:10px 14px; border-bottom:1px solid #E0D8D0; color:#333; font-weight:600;">{item['type']}</td>
-                    <td style="padding:10px 14px; border-bottom:1px solid #E0D8D0; color:#555;">{item['source']}</td>
-                    <td style="padding:10px 14px; border-bottom:1px solid #E0D8D0; color:#555;">{item.get('sku', '')}</td>
-                    <td style="padding:10px 14px; border-bottom:1px solid #E0D8D0; color:#333; {bold}">{item['volume']}</td>
-                </tr>"""
+        # Build cadence rows
+        cadence_rows_html = ""
+        for plat, vals in cfg.cadence_targets.items():
+            cadence_rows_html += f'<tr><td>{plat}</td><td>{vals["low"]}–{vals["high"]} / mo</td></tr>'
+        reel_target = cfg.kpi_targets.get("reel_ratio", 50)
+        cadence_rows_html += f'<tr><td>Reel Ratio (IG)</td><td>{reel_target}%</td></tr>'
+        cadence_rows_html += '<tr><td>Cross-pollinate</td><td>YT Shorts + Pinterest</td></tr>'
 
-            st.markdown(f"""
-            <table style="width:100%; border-collapse:collapse; border-radius:8px; overflow:hidden; border:1px solid #E0D8D0;">
-                <thead>
-                    <tr style="background:{teal};">
-                        <th style="padding:10px 14px; text-align:left; color:white; font-weight:600; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Content Type</th>
-                        <th style="padding:10px 14px; text-align:left; color:white; font-weight:600; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Source</th>
-                        <th style="padding:10px 14px; text-align:left; color:white; font-weight:600; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">SKU Focus</th>
-                        <th style="padding:10px 14px; text-align:left; color:white; font-weight:600; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Volume/Mo</th>
-                    </tr>
-                </thead>
-                <tbody>{rows_html}</tbody>
-            </table>
-            """, unsafe_allow_html=True)
+        # Build summary dark card (no indentation — Streamlit markdown treats 4+ leading spaces as code block)
+        ps = cfg.production_summary or {}
+        summary_html = ""
+        if ps:
+            _monthly_note = ps.get("monthly_note", "").replace("\n", " ")
+            summary_html = (
+                f'<div class="cpn-summary-dark">'
+                f'<div class="cpn-label">Monthly Total</div>'
+                f'<div class="cpn-big">~{ps["monthly_low"]}–{ps["monthly_high"]} assets</div>'
+                f'<div class="cpn-sub">{_monthly_note}</div>'
+                f'<hr>'
+                f'<div class="cpn-annual-label">2026 ({ps["annual_months"]}-Month) Need</div>'
+                f'<div class="cpn-annual-value">~{ps["annual_low"]}–{ps["annual_high"]} assets</div>'
+                f'</div>'
+            )
 
-            # Source Mix Target bar
-            if cfg.source_mix_target:
-                mix_colors = {"Brand": teal, "Influencer": "#D4A843", "Collective": "#8B7355", "Partner": "#C4956A"}
-                bar_html = ""
-                for label, pct in cfg.source_mix_target.items():
-                    bg = mix_colors.get(label, "#888")
-                    bar_html += f'<div style="width:{pct}%; background:{bg}; padding:8px 6px; text-align:center; color:white; font-size:0.78rem; font-weight:600;">{label} {pct}%</div>'
-                st.markdown(f"""
-                <p style="font-weight:700; margin:16px 0 6px 0; font-size:0.9rem; text-transform:uppercase;">Source Mix Target</p>
-                <div style="display:flex; border-radius:6px; overflow:hidden;">{bar_html}</div>
-                <p style="color:#888; font-size:0.8rem; margin-top:6px;">SKU Split: Especial 60% | RTD 35% | Tradicional 5%</p>
-                """, unsafe_allow_html=True)
-
-        with col_summary:
-            ps = cfg.production_summary
-            if ps:
-                st.markdown(f"""
-                <div style="background:{teal}; border-radius:10px; padding:20px 24px; border:2px solid {gold};">
-                    <p style="color:white; font-size:0.9rem; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin:0 0 8px 0;">Monthly Total</p>
-                    <p style="color:white; font-size:2.2rem; font-weight:700; margin:0 0 4px 0;">~{ps['monthly_low']}-{ps['monthly_high']} assets</p>
-                    <p style="color:#ccc; font-size:0.85rem; margin:0 0 20px 0;">{ps['monthly_note']}</p>
-                    <div style="border-top:1px solid {gold}; padding-top:14px; margin-top:6px;">
-                        <p style="color:{gold}; font-size:0.85rem; margin:0;">2026 ({ps['annual_months']}-Month) Need:</p>
-                        <p style="color:white; font-size:1.3rem; font-weight:700; margin:4px 0 0 0;">~{ps['annual_low']}-{ps['annual_high']} assets</p>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-
-            # Cadence Targets sidebar
-            ct = cfg.cadence_targets
-            if ct:
-                _ct_rows = ""
-                for plat, vals in ct.items():
-                    _ct_rows += f'<tr><td style="padding:6px 0; color:#333;">{plat}</td><td style="padding:6px 0; color:{teal}; font-weight:700; text-align:right;">{vals["low"]}-{vals["high"]}/mo</td></tr>'
-                # Add reel ratio and cross-pollinate
-                reel_target = cfg.kpi_targets.get("reel_ratio", 50)
-                _ct_rows += f'<tr><td style="padding:6px 0; color:#333;">Reel Ratio (IG)</td><td style="padding:6px 0; color:{teal}; font-weight:700; text-align:right;">{reel_target}%</td></tr>'
-                _ct_rows += f'<tr><td style="padding:6px 0; color:#333;">Cross-pollinate</td><td style="padding:6px 0; color:{teal}; font-weight:700; text-align:right;">YT Shorts + Pinterest</td></tr>'
-                st.markdown(f"""
-                <div style="background:#f9f7f4; border-radius:10px; padding:16px 20px; margin-top:16px; border:1px solid #E0D8D0;">
-                    <p style="font-weight:700; font-size:0.9rem; text-transform:uppercase; letter-spacing:0.5px; margin:0 0 10px 0;">Cadence Targets</p>
-                    <table style="width:100%;">{_ct_rows}</table>
-                </div>
-                """, unsafe_allow_html=True)
-
-    st.markdown("---")
+        # Build the full CPN block as a single-line HTML string (no indentation — Streamlit markdown
+        # treats 4+ leading spaces as a code fence, which breaks nested divs)
+        _cpn_html = (
+            f'<div class="content-card">'
+            f'<h3>Content Production Needs</h3>'
+            f'<div class="card-caption">Monthly asset requirements by content type, source, and SKU focus.</div>'
+            f'<div class="cpn-layout">'
+            f'<div>'
+            f'<table>'
+            f'<colgroup><col style="width:34%;"><col style="width:22%;"><col style="width:20%;"><col style="width:24%;"></colgroup>'
+            f'<thead><tr><th>Content Type</th><th>Source</th><th>SKU Focus</th><th>Volume / Mo</th></tr></thead>'
+            f'<tbody>{cpn_rows_html}</tbody>'
+            f'</table>'
+            f'<div class="source-mix-label">Source mix target</div>'
+            f'<div class="source-mix-bar">{source_mix_html}</div>'
+            f'<div class="sku-split-note">SKU Split: Especial 60% | RTD 35% | Tradicional 5%</div>'
+            f'</div>'
+            f'<div>'
+            f'{summary_html}'
+            f'<div class="cpn-cadence">'
+            f'<div class="cpn-cadence-label">Cadence Targets</div>'
+            f'<table>{cadence_rows_html}</table>'
+            f'</div>'
+            f'</div>'
+            f'</div>'
+            f'</div>'
+        )
+        st.markdown(_cpn_html, unsafe_allow_html=True)
 
     # ── Section 2: Instagram Deep Dive ──────────────────────────────────
-    st.subheader("Instagram Deep Dive")
+    render_kpi_section_label("Instagram deep dive")
 
     hero_ig = hero_df[hero_df["platform"] == "Instagram"]
     ig_total = len(hero_ig)
 
     if ig_total == 0:
-        st.info("No Instagram data available yet.")
+        render_poplife_note("No Instagram data available yet.")
     else:
         # ── Avg Engagements by Format ───────────────────────────────────
         col_eng, col_cadence = st.columns(2)
@@ -820,7 +845,7 @@ with tab_platform:
 with tab_action:
 
     # ── 30-Day Action Plan ─────────────────────────────────────────────
-    st.subheader(f"30-Day Action Plan for {HERO}")
+    render_kpi_section_label(f"30-day action plan for {HERO}")
 
     hero_ppw = sum(results["frequency"].get(HERO, {}).get(p, {}).get("posts_per_week", 0)
                      for p in ["Instagram", "TikTok"])
@@ -885,24 +910,22 @@ with tab_action:
     st.markdown("---")
 
     # ── 2026 Cultural Calendar ──────────────────────────────────────────
-    st.subheader("2026 Cultural Calendar")
+    render_kpi_section_label("2026 cultural calendar")
     st.caption("Quarterly cultural moments and content angles")
 
-    cal_colors = {"Q1": "#2ea3f2", "Q2": "#F8C090", "Q3": "#66BB6A", "Q4": "#C9A87E"}
+    _q_variants = {"Q1": "q1", "Q2": "q2", "Q3": "q3", "Q4": "q4"}
     cal_cols = st.columns(len(cfg.cultural_calendar))
     for col, (quarter, info) in zip(cal_cols, cfg.cultural_calendar.items()):
         with col:
-            c = cal_colors.get(quarter, "#999")
-            st.markdown(f"""
-            <div style="background:white; border-radius:10px; padding:14px; min-height:140px;
-                        border-top:4px solid {c}; border:1px solid #E0D8D0;">
-                <h4 style="margin:0 0 6px 0; color:{c};">{quarter}</h4>
-                <p style="font-weight:600; color:#333; font-size:0.85rem; margin:0 0 6px 0;">{info['moments']}</p>
-                <p style="color:#666; font-size:0.82rem; margin:0;">{info['angle']}</p>
-            </div>""", unsafe_allow_html=True)
+            render_quarter_card(
+                quarter=quarter,
+                moments=info.get("moments", ""),
+                angle=info.get("angle", ""),
+                variant=_q_variants.get(quarter, "q1"),
+            )
 
     # ── Year-Round Partner Events ────────────────────────────────────────
-    st.subheader("Year-Round Partner Events")
+    render_kpi_section_label("Year-round partner events")
     st.caption("Official brand partnerships with a recurring presence throughout the year")
 
     partners = [
@@ -913,17 +936,12 @@ with tab_action:
     pcols = st.columns(len(partners))
     for col, p in zip(pcols, partners):
         with col:
-            st.markdown(f"""
-            <div style="background:white; border-radius:10px; padding:14px; min-height:120px;
-                        border-left:4px solid #CC0000; border:1px solid #E0D8D0;">
-                <h4 style="margin:0 0 6px 0;">{p['icon']} {p['name']}</h4>
-                <p style="color:#666; font-size:0.82rem; margin:0;">{p['desc']}</p>
-            </div>""", unsafe_allow_html=True)
+            render_partner_event(emoji=p["icon"], name=p["name"], description=p["desc"])
 
     st.markdown("---")
 
     # ── Monthly Ramp (March-June) ───────────────────────────────────────
-    st.subheader("Monthly Ramp Targets (March — June 2026)")
+    render_kpi_section_label("Monthly ramp targets · March – June 2026")
     st.caption("Progressive scaling toward full strategy execution")
 
     ramp_rows = []
@@ -940,50 +958,57 @@ with tab_action:
     st.markdown("---")
 
     # ── Threats & Opportunities ────────────────────────────────────────
-    st.subheader("Threats & Opportunities")
+    render_kpi_section_label("Threats & opportunities")
 
+    # Build threats list
+    _threats = []
+    _df_owned = df[~df["collaboration"].str.strip().str.lower().isin(COLLAB_AMPLIFIED_TYPES)] if "collaboration" in df.columns else df
+    brand_counts = _df_owned.groupby("brand").size()
+    if len(brand_counts):
+        highest_poster = brand_counts.idxmax()
+        highest_post_count = brand_counts.max()
+        hero_count = len(hero_df)
+        if highest_poster != HERO:
+            _threats.append(f"{highest_poster} leads with {highest_post_count} posts vs {HERO}'s {hero_count} — losing share of voice")
+
+    brand_eng_all = _df_owned.groupby("brand")["total_engagement"].mean()
+    if len(brand_eng_all):
+        best_eng_brand = brand_eng_all.idxmax()
+        best_eng_val = brand_eng_all.max()
+        if best_eng_brand != HERO:
+            _threats.append(f"{best_eng_brand} dominates engagement at {best_eng_val:,.0f} avg eng/post")
+
+    if results["creators"]:
+        collab_items = [(b, v.get("collab_pct", 0)) for b, v in results["creators"].items() if b != HERO]
+        if collab_items:
+            highest_collab = max(collab_items, key=lambda x: x[1])
+            hero_collab = results["creators"].get(HERO, {}).get("collab_pct", 0)
+            if highest_collab[1] > hero_collab:
+                _threats.append(
+                    f"{highest_collab[0]}'s creator collab rate ({highest_collab[1]:.0f}%) "
+                    f"dwarfs {HERO}'s ({hero_collab:.0f}%)"
+                )
+
+    # Build opportunities list
+    _opps = []
+    hero_theme_eng = hero_df.groupby("content_pillar")["total_engagement"].mean() if (len(hero_df) and "content_pillar" in hero_df.columns and hero_df["content_pillar"].notna().any()) else pd.Series(dtype=float)
+    hero_best_theme = hero_theme_eng.idxmax() if len(hero_theme_eng) else "N/A"
+    hero_best_eng = hero_theme_eng.max() if len(hero_theme_eng) else 0
+    if hero_best_theme != "N/A":
+        _opps.append(f"{HERO}'s {hero_best_theme} content is the top-performing pillar at {hero_best_eng:,.0f} avg eng")
+
+    reel_pct_opp = len(hero_df[hero_df["post_type"] == "Reel"]) / max(len(hero_df[hero_df["platform"] == "Instagram"]), 1) * 100
+    if reel_pct_opp < 60:
+        _opps.append(f"Instagram Reels at only {reel_pct_opp:.0f}% of IG content — room to grow to 60%+")
+    for _opp in cfg.narrative.get("strategy", {}).get("opportunities", []):
+        _opps.append(_opp)
+
+    # Render as SWOT 2-col
     col_t, col_o = st.columns(2)
-
     with col_t:
-        st.error("**Competitive Threats**")
-        _df_owned = df[~df["collaboration"].str.strip().str.lower().isin(COLLAB_AMPLIFIED_TYPES)] if "collaboration" in df.columns else df
-        brand_counts = _df_owned.groupby("brand").size()
-        if len(brand_counts):
-            highest_poster = brand_counts.idxmax()
-            highest_post_count = brand_counts.max()
-            hero_count = len(hero_df)
-            if highest_poster != HERO:
-                st.markdown(f"- {highest_poster} leads with **{highest_post_count}** posts vs {HERO}'s **{hero_count}** — losing share of voice")
-
-        brand_eng_all = _df_owned.groupby("brand")["total_engagement"].mean()
-        if len(brand_eng_all):
-            best_eng_brand = brand_eng_all.idxmax()
-            best_eng_val = brand_eng_all.max()
-            if best_eng_brand != HERO:
-                st.markdown(f"- {best_eng_brand} dominates engagement at **{best_eng_val:,.0f} avg eng/post**")
-
-        if results["creators"]:
-            collab_items = [(b, v.get("collab_pct", 0)) for b, v in results["creators"].items() if b != HERO]
-            if collab_items:
-                highest_collab = max(collab_items, key=lambda x: x[1])
-                hero_collab = results["creators"].get(HERO, {}).get("collab_pct", 0)
-                if highest_collab[1] > hero_collab:
-                    st.markdown(f"- {highest_collab[0]}'s creator collab rate ({highest_collab[1]:.0f}%) "
-                                f"dwarfs {HERO}'s ({hero_collab:.0f}%)")
-
+        render_swot_card("threat", "Competitive Threats", _threats or ["No threats identified"])
     with col_o:
-        st.success(f"**Opportunities for {HERO}**")
-        hero_theme_eng = hero_df.groupby("content_pillar")["total_engagement"].mean() if (len(hero_df) and "content_pillar" in hero_df.columns and hero_df["content_pillar"].notna().any()) else pd.Series(dtype=float)
-        hero_best_theme = hero_theme_eng.idxmax() if len(hero_theme_eng) else "N/A"
-        hero_best_eng = hero_theme_eng.max() if len(hero_theme_eng) else 0
-        if hero_best_theme != "N/A":
-            st.markdown(f"- {HERO}'s **{hero_best_theme}** content is the top-performing pillar at {hero_best_eng:,.0f} avg eng")
-
-        reel_pct_opp = len(hero_df[hero_df["post_type"] == "Reel"]) / max(len(hero_df[hero_df["platform"] == "Instagram"]), 1) * 100
-        if reel_pct_opp < 60:
-            st.markdown(f"- Instagram Reels at only **{reel_pct_opp:.0f}%** of IG content — room to grow to 60%+")
-        for _opp in cfg.narrative.get("strategy", {}).get("opportunities", []):
-            st.markdown(f"- {_opp}")
+        render_swot_card("opportunity", f"Opportunities for {HERO}", _opps or ["No opportunities identified"])
 
     st.markdown("---")
 
@@ -992,7 +1017,7 @@ with tab_action:
     _has_autostrat = has_autostrat_data(autostrat)
 
     if _has_autostrat:
-        st.subheader("Qualitative Strategic Intelligence")
+        render_kpi_section_label("Qualitative strategic intelligence")
         st.caption("From autostrat.ai reports — audience insights, content trends, partnership opportunities")
 
         # ── Audience Profile (NOPD) ──────────────────────────────────────
@@ -1001,7 +1026,7 @@ with tab_action:
         _hero_ids = cfg.hero_hashtag_ids
         all_audience = [p for p in _all_aud if p["identifier"] in _hero_ids] if _hero_ids else _all_aud
         if all_audience:
-            render_section_label("Audience Profile — Who We're Talking To")
+            render_kpi_section_label("Audience profile — who we're talking to")
             # Merge NOPD across hero reports, deduplicating
             merged_nopd = {"needs": [], "objections": [], "desires": [], "pain_points": []}
             _seen = {"needs": set(), "objections": set(), "desires": set(), "pain_points": set()}
@@ -1012,27 +1037,27 @@ with tab_action:
                         if key not in _seen[dim]:
                             merged_nopd[dim].append(item)
                             _seen[dim].add(key)
-            render_nopd_cards(merged_nopd)
+            render_nopd_grid(merged_nopd)
             st.caption(f"*Synthesized from {len(all_audience)} {HERO} autostrat reports*")
             st.markdown("---")
 
         # Winning Territories
         all_htw = get_all_how_to_win(autostrat, exclude_reference=True)
         if all_htw:
-            render_section_label("Winning Territories")
+            render_kpi_section_label("Winning territories")
             all_territories = []
             for entry in all_htw:
                 for territory in entry["how_to_win"].get("territories", []):
                     is_dupe = any(territory[:40] == existing[:40] for existing in all_territories)
                     if not is_dupe:
                         all_territories.append(territory)
-            render_territory_cards(all_territories[:8])
+            render_territory_list(all_territories[:8])
             st.markdown("---")
 
         # Content Trends
         all_trends = get_all_content_trends(autostrat)
         if all_trends:
-            render_section_label("Content Trends")
+            render_kpi_section_label("Content trends")
             cols = st.columns(2)
             for i, trend in enumerate(all_trends[:6]):
                 with cols[i % 2]:
@@ -1043,7 +1068,7 @@ with tab_action:
         # Partnership Opportunities
         all_suggestions = get_all_sponsorship_suggestions(autostrat, exclude_reference=True)
         if all_suggestions:
-            render_section_label("Partnership Opportunities")
+            render_kpi_section_label("Partnership opportunities")
             for entry in all_suggestions:
                 source = f"{entry['source_label']} — {entry['identifier'].replace('_', ' ').title()}"
                 st.markdown(f"**From: {source}**")

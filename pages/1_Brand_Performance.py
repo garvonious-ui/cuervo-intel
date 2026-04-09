@@ -21,8 +21,11 @@ from autostrat_loader import (
     CONVERSATION_TYPES,
 )
 from autostrat_components import (
-    render_section_label, render_territory_cards, render_nopd_cards,
-    render_narrative_card, render_verbatim_quotes, platform_label,
+    render_narrative_card, platform_label,
+)
+from ui_components import (
+    render_page_hero, render_kpi_card, render_kpi_section_label, render_status_pill,
+    render_nopd_grid, render_territory_list, render_verbatim_card,
 )
 
 if "results" not in st.session_state:
@@ -69,8 +72,8 @@ tab_kpi, tab_content, tab_audit = st.tabs([
 with tab_kpi:
 
     # ── Social Brief KPI Scorecard ─────────────────────────────────────
-    st.subheader("Monthly KPI Scorecard")
-    st.caption(f"All metrics averaged per month across the dataset")
+    # Math preserved unchanged — render block rewritten to use Treatment C
+    # dark hero + light KPI cards (see docs/ui-phase-1-handoff.md).
 
     # Compute base data
     eng = results["engagement"].get(HERO, {})
@@ -125,65 +128,145 @@ with tab_kpi:
     _stories_pm = len(_hero_stories) / _n_months
     _story_views_pm = pd.to_numeric(_hero_stories["impressions"], errors="coerce").fillna(0).sum() / _n_months if "impressions" in _hero_stories.columns and len(_hero_stories) else 0
 
-    # Row 1: Averages + Cadence + Followers
-    k1, k2, k3, k4, k5 = st.columns(5)
-    with k1:
-        st.metric("Avg Eng/Post", f"{avg_eng_per_post:,.0f}",
-                  delta=f"{avg_eng_per_post - ENG_PER_POST_TARGET:+,.0f} vs {ENG_PER_POST_TARGET} target")
-    with k2:
-        st.metric("Avg Eng/Reel", f"{avg_eng_per_reel:,.0f}",
-                  delta=f"{avg_eng_per_reel - ENG_PER_POST_TARGET:+,.0f} vs {ENG_PER_POST_TARGET} target")
-    with k3:
-        st.metric("Reel Ratio (IG)", f"{reel_ratio:.0f}%",
-                  delta=f"{reel_ratio - REEL_RATIO_TARGET:+.0f}% vs {REEL_RATIO_TARGET}% target")
-    with k4:
-        st.metric("IG Posts/Mo", f"{ig_ppm:.0f}",
-                  delta=f"Target: {IG_PPM_TARGET[0]}-{IG_PPM_TARGET[1]}/mo",
-                  delta_color="off")
-    with k5:
-        ig_followers_display = f"{ig_followers:,}" if ig_followers else "N/A"
-        st.metric("IG Followers", ig_followers_display)
+    # Date range string for the hero stats (e.g. "Feb '25 – Apr '26")
+    if "post_date" in hero_df.columns and len(hero_df):
+        _dmin = pd.Timestamp(hero_df["post_date"].min())
+        _dmax = pd.Timestamp(hero_df["post_date"].max())
+        _date_range_text = f"{_dmin.strftime('%b')} '{_dmin.strftime('%y')} – {_dmax.strftime('%b')} '{_dmax.strftime('%y')}"
+    else:
+        _date_range_text = ""
 
-    # Row 2: Monthly engagement volumes
+    # ── Page hero — dark editorial block ───────────────────────────────
+    render_page_hero(
+        title="The Mirror",
+        kicker=f"{HERO} · Brand Performance",
+        subtitle=cfg.page_captions.get(
+            "performance",
+            f"How {HERO}'s owned content is performing against the 2026 Social Brief targets.",
+        ),
+        stats=[
+            {"value": f"{len(hero_df):,}", "label": f"{HERO} posts"},
+            {"value": f"{int(round(_n_months))} mo", "label": _date_range_text or "Dataset range"},
+            {"value": str(len(cfg.pillar_map)), "label": "Content pillars"},
+            {"value": f"{avg_eng_per_post:,.0f}", "label": "Avg eng/post"},
+        ],
+    )
+
+    # ── Section 1: Performance averages ────────────────────────────────
+    render_kpi_section_label("Performance averages")
+
+    # Hero metric — full-width Avg Eng/Post
+    render_kpi_card(
+        label="Avg engagement per post",
+        value=f"{avg_eng_per_post:,.0f}",
+        status=render_status_pill(avg_eng_per_post, ENG_PER_POST_TARGET),
+        hero=True,
+    )
+
+    # 3-col grid: Avg Eng/Reel, Reel Ratio, IG Posts/Mo
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        render_kpi_card(
+            label="Avg Eng / Reel",
+            value=f"{avg_eng_per_reel:,.0f}",
+            status=render_status_pill(avg_eng_per_reel, ENG_PER_POST_TARGET),
+        )
+    with c2:
+        render_kpi_card(
+            label="Reel Ratio (IG)",
+            value=f"{reel_ratio:.0f}%",
+            status=render_status_pill(reel_ratio, REEL_RATIO_TARGET, format="percent"),
+        )
+    with c3:
+        render_kpi_card(
+            label="IG Posts / Mo",
+            value=f"{ig_ppm:.0f}",
+            meta=f"Target {IG_PPM_TARGET[0]}–{IG_PPM_TARGET[1]}/mo",
+        )
+
+    # ── Section 2: Monthly volume ──────────────────────────────────────
+    render_kpi_section_label("Monthly volume")
+
     v1, v2, v3, v4 = st.columns(4)
     with v1:
         _likes_tgt = _t.get("likes_per_month", 0)
-        st.metric("Likes/Month", f"{_likes_pm:,.0f}",
-                  delta=f"{_likes_pm - _likes_tgt:+,.0f} vs {_likes_tgt:,} target")
+        render_kpi_card(
+            label="Likes / month",
+            value=f"{_likes_pm:,.0f}",
+            status=render_status_pill(_likes_pm, _likes_tgt),
+        )
     with v2:
         _comments_tgt = _t.get("comments_per_month", 0)
-        st.metric("Comments/Month", f"{_comments_pm:,.0f}",
-                  delta=f"{_comments_pm - _comments_tgt:+,.0f} vs {_comments_tgt:,} target")
+        render_kpi_card(
+            label="Comments / month",
+            value=f"{_comments_pm:,.0f}",
+            status=render_status_pill(_comments_pm, _comments_tgt),
+        )
     with v3:
         _saves_tgt = _t.get("saves_per_month", 0)
-        st.metric("Saves/Month", f"{_saves_pm:,.0f}",
-                  delta=f"{_saves_pm - _saves_tgt:+,.0f} vs {_saves_tgt:,} target")
+        render_kpi_card(
+            label="Saves / month",
+            value=f"{_saves_pm:,.0f}",
+            status=render_status_pill(_saves_pm, _saves_tgt),
+        )
     with v4:
         _shares_tgt = _t.get("shares_per_month", 0)
-        st.metric("Shares/Month", f"{_shares_pm:,.0f}",
-                  delta=f"{_shares_pm - _shares_tgt:+,.0f} vs {_shares_tgt:,} target")
+        render_kpi_card(
+            label="Shares / month",
+            value=f"{_shares_pm:,.0f}",
+            status=render_status_pill(_shares_pm, _shares_tgt),
+        )
 
-    # Row 3: Views, impressions, stories
-    v5, v6, v7, v8 = st.columns(4)
-    with v5:
+    # ── Section 3: Reach & format ──────────────────────────────────────
+    render_kpi_section_label("Reach & format")
+
+    r1, r2, r3, r4 = st.columns(4)
+    with r1:
         _rv_tgt = _t.get("reel_views_per_month", 0)
-        st.metric("Reel Views/Mo", f"{_reel_views:,.0f}",
-                  delta=f"{_reel_views - _rv_tgt:+,.0f} vs {_rv_tgt:,} target")
-    with v6:
+        render_kpi_card(
+            label="Reel Views / mo",
+            value=f"{_reel_views:,.0f}",
+            status=render_status_pill(_reel_views, _rv_tgt, format="thousand"),
+        )
+    with r2:
         _ci_tgt = _t.get("carousel_impressions_per_month", 0)
-        st.metric("Carousel Imp/Mo", f"{_carousel_imp:,.0f}",
-                  delta=f"{_carousel_imp - _ci_tgt:+,.0f} vs {_ci_tgt:,} target")
-    with v7:
+        render_kpi_card(
+            label="Carousel Imp / mo",
+            value=f"{_carousel_imp:,.0f}",
+            status=render_status_pill(_carousel_imp, _ci_tgt, format="thousand"),
+        )
+    with r3:
         _st_tgt = _t.get("stories_per_month", 0)
-        st.metric("Stories/Month", f"{_stories_pm:,.0f}",
-                  delta=f"{_stories_pm - _st_tgt:+,.0f} vs {_st_tgt:,} target")
-    with v8:
+        render_kpi_card(
+            label="Stories / month",
+            value=f"{_stories_pm:,.0f}",
+            status=render_status_pill(_stories_pm, _st_tgt),
+        )
+    with r4:
         _sv_tgt = _t.get("story_views_per_month", 0)
-        st.metric("Story Views/Month", f"{_story_views_pm:,.0f}",
-                  delta=f"{_story_views_pm - _sv_tgt:+,.0f} vs {_sv_tgt:,} target")
+        render_kpi_card(
+            label="Story Views / month",
+            value=f"{_story_views_pm:,.0f}",
+            status=render_status_pill(_story_views_pm, _sv_tgt, format="thousand"),
+        )
 
-    st.caption("**Reel Views** = number of times the video was played. **Carousel/Static Impressions** = number of times the post appeared on screen. "
-               "These are different metrics — impressions are typically higher than views for equivalent reach.")
+    # ── Section 4: Audience ────────────────────────────────────────────
+    render_kpi_section_label("Audience")
+
+    a1, a2, a3 = st.columns(3)
+    with a1:
+        ig_followers_display = f"{ig_followers:,}" if ig_followers else "N/A"
+        render_kpi_card(
+            label="IG Followers",
+            value=ig_followers_display,
+            meta="Instagram",
+        )
+
+    st.caption(
+        "**Reel Views** = number of times the video was played. "
+        "**Carousel/Static Impressions** = number of times the post appeared on screen. "
+        "These are different metrics — impressions are typically higher than views for equivalent reach."
+    )
 
     # ── "So What" Narrative ────────────────────────────────────────────
     hits = []
@@ -720,7 +803,7 @@ with tab_audit:
                     # Executive Summary
                     es = report.get("executive_summary", {})
                     if es.get("key_insights"):
-                        render_section_label("Key Insights")
+                        render_kpi_section_label("Key insights")
                         insights = es["key_insights"]
                         # Skip first if it duplicates the search prompt
                         if len(insights) > 1:
@@ -733,31 +816,32 @@ with tab_audit:
                     # Audience Profile (NOPD)
                     ap = report.get("audience_profile", {})
                     if any(ap.get(k) for k in ["needs", "objections", "desires", "pain_points"]):
-                        render_section_label("Audience Profile (NOPD)")
+                        render_kpi_section_label("Audience profile (NOPD)")
                         if ap.get("summary"):
                             st.markdown(ap["summary"])
-                        render_nopd_cards(ap)
+                        render_nopd_grid(ap)
 
                     # How to Win
                     hw = report.get("how_to_win", {})
                     if hw.get("territories"):
-                        render_section_label("How to Win")
+                        render_kpi_section_label("How to win")
                         if hw.get("summary"):
                             st.markdown(f"*{hw['summary']}*")
-                        render_territory_cards(hw["territories"])
+                        render_territory_list(hw["territories"])
 
                     # Strategic Actions
                     ha = report.get("hashtag_analysis", {})
                     if ha.get("strategic_actions"):
-                        render_section_label("Strategic Actions")
+                        render_kpi_section_label("Strategic actions")
                         for i, action in enumerate(ha["strategic_actions"][:6], 1):
                             st.markdown(f"**{i}.** {action}")
 
                     # Audience Verbatims
                     verbatims = hw.get("audience_verbatims", [])
                     if verbatims:
-                        render_section_label("Audience Verbatims")
-                        render_verbatim_quotes(verbatims, max_quotes=8)
+                        render_kpi_section_label("Audience verbatims")
+                        for _q in verbatims[:8]:
+                            render_verbatim_card(_q)
 
         # ── Google News ───────────────────────────────────────────────
         news_report = get_report(autostrat, "google_news", cfg.hero_news_id) if cfg.hero_news_id else None
@@ -789,7 +873,7 @@ with tab_audit:
                 swot = news_report.get("swot_analysis", {})
                 has_swot = any(swot.get(k) for k in ["strengths", "weaknesses", "opportunities", "threats"])
                 if has_swot:
-                    render_section_label("SWOT Analysis")
+                    render_kpi_section_label("SWOT analysis")
                     sw_col, ot_col = st.columns(2)
                     with sw_col:
                         for key, label, color in [("strengths", "Strengths", "#5CB85C"), ("weaknesses", "Weaknesses", "#D9534F")]:
@@ -808,5 +892,5 @@ with tab_audit:
                 strat = news_report.get("strategic_implications", {})
                 action_items = strat.get("action_items", [])
                 if action_items:
-                    render_section_label("News Action Items")
-                    render_territory_cards(action_items)
+                    render_kpi_section_label("News action items")
+                    render_territory_list(action_items)

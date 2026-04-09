@@ -17,12 +17,13 @@ from autostrat_loader import (
     REPORT_TYPE_LABELS,
 )
 from autostrat_components import (
-    render_nopd_cards,
-    render_territory_cards,
     render_narrative_card,
-    render_section_label,
     render_brand_mention,
     platform_label,
+)
+from ui_components import (
+    render_page_hero, render_poplife_note,
+    render_kpi_section_label, render_nopd_grid, render_territory_list,
 )
 
 # ── Load data dynamically ─────────────────────────────────────────────
@@ -33,12 +34,6 @@ cfg = get_client()
 
 st.logo(cfg.app_logo_path)
 st.markdown(cfg.custom_css, unsafe_allow_html=True)
-
-st.title(cfg.page_headers.get("conversation", "Conversation Intel"))
-st.caption(
-    "Qualitative intelligence from brand hashtags, category research, "
-    "and news -- Instagram & TikTok"
-)
 
 brand_ht_map = get_brand_hashtag_reports(autostrat)
 category_reports = get_category_reports(autostrat)
@@ -51,10 +46,26 @@ has_brand_data = len(brand_ht_map) > 0
 has_category_data = len(category_reports) > 0
 has_news_data = len(news_reports) > 0
 
+# ── Page hero ─────────────────────────────────────────────────────────
+render_page_hero(
+    title="The Landscape",
+    kicker=f"{cfg.hero_brand} · Conversation Intel",
+    subtitle=(
+        "Qualitative intelligence from brand hashtags, category research, "
+        "and news — Instagram & TikTok."
+    ),
+    stats=[
+        {"value": str(len(brand_ht_map)), "label": "Brand reports"},
+        {"value": str(len(category_reports)), "label": "Category reports"},
+        {"value": str(len(news_reports)), "label": "News reports"},
+        {"value": "2", "label": "Platforms"},
+    ],
+)
+
 if not has_brand_data and not has_category_data and not has_news_data:
-    st.info(
+    render_poplife_note(
         "No conversation intelligence loaded. Drop autostrat PDF exports into "
-        "`data/autostrat/pdfs/` and click **Import PDFs** in the sidebar."
+        "<code>data/autostrat/pdfs/</code> and click <strong>Import PDFs</strong> in the sidebar."
     )
     st.stop()
 
@@ -134,12 +145,12 @@ tab_brands, tab_category, tab_news = st.tabs(
 # ═══════════════════════════════════════════════════════════════════════
 with tab_brands:
     if not has_brand_data:
-        st.info("No brand hashtag reports loaded.")
+        render_poplife_note("No brand hashtag reports loaded.")
     else:
         st.markdown("Compare how each brand's hashtag space looks across Instagram & TikTok.")
 
         # ── Key Insights ──────────────────────────────────────
-        render_section_label("Key Insights")
+        render_kpi_section_label("Key Insights")
         for label, rt, ident, report in active_brand_reports:
             plat = platform_label(rt)
             is_hero = ident in cfg.hero_hashtag_ids
@@ -150,7 +161,7 @@ with tab_brands:
         st.markdown("---")
 
         # ── Audience Comparison (NOPD per brand) ────────────
-        render_section_label("Audience Comparison (NOPD)")
+        render_kpi_section_label("Audience Comparison (NOPD)")
         st.markdown("How each brand's hashtag audience thinks and feels.")
         for label, rt, ident, report in active_brand_reports:
             if report.get("audience_profile"):
@@ -160,12 +171,12 @@ with tab_brands:
                     ap = report["audience_profile"]
                     if ap.get("summary"):
                         st.markdown(f"*{ap['summary']}*")
-                    render_nopd_cards(ap)
+                    render_nopd_grid(ap)
 
         st.markdown("---")
 
         # ── Opportunities & Strategic Actions ───────────────
-        render_section_label("Opportunities & Strategic Actions")
+        render_kpi_section_label("Opportunities & Strategic Actions")
         for label, rt, ident, report in active_brand_reports:
             pairs = _get_opps_actions(report)
             if pairs:
@@ -178,7 +189,7 @@ with tab_brands:
         st.markdown("---")
 
         # ── How to Win Territories ─────────────────────────────
-        render_section_label("How to Win Territories")
+        render_kpi_section_label("How to Win Territories")
         for label, rt, ident, report in active_brand_reports:
             htw = report.get("how_to_win", {})
             if not htw.get("territories") and not htw.get("summary"):
@@ -190,7 +201,7 @@ with tab_brands:
                     st.caption(htw["summary"])
                 territories = htw.get("territories", [])
                 if territories:
-                    render_territory_cards(territories)
+                    render_territory_list(territories)
                 else:
                     st.caption("No territories")
 
@@ -199,7 +210,7 @@ with tab_brands:
         # ── What This Means for {hero_brand} ──────────────────────
         conv_narrative = cfg.narrative.get("conversation", {})
         what_this_means_header = conv_narrative.get("what_this_means", f"What This Means for {cfg.hero_brand}")
-        render_section_label(what_this_means_header)
+        render_kpi_section_label(what_this_means_header)
 
         # Gather hero brand territories (across platforms)
         hero_terrs = []
@@ -439,7 +450,7 @@ with tab_brands:
         # ── Brand Mentions (moved from Page 2) ────────────────
         if all_mentions:
             st.markdown("---")
-            render_section_label("Brand Mentions Across All Conversations")
+            render_kpi_section_label("Brand Mentions Across All Conversations")
             st.caption("How brands appear in the conversation space across all hashtag, keyword, and news reports")
             for mention in all_mentions[:12]:
                 render_brand_mention(mention)
@@ -450,7 +461,7 @@ with tab_brands:
 # ═══════════════════════════════════════════════════════════════════════
 with tab_category:
     if not has_category_data:
-        st.info("No category or cultural reports loaded yet.")
+        render_poplife_note("No category or cultural reports loaded yet.")
     else:
         st.markdown(
             "Cultural hashtags, category search terms, and keyword research "
@@ -464,7 +475,7 @@ with tab_category:
                 # ── Executive Summary ───────────────────────────
                 insights = _get_insights(report)
                 if insights:
-                    render_section_label("Executive Summary")
+                    render_kpi_section_label("Executive Summary")
                     for insight in insights:
                         st.markdown(f"- {insight}")
 
@@ -473,16 +484,16 @@ with tab_category:
                 has_nopd = any(ap.get(k) for k in ["needs", "objections", "desires", "pain_points"])
                 if has_nopd:
                     st.markdown("---")
-                    render_section_label(f"Who's Searching {cat_label}")
+                    render_kpi_section_label(f"Who's Searching {cat_label}")
                     if ap.get("summary"):
                         st.markdown(f"*{ap['summary']}*")
-                    render_nopd_cards(ap)
+                    render_nopd_grid(ap)
 
                 # ── Content Opportunities ───────────────────────
                 pairs = _get_opps_actions(report)
                 if pairs:
                     st.markdown("---")
-                    render_section_label("Content Opportunities & Strategic Actions")
+                    render_kpi_section_label("Content Opportunities & Strategic Actions")
                     for pair in pairs:
                         _render_opp_action_card(pair, accent=POPLIFE_BLUE)
 
@@ -490,11 +501,11 @@ with tab_category:
                 htw = report.get("how_to_win", {})
                 if htw.get("territories") or htw.get("summary"):
                     st.markdown("---")
-                    render_section_label(f"How to Win {cat_label}")
+                    render_kpi_section_label(f"How to Win {cat_label}")
                     if htw.get("summary"):
                         st.caption(htw["summary"])
                     if htw.get("territories"):
-                        render_territory_cards(htw["territories"])
+                        render_territory_list(htw["territories"])
 
         # ── Hero Brand's Play: bridge brand + category ─────────────
         _hero_rpt = None
@@ -506,7 +517,7 @@ with tab_category:
         if _hero_rpt and category_reports:
             st.markdown("---")
             cuervos_play_header = conv_narrative.get("cuervos_play", f"{cfg.hero_brand}'s Play")
-            render_section_label(cuervos_play_header)
+            render_kpi_section_label(cuervos_play_header)
 
             cat_rpt = category_reports[0][3]
             cat_lbl = category_reports[0][2]
@@ -562,9 +573,9 @@ with tab_category:
 # ═══════════════════════════════════════════════════════════════════════
 with tab_news:
     if not has_news_data:
-        st.info(
+        render_poplife_note(
             "No Google News reports loaded. Drop autostrat Google News PDF exports "
-            "into `data/autostrat/pdfs/` and click **Import PDFs** in the sidebar."
+            "into <code>data/autostrat/pdfs/</code> and click <strong>Import PDFs</strong> in the sidebar."
         )
     else:
         st.markdown(
@@ -589,7 +600,7 @@ with tab_news:
                     render_narrative_card("Overview", overview, accent_color=POPLIFE_BLUE)
 
                 if insights:
-                    render_section_label("Key Insights")
+                    render_kpi_section_label("Key Insights")
                     for insight in insights:
                         st.markdown(f"- {insight}")
 
@@ -598,7 +609,7 @@ with tab_news:
                 na_summary = news_analysis.get("summary", "")
                 if na_summary:
                     st.markdown("---")
-                    render_section_label("News Analysis")
+                    render_kpi_section_label("News Analysis")
                     st.markdown(na_summary)
 
                 # Sentiment breakdown
@@ -633,7 +644,7 @@ with tab_news:
                 # Key topics
                 topics = news_analysis.get("key_topics", [])
                 if topics:
-                    render_section_label("Key Topics")
+                    render_kpi_section_label("Key Topics")
                     for topic in topics:
                         st.markdown(f"- {topic}")
 
@@ -674,7 +685,7 @@ with tab_news:
                 mentions = report.get("brand_mentions", [])
                 if mentions:
                     st.markdown("---")
-                    render_section_label("Brand Mentions")
+                    render_kpi_section_label("Brand Mentions")
                     for mention in mentions:
                         render_brand_mention({
                             "brand": mention.get("brand", ""),
@@ -688,7 +699,7 @@ with tab_news:
                 narratives = report.get("trending_narratives", [])
                 if narratives:
                     st.markdown("---")
-                    render_section_label("Trending Narratives")
+                    render_kpi_section_label("Trending Narratives")
                     for narr in narratives:
                         title = narr.get("narrative", narr.get("trend", ""))
                         desc = narr.get("description", "")
@@ -716,17 +727,17 @@ with tab_news:
                 has_nopd = any(ap.get(k) for k in ["needs", "objections", "desires", "pain_points"])
                 if has_nopd:
                     st.markdown("---")
-                    render_section_label("News Audience Profile")
+                    render_kpi_section_label("News Audience Profile")
                     if ap.get("summary"):
                         st.markdown(f"*{ap['summary']}*")
-                    render_nopd_cards(ap)
+                    render_nopd_grid(ap)
 
                 # ── SWOT Analysis ──────────────────────────
                 swot = report.get("swot_analysis", {})
                 has_swot = any(swot.get(k) for k in ["strengths", "weaknesses", "opportunities", "threats"])
                 if has_swot:
                     st.markdown("---")
-                    render_section_label("SWOT Analysis")
+                    render_kpi_section_label("SWOT Analysis")
                     sw_col, ot_col = st.columns(2)
                     with sw_col:
                         strengths = swot.get("strengths", [])
@@ -785,19 +796,19 @@ with tab_news:
                 action_items = strat.get("action_items", [])
                 if strat_summary or action_items:
                     st.markdown("---")
-                    render_section_label("Strategic Implications")
+                    render_kpi_section_label("Strategic Implications")
                     if strat_summary:
                         render_narrative_card(
                             "What This Means", strat_summary, accent_color=POPLIFE_PEACH
                         )
                     if action_items:
-                        render_territory_cards(action_items)
+                        render_territory_list(action_items)
 
                 # ── In-Market Campaigns ────────────────────
                 campaigns = report.get("in_market_campaigns", [])
                 if campaigns:
                     st.markdown("---")
-                    render_section_label("In-Market Campaigns")
+                    render_kpi_section_label("In-Market Campaigns")
                     for camp in campaigns:
                         name = camp.get("campaign", "")
                         desc = camp.get("description", "")
@@ -817,7 +828,7 @@ with tab_news:
                 key_stats = report.get("key_statistics", [])
                 if key_stats:
                     st.markdown("---")
-                    render_section_label("Key Statistics")
+                    render_kpi_section_label("Key Statistics")
                     for stat in key_stats:
                         st.markdown(f"- {stat}")
 

@@ -21,9 +21,12 @@ from autostrat_loader import (
     get_all_audience_profiles, PROFILE_TYPES,
 )
 from autostrat_components import (
-    render_section_label, render_territory_cards, render_nopd_cards,
-    render_narrative_card, render_hits_misses, render_verbatim_quotes,
+    render_narrative_card, render_hits_misses,
     render_sponsorship_card, render_statistics_section,
+)
+from ui_components import (
+    render_page_hero, render_kpi_section_label, render_poplife_note,
+    render_nopd_grid, render_territory_list, render_verbatim_card,
 )
 
 if "results" not in st.session_state:
@@ -35,11 +38,26 @@ cfg = get_client()
 
 st.logo(cfg.app_logo_path)
 st.markdown(cfg.custom_css, unsafe_allow_html=True)
-st.header(cfg.page_headers.get("inspiration", "Inspiration & Explorer"))
 
 results = st.session_state["results"]
 df = st.session_state["filtered_df"].copy()
 full_df = st.session_state["df"]
+
+# ── Page hero ─────────────────────────────────────────────────────────
+render_page_hero(
+    title="The Toolbox",
+    kicker=f"{cfg.hero_brand} · Inspiration & Explorer",
+    subtitle=cfg.page_captions.get(
+        "inspiration",
+        "Non-competitive brands studied for content strategy inspiration — plus the full data explorer.",
+    ),
+    stats=[
+        {"value": str(len(cfg.reference_brands)), "label": "Reference brands"},
+        {"value": f"{len(full_df):,}", "label": "Total posts"},
+        {"value": str(len(cfg.brand_order)), "label": "Brands tracked"},
+        {"value": "2", "label": "Platforms"},
+    ],
+)
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 tab_inspo, tab_explorer = st.tabs(["Inspiration", "Data Explorer"])
@@ -60,7 +78,7 @@ with tab_inspo:
     ref_profiles = get_reference_profiles(autostrat)
 
     if not ref_profiles:
-        st.info(
+        render_poplife_note(
             "No reference brand reports loaded. Import autostrat PDFs for "
             "inspiration brands (e.g., Duolingo, Poppi) from the home page."
         )
@@ -72,7 +90,7 @@ with tab_inspo:
         available_refs = {k: v for k, v in ref_profiles.items() if v["report_type"] == ref_type}
 
         if not available_refs:
-            st.info(f"No {ref_platform} reference brand reports available.")
+            render_poplife_note(f"No {ref_platform} reference brand reports available.")
         else:
             ref_options = {
                 cfg.reference_brand_labels.get(v["identifier"], v["identifier"].replace("_", " ").title()): k
@@ -89,7 +107,7 @@ with tab_inspo:
             # ── Snapshot KPIs ──────────────────────────────────────────
             snapshot = report_r.get("snapshot", {})
             if any(snapshot.values()):
-                render_section_label("Profile Snapshot")
+                render_kpi_section_label("Profile snapshot")
                 rc1, rc2, rc3, rc4, rc5 = st.columns(5)
                 with rc1:
                     st.metric("Followers", f"{snapshot.get('followers', 0):,}")
@@ -107,7 +125,7 @@ with tab_inspo:
             # ── Creator Summary ────────────────────────────────────────
             cs = report_r.get("creator_summary", {})
             if cs.get("topline"):
-                render_section_label("Brand Summary")
+                render_kpi_section_label("Brand summary")
                 topline_clean = cs["topline"].replace("\n", " ").strip()
                 st.markdown(f"**{display_name}** — {topline_clean}")
                 if cs.get("what_it_means"):
@@ -119,7 +137,7 @@ with tab_inspo:
             steal_header = cfg.narrative.get("inspiration", {}).get(
                 "steal_header_template", "What {hero_brand} Can Steal"
             ).format(hero_brand=cfg.hero_brand)
-            render_section_label(steal_header)
+            render_kpi_section_label(steal_header)
             st.caption(f"Strategic patterns from {display_name} translated to {cfg.hero_brand}'s {cfg.industry} world")
 
             steal_points = []
@@ -173,7 +191,7 @@ with tab_inspo:
                 for point in steal_points:
                     st.markdown(f"- {point}")
             else:
-                st.info(f"Import more {display_name} report data for specific tactical recommendations.")
+                render_poplife_note(f"Import more {display_name} report data for specific tactical recommendations.")
             st.markdown("---")
 
             # ── Audience Comparison: Hero Brand vs Reference ───────────────
@@ -192,32 +210,17 @@ with tab_inspo:
                 comparison_header = cfg.narrative.get("inspiration", {}).get(
                     "audience_comparison_template", "Audience Comparison: {hero_brand} vs {display_name}"
                 ).format(hero_brand=cfg.hero_brand, display_name=display_name)
-                render_section_label(comparison_header)
-                for dimension in ["needs", "objections", "desires", "pain_points"]:
-                    from autostrat_components import NOPD_STYLES
-                    style = NOPD_STYLES[dimension]
-                    st.markdown(f"""
-                    <div style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
-                                color: {style['color']}; font-size: 1rem; letter-spacing: 1px;
-                                margin: 16px 0 8px 0;">{style['label']}</div>
-                    """, unsafe_allow_html=True)
-
-                    col_c, col_r = st.columns(2)
-                    with col_c:
-                        st.markdown(f"**{cfg.hero_brand}**")
-                        for item in cuervo_ap.get(dimension, []):
-                            st.markdown(f"- {item}")
-                        if not cuervo_ap.get(dimension):
-                            st.caption("No data")
-                    with col_r:
-                        st.markdown(f"**{display_name}**")
-                        for item in ap_ref.get(dimension, []):
-                            st.markdown(f"- {item}")
-                        if not ap_ref.get(dimension):
-                            st.caption("No data")
+                render_kpi_section_label(comparison_header)
+                cmp_col_c, cmp_col_r = st.columns(2)
+                with cmp_col_c:
+                    st.markdown(f"**{cfg.hero_brand}**")
+                    render_nopd_grid(cuervo_ap)
+                with cmp_col_r:
+                    st.markdown(f"**{display_name}**")
+                    render_nopd_grid(ap_ref)
                 st.markdown("---")
             elif has_ref_nopd:
-                render_section_label(f"{display_name} Audience Profile (Reference)")
+                render_kpi_section_label(f"{display_name} audience profile (reference)")
                 st.caption(
                     f"This is {display_name}'s audience — not {cfg.industry} drinkers. "
                     f"Study their engagement patterns and emotional drivers, "
@@ -226,25 +229,26 @@ with tab_inspo:
                 if ap_ref.get("summary"):
                     summary_clean = ap_ref["summary"].replace("\n", " ").strip()
                     st.markdown(f"*{summary_clean}*")
-                render_nopd_cards(ap_ref)
+                render_nopd_grid(ap_ref)
                 st.markdown("---")
 
             # ── How to Win ─────────────────────────────────────────────
             hw = report_r.get("how_to_win", {})
             if hw.get("territories"):
-                render_section_label("How to Win")
+                render_kpi_section_label("How to win")
                 if hw.get("summary"):
                     st.markdown(f"*{hw['summary']}*")
-                render_territory_cards(hw["territories"])
+                render_territory_list(hw["territories"])
                 if hw.get("audience_verbatims"):
                     with st.expander("Audience Verbatims"):
-                        render_verbatim_quotes(hw["audience_verbatims"])
+                        for _quote in hw["audience_verbatims"][:8]:
+                            render_verbatim_card(_quote)
                 st.markdown("---")
 
             # ── Performance Statistics ────────────────────────────────
             stats = report_r.get("statistics", {})
             if stats and any(stats.get("all_posts", {}).values()):
-                render_section_label("Performance Statistics")
+                render_kpi_section_label("Performance statistics")
                 st.caption("Min / Max / Median / Avg across all analyzed posts")
                 render_statistics_section(stats)
                 st.markdown("---")
@@ -256,7 +260,7 @@ with tab_inspo:
 # ══════════════════════════════════════════════════════════════════════
 
 with tab_explorer:
-    st.subheader("Data Explorer")
+    render_kpi_section_label("Data explorer")
     st.markdown("Use these filters to drill into the data. Global brand/platform filters from the sidebar still apply.")
 
     # ── Advanced filters ───────────────────────────────────────────────

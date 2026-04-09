@@ -5,6 +5,7 @@ Assembles all Cuervo-specific config into a ClientConfig instance.
 """
 
 from clients._schema import ClientConfig
+from config import POPLIFE_TREATMENT_C_CSS
 from clients.cuervo.brands import (
     BRANDS, BRAND_ORDER, BRAND_COLORS, BRAND_MAP, FALLBACK_FOLLOWERS,
     REFERENCE_BRANDS, REFERENCE_BRAND_LABELS,
@@ -26,24 +27,12 @@ from clients.cuervo.copy import (
     PAGE_HEADERS, PAGE_CAPTIONS, NAV_TABLE, NARRATIVE,
 )
 
-# ── Poplife-themed CSS ───────────────────────────────────────────────
+# ── Cuervo-specific client CSS (sidebar theme, buttons, blockquote) ───
+# All shared Treatment C styles come from POPLIFE_TREATMENT_C_CSS in config.py.
+# This block only contains Cuervo overrides (dark sidebar, peach button theme).
 
-CUSTOM_CSS = """
+_CUERVO_CLIENT_CSS = """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&display=swap');
-
-    .block-container { padding-top: 3rem; }
-
-    /* Headings */
-    h1, h2, h3 { color: #333333; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; }
-
-    /* Metrics */
-    [data-testid="stMetricValue"] { font-size: 1.8rem; font-weight: 700; color: #333333; }
-    [data-testid="stMetricDelta"] { font-size: 0.9rem; }
-
-    /* Tabs */
-    .stTabs [data-baseweb="tab"] { font-weight: 600; font-family: 'Barlow Condensed', sans-serif; }
-
     /* Sidebar */
     [data-testid="stSidebar"] {
         background-color: #333333;
@@ -111,6 +100,9 @@ CUSTOM_CSS = """
                  background: #F3EDE6; border-radius: 0 8px 8px 0; }
 </style>
 """
+
+# Concatenate shared Treatment C CSS + Cuervo-specific overrides.
+CUSTOM_CSS = POPLIFE_TREATMENT_C_CSS + _CUERVO_CLIENT_CSS
 
 
 def get_config() -> ClientConfig:

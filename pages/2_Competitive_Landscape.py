@@ -13,6 +13,9 @@ import streamlit as st
 
 from config import CHART_TEMPLATE, CHART_FONT, COLLAB_AMPLIFIED_TYPES
 from client_context import get_client
+from ui_components import (
+    render_page_hero, render_kpi_section_label, render_poplife_note,
+)
 
 if "results" not in st.session_state:
     st.warning("Go to the home page first to load data.")
@@ -22,8 +25,6 @@ cfg = get_client()
 
 st.logo(cfg.app_logo_path)
 st.markdown(cfg.custom_css, unsafe_allow_html=True)
-st.header(cfg.page_headers.get("competitive", "Competitive Landscape"))
-st.caption(cfg.page_captions.get("competitive", "What competitors are doing — sidebar filters apply here."))
 
 results = st.session_state["results"]
 df = st.session_state["filtered_df"]
@@ -34,6 +35,22 @@ order = [b for b in cfg.brand_order if b in sel_brands]
 HERO = cfg.hero_brand
 ENG_PER_POST_TARGET = cfg.kpi_targets["engagements_per_post"]
 ENG_PER_1K_TARGET = cfg.kpi_targets["eng_per_1k_followers"]
+
+# ── Page hero ─────────────────────────────────────────────────────────
+render_page_hero(
+    title="The Window",
+    kicker=f"{HERO} · Competitive Landscape",
+    subtitle=cfg.page_captions.get(
+        "competitive",
+        "What competitors are doing — sidebar filters apply here.",
+    ),
+    stats=[
+        {"value": str(len(cfg.brand_order)), "label": "Brands tracked"},
+        {"value": str(len(sel_brands)), "label": "In view"},
+        {"value": f"{len(df):,}", "label": "Posts filtered"},
+        {"value": "2", "label": "Platforms"},
+    ],
+)
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 tab_overview, tab_gaps = st.tabs([
@@ -47,7 +64,7 @@ tab_overview, tab_gaps = st.tabs([
 with tab_overview:
 
     # ── Comparison Table ───────────────────────────────────────────────
-    st.subheader("Side-by-Side Metrics")
+    render_kpi_section_label("Side-by-side metrics")
 
     benchmark = results.get("benchmark", {})
     has_bench = bool(benchmark)
@@ -138,7 +155,7 @@ with tab_overview:
     st.markdown("---")
 
     # ── "Who's Winning & Why" ──────────────────────────────────────────
-    st.subheader("Who's Winning & Why")
+    render_kpi_section_label("Who's winning & why")
 
     _df_owned = df[~df["collaboration"].str.strip().str.lower().isin(COLLAB_AMPLIFIED_TYPES)] if "collaboration" in df.columns else df
     brand_engs = _df_owned.groupby("brand")["total_engagement"].mean().dropna()
@@ -158,14 +175,22 @@ with tab_overview:
 
     hero_avg_eng = brand_engs.get(HERO, 0)
     hero_rank = list(brand_engs.index).index(HERO) + 1 if HERO in brand_engs.index else len(brand_engs)
-    st.info(f"**{HERO} ranks #{hero_rank}** out of {len(brand_engs)} brands at {hero_avg_eng:,.0f} avg engagements. "
-            f"The top brand leads by {top3.iloc[0] - hero_avg_eng:,.0f}." if len(top3) and hero_avg_eng < top3.iloc[0] else
-            f"**{HERO} leads** at {hero_avg_eng:,.0f} avg engagements.")
+    if len(top3) and hero_avg_eng < top3.iloc[0]:
+        render_poplife_note(
+            f"<strong>{HERO} ranks #{hero_rank}</strong> out of {len(brand_engs)} brands "
+            f"at {hero_avg_eng:,.0f} avg engagements. "
+            f"The top brand leads by {top3.iloc[0] - hero_avg_eng:,.0f}."
+        )
+    else:
+        render_poplife_note(
+            f"<strong>{HERO} leads</strong> at {hero_avg_eng:,.0f} avg engagements.",
+            variant="success",
+        )
 
     st.markdown("---")
 
     # ── Engagement per 1K Followers Chart ──────────────────────────────
-    st.subheader("Engagements per 1K Followers by Brand")
+    render_kpi_section_label("Engagements per 1K followers")
 
     epk_rows = []
     for brand in sel_brands:
@@ -202,7 +227,7 @@ with tab_overview:
     st.markdown("---")
 
     # ── Top 10 Posts per Brand/Platform ──────────────────────────────
-    st.subheader("Top 10 Posts by Brand")
+    render_kpi_section_label("Top 10 posts by brand")
     st.caption("Best-performing content per brand — study what's working")
 
     top10_brand = st.selectbox("Select brand", order, key="top10_brand_sel")
@@ -277,15 +302,20 @@ with tab_overview:
         best_type = pd.DataFrame(top10_rows).groupby("Type")["Engagements"].mean()
         best_type_name = best_type.idxmax() if len(best_type) else "N/A"
         avg_top10_eng = sum(r["Engagements"] for r in top10_rows) / len(top10_rows)
-        st.info(f"**{top10_brand}'s top 10** average {avg_top10_eng:,.0f} engagements on {top10_plat}. "
-                f"Best-performing format: **{best_type_name}**. "
-                f"{'Study their approach for ' + HERO + ' adaptation.' if top10_brand != HERO else 'Keep doubling down on what works.'}")
+        _adapt = (
+            f"Study their approach for {HERO} adaptation."
+            if top10_brand != HERO
+            else "Keep doubling down on what works."
+        )
+        render_poplife_note(
+            f"<strong>{top10_brand}'s top 10</strong> average {avg_top10_eng:,.0f} engagements "
+            f"on {top10_plat}. Best-performing format: <strong>{best_type_name}</strong>. {_adapt}"
+        )
     else:
-        st.info(f"No {top10_plat} post data available for {top10_brand}.")
+        render_poplife_note(f"No {top10_plat} post data available for {top10_brand}.")
 
     # ── Dynamic vs Static Performance ──────────────────────────────────
-    st.divider()
-    st.subheader("Dynamic vs Static Performance")
+    render_kpi_section_label("Dynamic vs static performance")
     st.caption("Comparing avg engagements: Dynamic (video) vs Static (image) content")
 
     dynamic_types = ["Reel", "Video"]
@@ -340,9 +370,13 @@ with tab_overview:
         fig_ds.update_layout(font=CHART_FONT, height=380, legend=dict(orientation="h", y=-0.15))
         st.plotly_chart(fig_ds, use_container_width=True)
 
-    st.info(f"**Dynamic content {'outperforms' if dyn_eng > stat_eng else 'underperforms vs'} static** by "
-            f"{abs(dyn_eng - stat_eng):,.0f} avg engagements. {HERO}'s dynamic mix is {dyn_pct:.0f}% — "
-            f"{'meeting' if dyn_pct >= 50 else 'below'} the 50%+ target.")
+    _outcome = "outperforms" if dyn_eng > stat_eng else "underperforms vs"
+    _status = "meeting" if dyn_pct >= 50 else "below"
+    render_poplife_note(
+        f"<strong>Dynamic content {_outcome} static</strong> by "
+        f"{abs(dyn_eng - stat_eng):,.0f} avg engagements. {HERO}'s dynamic mix is {dyn_pct:.0f}% — "
+        f"{_status} the 50%+ target."
+    )
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -352,7 +386,7 @@ with tab_overview:
 with tab_gaps:
 
     # ── Format Strategy Comparison ─────────────────────────────────────
-    st.subheader("Format Strategy Comparison")
+    render_kpi_section_label("Format strategy comparison")
 
     type_data = df[df["brand"].isin(sel_brands)].groupby(["brand", "post_type"]).size().reset_index(name="count")
     totals = type_data.groupby("brand")["count"].transform("sum")
@@ -368,7 +402,7 @@ with tab_gaps:
     st.markdown("---")
 
     # ── Avg Engagements by Format (Cross-Brand) ─────────────────────
-    st.subheader("Avg Engagements by Format — Cross-Brand")
+    render_kpi_section_label("Avg engagements by format")
     st.caption("Which content formats drive the most engagement for each brand")
 
     eng_by_fmt_rows = []
@@ -399,15 +433,17 @@ with tab_gaps:
         if len(best_fmt_overall):
             top_fmt = best_fmt_overall.index[0]
             top_fmt_eng = best_fmt_overall.iloc[0]
-            st.info(f"**{top_fmt}** drives the highest avg engagement across brands at {top_fmt_eng:,.0f}. "
-                    f"Ensure {HERO}'s content mix prioritizes this format.")
+            render_poplife_note(
+                f"<strong>{top_fmt}</strong> drives the highest avg engagement across brands "
+                f"at {top_fmt_eng:,.0f}. Ensure {HERO}'s content mix prioritizes this format."
+            )
     else:
-        st.info("No engagement-by-format data available.")
+        render_poplife_note("No engagement-by-format data available.")
 
     st.markdown("---")
 
     # ── Posting Frequency Comparison ───────────────────────────────────
-    st.subheader("Posting Frequency (posts/week)")
+    render_kpi_section_label("Posting frequency (posts/week)")
 
     freq = results["frequency"]
     freq_rows = []
