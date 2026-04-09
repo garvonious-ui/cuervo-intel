@@ -19,7 +19,8 @@ import streamlit as st
 sys.path.insert(0, os.path.dirname(__file__))
 
 from client_context import load_client_config, get_client, set_active_client, list_available_clients
-from config import CHART_TEMPLATE, CHART_FONT
+from config import CHART_TEMPLATE, CHART_FONT, POPLIFE_TREATMENT_C_CSS
+from ui_components import render_page_hero, render_kpi_section_label
 
 # ── Client Routing ───────────────────────────────────────────────────
 # Must happen before set_page_config so we can use client's page_title.
@@ -30,8 +31,9 @@ if client_id is None:
     # Internal view — client picker
     st.set_page_config(page_title="Poplife | Social Intel", page_icon="favicon.png",
                        layout="wide", initial_sidebar_state="expanded")
-    st.title("Poplife — Social Media Intelligence")
-    st.caption("Select a client to launch their dashboard")
+    # Treatment C CSS is injected here because no client config is loaded yet
+    # (client-specific custom_css is only loaded after a client is selected).
+    st.markdown(f"<style>{POPLIFE_TREATMENT_C_CSS}</style>", unsafe_allow_html=True)
 
     available = list_available_clients()
     if not available:
@@ -47,6 +49,20 @@ if client_id is None:
         except Exception:
             display_names[cid] = cid
 
+    render_page_hero(
+        title="The Control Room",
+        kicker="POPLIFE · INTERNAL",
+        subtitle="Select a client dashboard to launch — or append ?client=<id> to any URL to jump straight in.",
+        stats=[
+            {"value": str(len(available)), "label": "Active clients"},
+            {"value": "5", "label": "Dashboard pages"},
+            {"value": "2", "label": "Platforms"},
+            {"value": "Treatment C", "label": "UI phase"},
+        ],
+    )
+
+    render_kpi_section_label("Launch a dashboard")
+    st.caption("Pick a client below, then click Launch. The client's full Treatment C dashboard opens in this tab.")
     selected = st.selectbox(
         "Select Client",
         available,
@@ -390,23 +406,21 @@ if show_dev_controls:
 
 # ── Home Page ─────────────────────────────────────────────────────────
 
-logo_col, title_col = st.columns([1, 5])
-with logo_col:
-    if cfg.logo_path and os.path.isfile(cfg.logo_path):
-        st.image(cfg.logo_path, width=140)
-with title_col:
-    st.title(cfg.home_title)
-    st.caption(cfg.home_subtitle_template.format(n=len(cfg.brands))
-               + f"  |  {len(df)} posts analyzed")
+render_page_hero(
+    title="The Hub",
+    kicker=f"{cfg.hero_brand.upper()} · SOCIAL INTELLIGENCE",
+    subtitle=cfg.home_subtitle_template.format(n=len(cfg.brands)),
+    stats=[
+        {"value": f"{len(df):,}", "label": "Posts analyzed"},
+        {"value": str(len(cfg.brands)), "label": "Brands tracked"},
+        {"value": "5", "label": "Dashboard pages"},
+        {"value": "2", "label": "Platforms"},
+    ],
+)
 
-st.markdown("---")
-
-st.markdown("---")
-st.subheader("Navigate")
+render_kpi_section_label("Navigate")
+st.caption("Each page is a different lens on the same data — jump straight to a section from the sidebar or from the links below.")
 st.markdown(cfg.nav_table)
-
-# Excel export
-st.markdown("---")
 
 
 def _generate_excel(results):
@@ -417,6 +431,7 @@ def _generate_excel(results):
         return f.read()
 
 
+render_kpi_section_label("Export")
 col_a, col_b = st.columns([3, 1])
 with col_b:
     xlsx_bytes = _generate_excel(results)

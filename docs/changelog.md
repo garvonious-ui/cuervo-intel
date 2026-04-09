@@ -1,5 +1,32 @@
 # Changelog
 
+## 2026-04-09 — Session 3a (home + picker Treatment C) — ON `preview/ui-phase-1` BRANCH
+
+Follow-up after deploying `preview/ui-phase-1` to Streamlit Community Cloud for review. User flagged that the internal client picker and per-client home pages were still on the bare `st.title` + `st.caption` layout — inconsistent with pages 1–5 after the Treatment C rollout.
+
+### What shipped
+- **`app.py` internal client picker** (no `?client=` param): dark "THE CONTROL ROOM" hero with `POPLIFE · INTERNAL` kicker, 4 inline stats (active clients, dashboard pages, platforms, UI phase). Peach "LAUNCH A DASHBOARD" section label above the selectbox + Launch Dashboard button. Injects `POPLIFE_TREATMENT_C_CSS` directly (no client config is loaded at this point, so client-specific `custom_css` is unavailable).
+- **`app.py` per-client home** (`?client=X`): dark "THE HUB" hero with `{CLIENT} · SOCIAL INTELLIGENCE` kicker (e.g. "JOSE CUERVO · SOCIAL INTELLIGENCE"), 4 inline stats (posts analyzed, brands tracked, dashboard pages, platforms). Replaces the old `st.columns([1, 5])` logo + `st.title` layout. Peach "NAVIGATE" section label above `cfg.nav_table`. Peach "EXPORT" section label above the Download Excel Report button.
+
+### Gotcha found and worked around
+First attempt used `render_content_card_open/render_content_card_close` to wrap the selectbox + button (picker) and the nav_table (home). That broke visually: Streamlit widgets render as siblings inside their own container divs, NOT inside markdown-emitted HTML. The open `<div class="content-card">` gets auto-closed by the browser's HTML parser at the end of the `st.markdown` block, and everything after appears visually outside the card.
+
+**Rule for future Treatment C work**: `render_content_card_open/close` only works for content where everything between them is emitted via a single `st.markdown(unsafe_allow_html=True)` call. It does NOT work when Streamlit widgets (`st.selectbox`, `st.button`, `st.plotly_chart`, `st.dataframe`, `st.markdown` with markdown tables, etc.) appear between them — those create their own sibling containers. For widget content, use a section label + caption instead. (This also means the Page 3 Collab Mix + Content Mix Funnel "wraps" I shipped in the main Session 3 entry are actually only wrapping the title + caption; the charts and scorecards below them render as siblings. Looks fine visually because the dark header + light content flows naturally, but it's not a true card wrap. Worth revisiting in Phase 2.)
+
+### Second gotcha: `type="primary"` Launch button
+Using `st.button("Launch Dashboard", type="primary")` on the picker rendered as barely-visible light-peach text on a pale peach background. Root cause: the picker loads `POPLIFE_TREATMENT_C_CSS` but NOT any client-specific `custom_css` (no client is loaded yet), so Streamlit's default primary-button theme clashed with the peach background. Fix: dropped `type="primary"` — the button now renders as dark-on-white and reads clearly.
+
+### Verified
+3 views on port 8501 (picker, `?client=cuervo` home, `?client=devils_reserve` home). Zero exceptions, zero server errors. Screenshots captured of all three.
+
+### Files changed this sub-session
+```
+ M app.py            — picker + home page Treatment C conversions, imports ui_components + POPLIFE_TREATMENT_C_CSS
+ M docs/changelog.md — this entry
+```
+
+---
+
 ## 2026-04-09 — Session 3 (UI Phase 1 finish: Treatment C consistency pass across all 5 pages) — COMMIT READY, NOT PUSHED
 
 ### What shipped
