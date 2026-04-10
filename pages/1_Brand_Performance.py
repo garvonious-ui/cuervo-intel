@@ -548,12 +548,13 @@ with tab_content:
                                      xaxis_tickangle=-35)
             st.plotly_chart(fig_pillar, use_container_width=True)
 
-            top_p = pillar_eng.iloc[0]
-            bottom_p = pillar_eng.iloc[-1] if len(pillar_eng) > 1 else top_p
-            pillars_above = pillar_eng[pillar_eng["avg_eng"] >= ENG_PER_POST_TARGET]
-            st.info(f"**Top pillar:** {top_p['content_pillar']} at {top_p['avg_eng']:,.0f} avg engagements ({top_p['count']} posts). "
-                    f"{len(pillars_above)} of {len(pillar_eng)} pillars meet the {ENG_PER_POST_TARGET} eng/post target. "
-                    f"**Lowest:** {bottom_p['content_pillar']} at {bottom_p['avg_eng']:,.0f}.")
+            if len(pillar_eng):
+                top_p = pillar_eng.iloc[0]
+                bottom_p = pillar_eng.iloc[-1] if len(pillar_eng) > 1 else top_p
+                pillars_above = pillar_eng[pillar_eng["avg_eng"] >= ENG_PER_POST_TARGET]
+                st.info(f"**Top pillar:** {top_p['content_pillar']} at {top_p['avg_eng']:,.0f} avg engagements ({top_p['count']} posts). "
+                        f"{len(pillars_above)} of {len(pillar_eng)} pillars meet the {ENG_PER_POST_TARGET} eng/post target. "
+                        f"**Lowest:** {bottom_p['content_pillar']} at {bottom_p['avg_eng']:,.0f}.")
         else:
             st.subheader("Content Theme Performance")
             st.caption(_perf.get("theme_caption", f"Which themes drive the highest engagement for {HERO}"))
