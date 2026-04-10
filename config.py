@@ -221,6 +221,29 @@ POPLIFE_TREATMENT_C_CSS = """
     /* Base headings */
     h1, h2, h3, h4, h5, h6 { color: #333333; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; }
 
+    /* ══════════════════════════════════════════════════════════════════
+       Streamlit icon font preservation
+       ══════════════════════════════════════════════════════════════════
+       Streamlit uses Material Symbols Rounded ligatures for native icons
+       (sidebar collapse arrow, expander chevron, button icons, etc.).
+       Setting `font = "Barlow Condensed"` in .streamlit/config.toml
+       cascades that font down to icon spans too, breaking the ligature
+       transformation — so users see the literal icon name as text
+       (e.g. "keyboard_double_arrow_left", "arrow_drop_down").
+       Force Material Symbols back onto the icon elements explicitly.
+       ══════════════════════════════════════════════════════════════════ */
+    [data-testid="stIconMaterial"],
+    span[data-testid="stIconMaterial"],
+    .material-icons,
+    .material-symbols-rounded,
+    .material-symbols-outlined {
+        font-family: 'Material Symbols Rounded', 'Material Symbols Outlined', 'Material Icons' !important;
+        font-weight: normal !important;
+        font-style: normal !important;
+        font-feature-settings: 'liga' !important;
+        -webkit-font-feature-settings: 'liga' !important;
+    }
+
     /* Restyled Streamlit tabs to match Treatment C tab row */
     .stTabs [data-baseweb="tab-list"] {
         border-bottom: 1px solid #E0D8D0;
