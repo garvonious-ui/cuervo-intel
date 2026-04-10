@@ -480,7 +480,7 @@ with tab_frameworks:
 
     st.markdown("---")
 
-    # ── Content Mix Funnel ─────────────────────────────────────────────
+    # ── Content Mix Funnel (hidden when no funnel tags — 2026-04-10 17:00) ──
     # Only show if posts have content_mix_funnel tags
     _mix_src_check = hero_df_full if "hero_df_full" in dir() else hero_df
     _has_funnel_data = "content_mix_funnel" in _mix_src_check.columns and _mix_src_check["content_mix_funnel"].notna().any()
