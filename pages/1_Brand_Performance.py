@@ -37,8 +37,9 @@ _perf = cfg.narrative.get("performance", {})
 
 st.logo(cfg.app_logo_path)
 st.markdown(cfg.custom_css, unsafe_allow_html=True)
-st.header(cfg.page_headers.get("performance", "Brand Performance"))
-st.caption(cfg.page_captions.get("performance", "How the brand is performing — sidebar filters do not apply here."))
+# Note: render_page_hero() further down (~line 140) renders THE MIRROR hero +
+# kicker + subtitle. The old st.header / st.caption block was vestigial from
+# before the Treatment C rollout — removed so the page only has one title.
 
 results = st.session_state["results"]
 df = st.session_state["df"]  # Unfiltered
