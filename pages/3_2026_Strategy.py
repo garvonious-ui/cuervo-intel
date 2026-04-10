@@ -481,81 +481,85 @@ with tab_frameworks:
     st.markdown("---")
 
     # ── Content Mix Funnel ─────────────────────────────────────────────
+    # Only show if posts have content_mix_funnel tags
+    _mix_src_check = hero_df_full if "hero_df_full" in dir() else hero_df
+    _has_funnel_data = "content_mix_funnel" in _mix_src_check.columns and _mix_src_check["content_mix_funnel"].notna().any()
     _mix_cats = list(cfg.content_mix_targets.keys())
-    render_kpi_section_label(f"Content mix funnel — {' / '.join(_mix_cats)} / Connect")
-    st.caption(f"Grab attention first ({_mix_cats[0]} {cfg.content_mix_targets[_mix_cats[0]]}%), then guide to action ({_mix_cats[-1]} {cfg.content_mix_targets[_mix_cats[-1]]}%)")
+    if _has_funnel_data:
+        render_kpi_section_label(f"Content mix funnel — {' / '.join(_mix_cats)} / Connect")
+        st.caption(f"Grab attention first ({_mix_cats[0]} {cfg.content_mix_targets[_mix_cats[0]]}%), then guide to action ({_mix_cats[-1]} {cfg.content_mix_targets[_mix_cats[-1]]}%)")
 
-    hero_mix_data = []
-    # Use hero_df_full but exclude stories (includes Edutain dupes with _mix_weight=0.5)
-    _mix_src = hero_df_full if "hero_df_full" in dir() else hero_df
-    if "is_story" in _mix_src.columns:
-        _mix_src = _mix_src[_mix_src["is_story"].astype(str).str.lower() != "yes"]
-    has_weight = "_mix_weight" in _mix_src.columns
-    total_weight = _mix_src["_mix_weight"].sum() if has_weight else len(_mix_src)
-    for cat in _mix_cats:
-        if "content_mix_funnel" in _mix_src.columns:
-            matching = _mix_src[_mix_src["content_mix_funnel"] == cat]
-            if has_weight:
-                pct = matching["_mix_weight"].sum() / max(total_weight, 1) * 100
+        hero_mix_data = []
+        # Use hero_df_full but exclude stories (includes Edutain dupes with _mix_weight=0.5)
+        _mix_src = hero_df_full if "hero_df_full" in dir() else hero_df
+        if "is_story" in _mix_src.columns:
+            _mix_src = _mix_src[_mix_src["is_story"].astype(str).str.lower() != "yes"]
+        has_weight = "_mix_weight" in _mix_src.columns
+        total_weight = _mix_src["_mix_weight"].sum() if has_weight else len(_mix_src)
+        for cat in _mix_cats:
+            if "content_mix_funnel" in _mix_src.columns:
+                matching = _mix_src[_mix_src["content_mix_funnel"] == cat]
+                if has_weight:
+                    pct = matching["_mix_weight"].sum() / max(total_weight, 1) * 100
+                else:
+                    pct = len(matching) / max(len(_mix_src), 1) * 100
             else:
+                cat_themes = cfg.content_mix_map[cat]
+                matching = _mix_src[_mix_src["content_theme"].isin(cat_themes)]
                 pct = len(matching) / max(len(_mix_src), 1) * 100
-        else:
-            cat_themes = cfg.content_mix_map[cat]
-            matching = _mix_src[_mix_src["content_theme"].isin(cat_themes)]
-            pct = len(matching) / max(len(_mix_src), 1) * 100
-        target = cfg.content_mix_targets.get(cat, 0)
-        hero_mix_data.append({
-            "Category": cat,
-            "Actual %": round(pct, 1),
-            "Target %": target,
-            "Gap": round(pct - target, 1),
-            "Posts": len(matching),
-        })
+            target = cfg.content_mix_targets.get(cat, 0)
+            hero_mix_data.append({
+                "Category": cat,
+                "Actual %": round(pct, 1),
+                "Target %": target,
+                "Gap": round(pct - target, 1),
+                "Posts": len(matching),
+            })
 
-    mix_df = pd.DataFrame(hero_mix_data)
+        mix_df = pd.DataFrame(hero_mix_data)
 
-    render_content_card_open(
-        title=f"{HERO} content mix: actual vs Poplife target",
-        caption="Funnel logic — Entertain grabs attention → Educate builds relevance → Connect fosters relationships → Convince drives action",
-    )
-    col_mix1, col_mix2 = st.columns([1.3, 1])
-    with col_mix1:
-        fig_mix = go.Figure()
-        fig_mix.add_trace(go.Bar(x=mix_df["Category"], y=mix_df["Actual %"],
-                                 name="Actual", marker_color=[cfg.content_mix_colors.get(c, "#999999") for c in mix_df["Category"]],
-                                 text=mix_df["Actual %"], textposition="outside", texttemplate="%{text:.0f}%"))
-        fig_mix.add_trace(go.Scatter(x=mix_df["Category"], y=mix_df["Target %"],
-                                     name="Poplife Target", mode="markers+lines",
-                                     marker=dict(size=12, color="#333333", symbol="diamond"),
-                                     line=dict(color="#333333", width=2, dash="dash")))
-        fig_mix.update_layout(template=CHART_TEMPLATE, font=CHART_FONT, height=360,
-                              yaxis_title="% of Content",
-                              legend=dict(orientation="h", y=-0.15),
-                              margin=dict(l=10, r=10, t=20, b=10))
-        st.plotly_chart(fig_mix, use_container_width=True)
+        render_content_card_open(
+            title=f"{HERO} content mix: actual vs Poplife target",
+            caption="Funnel logic — Entertain grabs attention → Educate builds relevance → Connect fosters relationships → Convince drives action",
+        )
+        col_mix1, col_mix2 = st.columns([1.3, 1])
+        with col_mix1:
+            fig_mix = go.Figure()
+            fig_mix.add_trace(go.Bar(x=mix_df["Category"], y=mix_df["Actual %"],
+                                     name="Actual", marker_color=[cfg.content_mix_colors.get(c, "#999999") for c in mix_df["Category"]],
+                                     text=mix_df["Actual %"], textposition="outside", texttemplate="%{text:.0f}%"))
+            fig_mix.add_trace(go.Scatter(x=mix_df["Category"], y=mix_df["Target %"],
+                                         name="Poplife Target", mode="markers+lines",
+                                         marker=dict(size=12, color="#333333", symbol="diamond"),
+                                         line=dict(color="#333333", width=2, dash="dash")))
+            fig_mix.update_layout(template=CHART_TEMPLATE, font=CHART_FONT, height=360,
+                                  yaxis_title="% of Content",
+                                  legend=dict(orientation="h", y=-0.15),
+                                  margin=dict(l=10, r=10, t=20, b=10))
+            st.plotly_chart(fig_mix, use_container_width=True)
 
-    with col_mix2:
-        for _, row in mix_df.iterrows():
-            direction = "MORE" if row["Gap"] < -5 else ("LESS" if row["Gap"] > 5 else "ON TRACK")
-            _body = (
-                f"<strong>{row['Category']}</strong>: {row['Actual %']:.0f}% actual / "
-                f"{row['Target %']}% target ({row['Gap']:+.0f}%)"
-            )
-            if direction == "ON TRACK":
-                render_poplife_note(_body, variant="success")
-            elif direction == "MORE":
-                render_poplife_note(_body + " — Need MORE", variant="danger")
-            else:
-                render_poplife_note(_body + " — Need LESS", variant="warning")
-    render_content_card_close()
+        with col_mix2:
+            for _, row in mix_df.iterrows():
+                direction = "MORE" if row["Gap"] < -5 else ("LESS" if row["Gap"] > 5 else "ON TRACK")
+                _body = (
+                    f"<strong>{row['Category']}</strong>: {row['Actual %']:.0f}% actual / "
+                    f"{row['Target %']}% target ({row['Gap']:+.0f}%)"
+                )
+                if direction == "ON TRACK":
+                    render_poplife_note(_body, variant="success")
+                elif direction == "MORE":
+                    render_poplife_note(_body + " — Need MORE", variant="danger")
+                else:
+                    render_poplife_note(_body + " — Need LESS", variant="warning")
+        render_content_card_close()
 
-    render_connect_callout(
-        "Connect — Always On",
-        "Connection isn't a content category — it's how we show up every day. Replying to "
-        "comments, engaging in DMs, reposting fan content, and jumping into conversations in "
-        "the feed. This layer runs underneath everything and turns passive followers into "
-        "active community.",
-    )
+        render_connect_callout(
+            "Connect — Always On",
+            "Connection isn't a content category — it's how we show up every day. Replying to "
+            "comments, engaging in DMs, reposting fan content, and jumping into conversations in "
+            "the feed. This layer runs underneath everything and turns passive followers into "
+            "active community.",
+        )
 
     st.markdown("---")
 
