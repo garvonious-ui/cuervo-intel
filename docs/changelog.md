@@ -1,5 +1,92 @@
 # Changelog
 
+## 2026-04-10 — Session 4 (DR data enrichment + autostrat cleanup) — SHIPPED TO `origin/preview/ui-phase-1`
+
+DR dashboard went from broken KPIs to fully functional scorecard + cleaned autostrat intelligence. Also created a Notion briefing doc for client meeting.
+
+### What shipped (10 commits)
+
+**DR manual_posts.csv enrichment**
+- Merged 18 captions from `dr_captions_filled.csv` → 100% caption coverage (133 posts)
+- Fixed brand name mismatch: `brand` column was `"devilsreserve"` but `cfg.hero_brand = "Devils Reserve"`. This was the root cause of all KPI zeros — `hero_df = df[df["brand"] == HERO]` returned 0 rows.
+- Fixed comma-formatted numeric columns (`views`, `impressions` stored as `"1,924"` strings) → parsed to int. Fixed Carousel Imp/Mo from 485 → ~24K.
+- Recomputed `total_engagement` (was all NaN — never calculated).
+- Removed 30 untagged TikTok posts + 1 deleted IG post → clean 133 IG-only dataset.
+- Set `themes_ready=True` in DR config.
+- Added `"devils reserve"` to `COLLAB_OWNED_TYPES` in config.py.
+
+**Page 3 content mix funnel guard**
+- Hid the funnel chart + Connect callout when `content_mix_funnel` has no real data. DR posts don't have funnel tags yet.
+- **Debugging saga**: initial guard checked `notna().any()` which returned `True` because the import pipeline's `.astype(str)` converted NaN → `"nan"` → `.replace("nan", pd.NA)` but left empty strings `""` which pass `notna()`. Fixed by also checking `str.strip() != ""`.
+- Added debug `st.caption` to diagnose Streamlit Cloud deploy issues (later removed).
+
+**Page 1 pillar crash guard**
+- Added `if len(pillar_eng):` guard around `pillar_eng.iloc[0]` to prevent IndexError when no owned posts have pillar tags.
+
+**Page 3 creator archetypes priority swap**
+- Brief-defined archetypes now show first (curated, complete). Autostrat-derived archetypes are fallback only.
+
+**Autostrat report cleanup (6 files)**
+- Stripped `\n` PDF artifacts from all text fields across 6 reports (1 hashtag + 5 keyword).
+- Removed search prompts from `key_insights[0]` and `overview` fields.
+- Fixed `search_term` from PDF header ("Why You're Searching") to actual keywords.
+- Cleaned `audience_verbatims`: removed 5 summary-fragment items from DR + Cazadores arrays.
+- Split concatenated creator archetype descriptions across all 3 archetypes (all 5 keyword reports).
+- Recombined 7 garbled campaign fragments into 4 coherent campaigns (Fireball, Jager, Pink Whitney).
+- Profile reports (8 files: chipotle/poppi/dunkin/duolingo × IG/TikTok) audited and confirmed clean — no changes needed.
+
+**Notion briefing doc**
+- Created platform overview + per-page DR performance notes for client meeting: https://www.notion.so/33ee73d7ba2c8197b8cae4b7ee63f30a
+
+### Decisions made
+- **TikTok posts removed from DR manual_posts.csv** — 30 untagged TikTok rows with no pillar/collab tags were diluting the dataset. IG-only for now; TikTok data can come from Sprout exports when available.
+- **Content mix funnel hidden until tagged** — chart shows all 0% without `content_mix_funnel` values. Guard hides the entire section (chart + scorecard + Connect callout). Will reappear automatically once funnel tags are added.
+- **Connect to be removed from DR funnel targets** — user confirmed Connect should not be a funnel stage (same as Cuervo). Deferred to next session when funnel tags are added.
+
+### Bugs found / issues to address next session
+- **Streamlit Cloud preview app serves `main` branch Python code despite branch setting saying `preview/ui-phase-1`**. Data files (CSVs, JSONs) deploy from the preview branch correctly, but `.py` code changes only take effect on `main`. Root cause unknown — may need to delete and recreate the Streamlit Cloud app. For now, code changes must be merged to `main` to go live.
+- **DR `content_mix_funnel` needs manual tagging** — 133 posts need Entertain/Educate/Convince tags. Once tagged, the funnel chart will appear automatically.
+- **DR `content_mix_targets` still includes "Connect"** — needs to be removed (rebalanced to 3 stages: Entertain/Educate/Convince) when funnel tags are added.
+- **`sprout_import.py` line 825 empty string bug** — `.astype(str).str.strip().replace("nan", pd.NA)` doesn't catch empty strings `""`. Should also replace `""` with `pd.NA`. Low priority since the Page 3 guard handles it downstream.
+
+### DR KPI scorecard (verified)
+| Metric | Value | vs Target |
+|---|---|---|
+| Avg Eng/Post | 86 | +1 above 85 |
+| Avg Eng/Reel | 104 | +19 above 85 |
+| Reel Ratio | 43% | -7% below 50% |
+| IG Posts/Mo | 9-10 | On target (8-12) |
+| Likes/Mo | 512 | +12 above 500 |
+| Comments/Mo | 178 | +148 above 30 |
+| Saves/Mo | 58 | +3 above 55 |
+| Shares/Mo | 64 | +4 above 60 |
+
+### Files changed this session
+```
+ M app.py                                          — CODE_VERSION v37→v39
+ M config.py                                       — COLLAB_OWNED_TYPES += "devils reserve"
+ M clients/devils_reserve/client.py                — themes_ready=True
+ M pages/1_Brand_Performance.py                    — pillar crash guard
+ M pages/3_2026_Strategy.py                        — funnel guard + archetype priority swap
+ A data/devils_reserve/sprout/manual_posts.csv     — 133 enriched IG posts
+ M data/devils_reserve/autostrat/instagram_hashtags/devilsreserve.json
+ M data/devils_reserve/autostrat/instagram_keywords/devils_reserve.json
+ M data/devils_reserve/autostrat/instagram_keywords/cazadores_tequila.json
+ M data/devils_reserve/autostrat/instagram_keywords/fireball_whisky.json
+ M data/devils_reserve/autostrat/instagram_keywords/jagermeister.json
+ M data/devils_reserve/autostrat/instagram_keywords/pink_whitney.json
+ M docs/build-plan.md
+ M docs/changelog.md
+```
+
+### Status
+- **Branch**: `preview/ui-phase-1` at `f43987a`, pushed to GitHub
+- **Production (`main`)**: still at `921477e`. Code changes from this session are NOT live on main.
+- **Preview deployment**: data changes are live, code changes are NOT (Streamlit Cloud branch bug)
+- **Next session pickup**: merge `preview/ui-phase-1` → `main` decision, DR funnel tagging, Connect removal from DR targets
+
+---
+
 ## 2026-04-09 — Session 3c (font system + naming unification + icon regression fix) — SHIPPED TO `origin/preview/ui-phase-1`
 
 Picked up after Session 3b's Streamlit Cloud reboot put the picker + home Treatment C live. User flagged font inconsistency across the dashboard ("a decent amount of areas using fallback fonts") and a naming mismatch between sidebar nav, hub landing-page table, and page heros. Resolved both, plus a side-effect bug the font fix introduced.
