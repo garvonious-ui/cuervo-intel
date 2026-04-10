@@ -1,5 +1,70 @@
 # Changelog
 
+## 2026-04-09 — Session 3c (font system + naming unification + icon regression fix) — SHIPPED TO `origin/preview/ui-phase-1`
+
+Picked up after Session 3b's Streamlit Cloud reboot put the picker + home Treatment C live. User flagged font inconsistency across the dashboard ("a decent amount of areas using fallback fonts") and a naming mismatch between sidebar nav, hub landing-page table, and page heros. Resolved both, plus a side-effect bug the font fix introduced.
+
+### What shipped (4 commits)
+
+**`fdb676a` — First attempt at the font fix (CSS-only). DID NOT WORK.**
+Added a high-specificity selector list with `font-family: 'Barlow Condensed' !important` targeting every Streamlit `data-testid` (`stMetricValue`, `stMarkdownContainer`, `stDataFrame`, `stExpander`, `stButton`, `stSelectbox`, sidebar, etc.). Also moved Google Fonts loading from `@import url(...)` inside `<style>` to `<link rel="stylesheet">` to kill FOUT. Pushed to preview, hard-refreshed — fonts STILL fell back. Live DOM probe showed `body` computed font was still "Source Sans" despite the `body { font-family: ... !important }` rule. Streamlit's own widget CSS loads later in the DOM than markdown-injected styles and wins on tie-breaker even against `!important`.
+
+**`8be51b2` — Real fix: Streamlit theme.fontFaces.**
+Switched to the supported approach: `.streamlit/config.toml` `[theme]` `font = "Barlow Condensed"` plus 5 `[[theme.fontFaces]]` blocks (weights 400-800) registering Barlow Condensed at framework startup. This runs *before* CSS injection so it sets the engine-level default that all native widgets inherit. The existing per-component Inter rules (hero subtitle, content-card tables, North Star tagline, CPN summary, poplife notes) still win because they're more specific selectors. Required a manual reboot to actually deploy (auto-rebuild failed silently — second time today).
+
+**`9744881` — Naming unification + font decisions doc.**
+Three different naming systems were drifting apart for the same 5 pages:
+- Sidebar (Streamlit auto-nav from filename) → "Brand Performance"
+- Hub landing-page table (`cfg.nav_table`) → "Cuervo Performance"
+- Page hero kicker (`render_page_hero`) → "JOSE CUERVO · BRAND PERFORMANCE"
+
+Locked in option #5 from the design discussion: descriptive name is the canonical primary identifier, editorial code names ("THE MIRROR", "THE WINDOW", "THE PLAYBOOK", "THE TOOLBOX", "THE LANDSCAPE") remain as the hero title — payoff once you're on the page, not a navigation aid.
+
+Specific edits:
+- `clients/cuervo/copy.py` `NAV_TABLE`: "Cuervo Performance" → "Brand Performance", "2026 Strategy & Brief" → "2026 Strategy", "Hashtag & Search Intel" → "Conversation Intel" (description rewritten to cover the full Tab 1/2/3 scope: brand hashtags + category/cultural + Google News).
+- `clients/devils_reserve/copy.py` `NAV_TABLE`: "Devils Reserve Performance" → "Brand Performance", "Strategy & Brief" → "2026 Strategy".
+- `pages/1_Brand_Performance.py`: removed vestigial `st.header()` + `st.caption()` at lines 40-41. These were leftover from before the Treatment C rollout — `render_page_hero()` at line ~140 was already rendering the hero with kicker + title + subtitle, so Page 1 was rendering the title TWICE. Other pages (2-5) had already dropped this when the hero was added.
+- Sidebar nav (filename-derived) was already correct so no file renames needed.
+- `docs/decisions.md`: added a long entry documenting the Streamlit font config gotcha. Rule: **fonts go in `.streamlit/config.toml [[theme.fontFaces]]`, never in CSS**. CSS only handles per-component overrides.
+
+**`01ba8af` — Material Symbols icon regression fix.**
+Side effect of `8be51b2`: setting `font = "Barlow Condensed"` cascaded the font down to Streamlit's native icon spans (`[data-testid="stIconMaterial"]`), which use Material Symbols Rounded ligatures. Barlow Condensed has no such ligatures, so users started seeing literal icon names as text — sidebar collapse button showed `keyboard_double_arrow_left`, expander chevrons showed `arrow_drop_down`. Fix: explicit CSS rule in `POPLIFE_TREATMENT_C_CSS` re-routing `[data-testid="stIconMaterial"]` (plus `material-icons`/`material-symbols-*` fallback selectors) back to `Material Symbols Rounded` with `!important` and `font-feature-settings: 'liga'`. Verified via `document.fonts` API that Material Symbols Rounded was already registered (Streamlit ships it) just unloaded — so CSS-only override was enough; no need to add it to fontFaces.
+
+### Verified live on preview after each commit
+Used Chrome MCP DOM probes (not just visual eyeballing — Streamlit Cloud stale-build issues make eyeballing unreliable). Probed `getComputedStyle().fontFamily` on body, headings, `stMetricValue`, `stMarkdownContainer`, buttons, sidebar links, icon spans. Final state on `9744881 + 01ba8af`:
+- Picker, Cuervo home, DR home — all 3 landing views Treatment C with Barlow Condensed everywhere
+- Sidebar nav links — Barlow Condensed
+- Hub landing table headers + cells — Barlow Condensed, naming matches sidebar
+- Page hero kicker matches hub table label exactly
+- Icon glyphs render properly (chevrons, sidebar collapse button)
+
+### Bugs found / issues to address next session
+- **Streamlit Cloud auto-rebuild is unreliable for this repo** — went 0-for-3 today (`12cf2fe`, `8be51b2` both required manual reboot via `Manage app → Reboot`). The toml fix specifically only takes effect on a fresh build, so bake the reboot step into the workflow when shipping anything that touches `.streamlit/config.toml`. Documented in `docs/decisions.md`.
+- **Streamlit `font = "..."` breaks icon ligatures** — fixed with the override CSS, but worth knowing for next time someone touches font config. Also documented in `docs/decisions.md`.
+- **More UI tweaks queued** — user has more font/visual tweaks to flag tomorrow but ran out of time. Picker + page heros + landing views are settled; remaining tweaks live on individual pages.
+
+### Files changed this session
+```
+ M .streamlit/config.toml             — font = "Barlow Condensed" + 5 fontFaces blocks
+ M config.py                          — global Streamlit widget font cascade (later neutralized when toml took over) + Material Symbols icon override
+ M clients/cuervo/copy.py             — NAV_TABLE renamed
+ M clients/devils_reserve/copy.py     — NAV_TABLE renamed
+ M pages/1_Brand_Performance.py       — removed vestigial st.header / st.caption
+ M docs/changelog.md                  — Session 3b sub-entry (mid-session checkpoint) + this entry
+ M docs/decisions.md                  — Streamlit font config gotcha
+?? 7 pre-existing untracked data CSVs (not touched, as before)
+```
+
+### Status
+- **Branch**: `preview/ui-phase-1` at `01ba8af`, pushed to GitHub
+- **Production (`main`)**: still at `2935549`. Clients are still on Session 1 state until merge
+- **Preview deployment**: live at https://cuervo-intel-preview.streamlit.app/ (may need manual reboot if recent push didn't auto-deploy)
+- **Working tree**: clean except 7 pre-existing untracked CSVs
+- **Build-plan deltas**: none. Phase 1 unchecked items unchanged. UI Phase 1 polish isn't tracked as a build-plan item
+- **Next session pickup**: more UI tweaks, then the merge decision. After UI tweaks bed in, the call is whether to merge `preview/ui-phase-1` → `main` (ships to clients) or keep iterating on the preview branch
+
+---
+
 ## 2026-04-09 — Session 3b (Streamlit Cloud stale-build diagnosis) — SHIPPED
 
 Follow-up after user reported "im not seeing the changes on streamlit" after Session 3 + 3a were pushed to `origin/preview/ui-phase-1`. Commits were on GitHub, but the preview app at https://cuervo-intel-preview.streamlit.app/ was still serving the old pre-Treatment-C UI.
