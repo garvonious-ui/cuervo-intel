@@ -1,6 +1,45 @@
 # Changelog
 
-## 2026-04-09 — Session 3a (home + picker Treatment C) — ON `preview/ui-phase-1` BRANCH
+## 2026-04-09 — Session 3b (Streamlit Cloud stale-build diagnosis) — SHIPPED
+
+Follow-up after user reported "im not seeing the changes on streamlit" after Session 3 + 3a were pushed to `origin/preview/ui-phase-1`. Commits were on GitHub, but the preview app at https://cuervo-intel-preview.streamlit.app/ was still serving the old pre-Treatment-C UI.
+
+### Diagnosis
+Loaded the preview app in Chrome via the `mcp__Claude_in_Chrome__*` tools and probed the DOM directly. Evidence the app was serving stale code:
+- `h1Text: "Cuervo — Social Media Intelligence"` — old plain `st.title` output (the new code renders `THE HUB` via `render_page_hero`)
+- `hasPageHero: false`, `sectionLabelCount: 0`, `kpiCards: 0` — zero Treatment C DOM elements on any probed view
+- Body text still had the old "Page | What you'll find" markdown nav table that was replaced in `12cf2fe`
+
+Meanwhile `git ls-remote origin preview/ui-phase-1` confirmed the remote was at `12cf2fe` — code was on GitHub, just not being served.
+
+### Cause + fix
+**Cause**: Streamlit Cloud's auto-rebuild on push had silently failed or gotten stuck on an earlier commit. User confirmed the app's Branch setting in Streamlit Cloud was correctly pointed at `preview/ui-phase-1`, so the issue wasn't misconfigured tracking. Unknown whether an earlier build errored and never cleared, or whether the poll-for-new-commits mechanism just missed the push.
+
+**Fix**: Manual reboot from the "Manage app" drawer (`⋮ → Reboot app`). Forced a fresh pull of the branch HEAD and rebuilt from scratch.
+
+### Verified live on the deployed preview
+After reboot, probed all 3 landing views via Chrome DOM queries:
+
+| View | Hero kicker | Hero title | Stats | Section labels | Exceptions |
+|---|---|---|---|---|---|
+| Picker (`/`) | POPLIFE · INTERNAL | THE CONTROL ROOM | 2 CLIENTS / 5 PAGES / 2 PLATFORMS / Treatment C | LAUNCH A DASHBOARD | 0 |
+| Cuervo home (`?client=cuervo`) | JOSE CUERVO · SOCIAL INTELLIGENCE | THE HUB | 1,080 POSTS / 13 BRANDS / 5 PAGES / 2 PLATFORMS | NAVIGATE, EXPORT | 0 |
+| DR home (`?client=devils_reserve`) | DEVILS RESERVE · SOCIAL INTELLIGENCE | THE HUB | 776 POSTS / 5 BRANDS / 5 PAGES / 2 PLATFORMS | NAVIGATE, EXPORT | 0 |
+
+All 3 views match the local smoke test from Session 3a exactly.
+
+### Rule for next time
+**When the preview app looks stale after a push**: don't assume Streamlit Cloud auto-pulled. Check the DOM directly (not just the title), compare with `git ls-remote`, and if the remote has the commit but the app doesn't — manual reboot from `Manage app → Reboot`. Auto-rebuild is best-effort, not guaranteed.
+
+### Files changed
+None — this was a pure diagnosis + dashboard-action fix, no code written.
+
+### Gotcha: direct page URLs bypass `app.py`
+Separately noted during diagnosis: hitting `/Brand_Performance` directly (without going through `/` or `/?client=X` first) shows the "Go to the home page first to load data" warning, because it bypasses the data-loading block in `app.py`. So if a user lands on a subpage URL and sees plain-looking output, that's ALSO not a reliable indicator of stale code — it's just the data-loading gate firing. Always test landing-page changes from the root URL.
+
+---
+
+## 2026-04-09 — Session 3a (home + picker Treatment C) — SHIPPED TO `origin/preview/ui-phase-1`
 
 Follow-up after deploying `preview/ui-phase-1` to Streamlit Community Cloud for review. User flagged that the internal client picker and per-client home pages were still on the bare `st.title` + `st.caption` layout — inconsistent with pages 1–5 after the Treatment C rollout.
 
@@ -27,7 +66,7 @@ Using `st.button("Launch Dashboard", type="primary")` on the picker rendered as 
 
 ---
 
-## 2026-04-09 — Session 3 (UI Phase 1 finish: Treatment C consistency pass across all 5 pages) — COMMIT READY, NOT PUSHED
+## 2026-04-09 — Session 3 (UI Phase 1 finish: Treatment C consistency pass across all 5 pages) — SHIPPED TO `origin/preview/ui-phase-1`
 
 ### What shipped
 Finished the Treatment C rollout by sweeping the remaining old-blue `autostrat_components` calls out of every page. After Session 2, hero blocks and most top-level section labels were already Treatment C — but `render_section_label`, `render_nopd_cards`, `render_territory_cards`, and `render_verbatim_quotes` from `autostrat_components.py` were still being called in all 5 pages (Page 1 Tab 3 Self-Audit, Page 3 Tab 4 Action Plan, Page 4 Tab 1 Inspiration, Page 5 all 3 tabs). That inconsistency is now gone.
@@ -127,15 +166,14 @@ The old autostrat helpers (`render_section_label`, `render_nopd_cards`, `render_
 ?? data/devils_reserve/posts_data.csv       ← pre-existing, not touched
 ```
 
-### How to pick back up
-Commit has been created locally but NOT pushed to `origin/main`. User to decide:
-1. `git push origin main` to ship it — Streamlit Cloud will rebuild within ~60s
-2. `git commit --amend` + re-stage to tweak the commit
-3. `git reset HEAD~1 --mixed` to unwind and keep the working tree for further edits
+### Shipped as
+- `921477e` — Implement Treatment C design system across all 5 pages (UI Phase 1)
+- `12cf2fe` — Apply Treatment C to internal picker + per-client home (app.py) [Session 3a follow-up]
+- Pushed to `origin/preview/ui-phase-1`. `origin/main` still at `2935549` — production clients are still on Session 1 state until we decide to merge.
 
 ---
 
-## 2026-04-09 — Session 2 (UI Phase 1: Treatment C rollout to pages 2–5) — IN PROGRESS, NOT COMMITTED
+## 2026-04-09 — Session 2 (UI Phase 1: Treatment C rollout to pages 2–5) — SHIPPED (rolled into commit `921477e` with Session 3)
 
 ### Status at pause
 All code changes are complete and verified on both Cuervo and DR. **Nothing has been committed yet** — working directory has 8 modified files + 1 new file (`ui_components.py`). Pick up by running the dev server, eyeballing a few pages in the browser, and then deciding on a commit.
