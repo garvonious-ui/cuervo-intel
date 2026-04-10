@@ -115,7 +115,7 @@ CHART_FONT = dict(family=_CHART_FONT_FAMILY)
 # account's following (co-authored IG Collab Posts, creator reposts, event
 # activations, etc.) and are excluded from hero KPI averages so the scorecard
 # reflects organic brand content performance.
-COLLAB_OWNED_TYPES = {"cuervo"}
+COLLAB_OWNED_TYPES = {"cuervo", "devils reserve"}
 COLLAB_AMPLIFIED_TYPES = {"partner", "influencer", "collective"}
 
 

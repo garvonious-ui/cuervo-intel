@@ -112,7 +112,7 @@ def get_config() -> ClientConfig:
         hero_brand="Devils Reserve",
         agency_name="Poplife",
         industry="tequila",
-        themes_ready=False,  # TODO: set True once manual content theme tagging is complete for DR posts
+        themes_ready=True,  # Manual pillar tags imported from DR Themes CSV (2026-04-10)
 
         # Brands
         brands=BRANDS,

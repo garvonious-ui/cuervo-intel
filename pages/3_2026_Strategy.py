@@ -459,27 +459,24 @@ with tab_frameworks:
     render_kpi_section_label(_crew_header)
     st.caption("Creators embedded in the brand — not hired talent. iPhone-first. Social-native.")
 
-    # Prefer autostrat-derived archetypes (richer: description, appeal, examples)
-    _autostrat_tmp = st.session_state.get("autostrat", {})
-    _autostrat_archetypes = get_all_creator_archetypes(_autostrat_tmp) if has_autostrat_data(_autostrat_tmp) else []
-
-    if _autostrat_archetypes:
-        _arch_cols = st.columns(min(len(_autostrat_archetypes[:6]), 3))
-        for i, arch in enumerate(_autostrat_archetypes[:6]):
-            with _arch_cols[i % len(_arch_cols)]:
-                render_creator_archetype(arch)
-        st.caption(f"*From autostrat.ai analysis — {len(_autostrat_archetypes)} archetypes identified*")
-    else:
-        # Fallback to brief-defined archetypes
+    # Prefer brief-defined archetypes (curated by social team, always complete).
+    # Autostrat-derived archetypes are a fallback only — they mix competitor
+    # archetypes with hero brand ones and often have missing descriptions.
+    if cfg.creator_archetypes:
         arch_cols = st.columns(min(len(cfg.creator_archetypes), 5))
         for i, (archetype, fit) in enumerate(cfg.creator_archetypes.items()):
             with arch_cols[i % len(arch_cols)]:
-                st.markdown(f"""
-                <div style="background:white; border-radius:10px; padding:14px; text-align:center;
-                            border:1px solid #E0D8D0; min-height:100px;">
-                    <p style="font-weight:700; color:#333; margin:0 0 6px 0; font-size:0.9rem;">{archetype}</p>
-                    <p style="color:#666; font-size:0.82rem; margin:0;">{fit}</p>
-                </div>""", unsafe_allow_html=True)
+                st.markdown(f"""<div style="background:white; border-radius:10px; padding:14px; text-align:center; border:1px solid #E0D8D0; min-height:100px;"><p style="font-weight:700; color:#333; margin:0 0 6px 0; font-size:0.9rem;">{archetype}</p><p style="color:#666; font-size:0.82rem; margin:0;">{fit}</p></div>""", unsafe_allow_html=True)
+    else:
+        # Fallback to autostrat-derived archetypes
+        _autostrat_tmp = st.session_state.get("autostrat", {})
+        _autostrat_archetypes = get_all_creator_archetypes(_autostrat_tmp) if has_autostrat_data(_autostrat_tmp) else []
+        if _autostrat_archetypes:
+            _arch_cols = st.columns(min(len(_autostrat_archetypes[:6]), 3))
+            for i, arch in enumerate(_autostrat_archetypes[:6]):
+                with _arch_cols[i % len(_arch_cols)]:
+                    render_creator_archetype(arch)
+            st.caption(f"*From autostrat.ai analysis — {len(_autostrat_archetypes)} archetypes identified*")
 
     st.markdown("---")
 
