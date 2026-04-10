@@ -159,13 +159,67 @@ def split_owned_collab(df):
 #   Page 5:        .insight-expander .wtm-card .news-narrative .news-quote
 
 POPLIFE_TREATMENT_C_CSS = """
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap');
-
     .block-container { padding-top: 2rem; }
 
+    /* ══════════════════════════════════════════════════════════════════
+       Global font cascade — make Barlow Condensed the default for every
+       Streamlit widget, then individual component rules override where
+       Inter is preferred (hero subtitle, content-card tables, callouts).
+       Without this, native widgets (st.metric, st.dataframe, st.markdown,
+       st.button, st.selectbox, sidebar nav, expanders) fall back to
+       Streamlit's bundled font.
+       ══════════════════════════════════════════════════════════════════ */
+    html, body, .stApp,
+    [data-testid="stAppViewContainer"],
+    [data-testid="stMain"],
+    [data-testid="stHeader"],
+    [data-testid="stSidebar"],
+    [data-testid="stSidebar"] *,
+    [data-testid="stSidebarNav"],
+    [data-testid="stSidebarNavLink"],
+    [data-testid="stSidebarNavLink"] span,
+    [data-testid="stMetricValue"],
+    [data-testid="stMetricLabel"],
+    [data-testid="stMetricDelta"],
+    [data-testid="stMarkdownContainer"],
+    [data-testid="stMarkdownContainer"] p,
+    [data-testid="stMarkdownContainer"] li,
+    [data-testid="stMarkdownContainer"] td,
+    [data-testid="stMarkdownContainer"] th,
+    [data-testid="stCaptionContainer"],
+    [data-testid="stCaptionContainer"] p,
+    [data-testid="stDataFrame"],
+    [data-testid="stDataFrame"] *,
+    [data-testid="stTable"],
+    [data-testid="stTable"] *,
+    [data-testid="stExpander"] summary,
+    [data-testid="stExpander"] summary *,
+    [data-testid="stNotificationContentInfo"],
+    [data-testid="stNotificationContentWarning"],
+    [data-testid="stNotificationContentError"],
+    [data-testid="stNotificationContentSuccess"],
+    .stMarkdown, .stMarkdown p, .stMarkdown li, .stMarkdown td, .stMarkdown th,
+    .stCaption,
+    .stButton button, .stDownloadButton button, .stFormSubmitButton button,
+    .stSelectbox label, .stSelectbox [data-baseweb="select"],
+    .stSelectbox [data-baseweb="select"] *,
+    .stMultiSelect label, .stMultiSelect [data-baseweb="select"] *,
+    .stTextInput label, .stTextInput input,
+    .stTextArea label, .stTextArea textarea,
+    .stRadio label, .stRadio [data-baseweb="radio"],
+    .stCheckbox label,
+    .stSlider label,
+    .stDateInput label, .stDateInput input,
+    .stNumberInput label, .stNumberInput input {
+        font-family: 'Barlow Condensed', Helvetica, Arial, sans-serif !important;
+    }
+
     /* Base headings */
-    h1, h2, h3 { color: #333333; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; }
+    h1, h2, h3, h4, h5, h6 { color: #333333; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; }
 
     /* Restyled Streamlit tabs to match Treatment C tab row */
     .stTabs [data-baseweb="tab-list"] {
