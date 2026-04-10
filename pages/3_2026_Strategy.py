@@ -480,11 +480,12 @@ with tab_frameworks:
 
     st.markdown("---")
 
-    # ── Content Mix Funnel (hidden when no funnel tags — 2026-04-10 17:00) ──
+    # ── Content Mix Funnel ─────────────────────────────────────────────
     # Only show if posts have content_mix_funnel tags
     _mix_src_check = hero_df_full if "hero_df_full" in dir() else hero_df
     _has_funnel_data = "content_mix_funnel" in _mix_src_check.columns and _mix_src_check["content_mix_funnel"].notna().any()
     _mix_cats = list(cfg.content_mix_targets.keys())
+    st.caption(f"🔍 DEBUG: _has_funnel_data={_has_funnel_data}, col_exists={'content_mix_funnel' in _mix_src_check.columns}, notna_any={_mix_src_check['content_mix_funnel'].notna().any() if 'content_mix_funnel' in _mix_src_check.columns else 'N/A'}")
     if _has_funnel_data:
         render_kpi_section_label(f"Content mix funnel — {' / '.join(_mix_cats)} / Connect")
         st.caption(f"Grab attention first ({_mix_cats[0]} {cfg.content_mix_targets[_mix_cats[0]]}%), then guide to action ({_mix_cats[-1]} {cfg.content_mix_targets[_mix_cats[-1]]}%)")
