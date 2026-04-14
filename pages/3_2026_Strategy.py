@@ -23,7 +23,8 @@ from autostrat_components import (
 )
 from ui_components import (
     render_page_hero, render_kpi_section_label, render_poplife_note,
-    render_north_star, render_sku_card, render_engine_card, render_voice_card,
+    render_north_star, render_sku_card, render_sku_usage_card,
+    render_engine_card, render_voice_card,
     render_ig_format_card, render_partner_event, render_quarter_card,
     render_swot_card, render_connect_callout,
     render_pillar_card, render_content_card_open, render_content_card_close,
@@ -339,6 +340,42 @@ with tab_frameworks:
                 energy=info.get("energy", ""),
                 occasions=info.get("occasions", ""),
             )
+
+    # ── SKU Usage by Occasion ───────────────────────────────────────────
+    # Matrix from the "Role of Variants" Mar 2026 deck: 17 occasions mapped
+    # to which SKU variant should lead. Inverted here from occasion→SKU into
+    # SKU→occasions so each card reads as a content-planning checklist.
+    if cfg.sku_usage_matrix:
+        st.markdown("")
+        render_kpi_section_label("SKU usage by occasion")
+        st.caption(
+            "Source: Cuervo *Role of Variants* deck, Mar 2026. "
+            "Use this as a content-planning reference — pick the occasion, read which SKU leads. "
+            "Some occasions map to multiple variants."
+        )
+
+        # Preserve the order of cfg.sku_strategy for consistent column ordering.
+        # Fall back to order-of-first-appearance in the matrix for any extras.
+        sku_order = []
+        for sku_name in cfg.sku_strategy.keys():
+            display = "RTDs" if sku_name.upper() == "RTD" else sku_name
+            sku_order.append(display)
+        # Build SKU -> [occasions] from the occasion -> [SKUs] matrix.
+        sku_to_occasions = {s: [] for s in sku_order}
+        for occasion, sku_list in cfg.sku_usage_matrix.items():
+            for sku in sku_list:
+                if sku not in sku_to_occasions:
+                    sku_to_occasions[sku] = []
+                    sku_order.append(sku)
+                sku_to_occasions[sku].append(occasion)
+
+        usage_cols = st.columns(len(sku_order))
+        for col, sku_name in zip(usage_cols, sku_order):
+            with col:
+                render_sku_usage_card(
+                    name=sku_name,
+                    occasions=sku_to_occasions.get(sku_name, []),
+                )
 
     st.markdown("---")
 

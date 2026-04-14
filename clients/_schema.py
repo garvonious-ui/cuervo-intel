@@ -58,6 +58,7 @@ class ClientConfig:
     testing_roadmap: dict[str, dict] = field(default_factory=dict)
     cultural_calendar: dict[str, dict] = field(default_factory=dict)
     sku_strategy: dict[str, dict] = field(default_factory=dict)
+    sku_usage_matrix: dict[str, list[str]] = field(default_factory=dict)  # occasion -> [SKU variants]
     execution_engines: dict[str, str] = field(default_factory=dict)
     creator_archetypes: dict[str, str] = field(default_factory=dict)
     voice_principles: list[tuple[str, str]] = field(default_factory=list)

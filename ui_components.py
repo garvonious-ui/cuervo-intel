@@ -19,6 +19,7 @@ Page 3 (Strategy) helpers:
 - render_north_star: dark north star callout
 - render_pillar_card: content pillar card with actual/target/gap
 - render_sku_card: SKU strategy card
+- render_sku_usage_card: SKU usage-by-occasion card (dark header + occasion list)
 - render_engine_card: execution engine card
 - render_voice_card: tone of voice principle card
 - render_ig_format_card: IG format mix card
@@ -360,6 +361,35 @@ def render_sku_card(name: str, energy: str, occasions: str) -> None:
   <div class="sku-occasions">{html.escape(occasions)}</div>
 </div>
 """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_sku_usage_card(name: str, occasions: list) -> None:
+    """Render a SKU card listing the occasions that should feature this variant.
+
+    Used on Page 3 Tab 2 to visualize the "Role of Variants" usage matrix —
+    one card per SKU, each listing the occasions it leads. An occasion can
+    appear on multiple cards if it maps to multiple SKUs.
+
+    Treatment C layout: dark header band with accent-colored SKU name and a
+    count pill, light body with an occasion list.
+    """
+    # Per-SKU accent variant class (hooks into .sku-usage-card.tradicional / .rtds).
+    variant = name.lower().replace(" ", "")
+    if variant == "rtd":
+        variant = "rtds"
+    items_html = "".join(f"<li>{html.escape(occ)}</li>" for occ in occasions)
+    count_label = f"{len(occasions)} OCCASION" + ("S" if len(occasions) != 1 else "")
+    # Note: use <div class="sku-name"> instead of <h4> — Streamlit's heading
+    # interceptor ("stHeadingWithActionElements") hoists h1-h6 out of their
+    # parent container for anchor linking, which breaks the flex layout.
+    st.markdown(
+        f'<div class="sku-usage-card {variant}">'
+        f'<div class="header"><div class="sku-name">{html.escape(name)}</div>'
+        f'<span class="count-pill">{count_label}</span></div>'
+        f'<div class="body"><ul>{items_html}</ul></div>'
+        f'</div>',
         unsafe_allow_html=True,
     )
 

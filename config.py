@@ -590,6 +590,93 @@ POPLIFE_TREATMENT_C_CSS = """
         font-size: 0.85rem; color: #444; line-height: 1.5;
     }
 
+    /* ── SKU usage-by-occasion card (Page 3 Tab 2, below .sku-card) ── */
+    /* Treatment C pattern: dark accent header band + light body.      */
+    /* Per-variant accent color cascades through header / count / arrows. */
+    .sku-usage-card {
+        --sku-accent: #F8C090;
+        background: #ffffff;
+        border: 1px solid #E0D8D0;
+        border-radius: 10px;
+        overflow: hidden;
+        min-height: 380px;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 1px 2px rgba(26,26,26,0.04);
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+    .sku-usage-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(26,26,26,0.08);
+    }
+    .sku-usage-card.tradicional { --sku-accent: #C9A87E; }
+    .sku-usage-card.rtds        { --sku-accent: #2ea3f2; }
+
+    /* Dark accent header band */
+    .sku-usage-card .header {
+        background: #1A1A1A;
+        padding: 16px 20px 14px 20px;
+        border-bottom: 3px solid var(--sku-accent);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+    .sku-usage-card .header .sku-name {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 1.45rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--sku-accent);
+        margin: 0;
+        line-height: 1;
+    }
+    .sku-usage-card .header .count-pill {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #F3EDE6;
+        background: rgba(243,237,230,0.1);
+        border: 1px solid rgba(243,237,230,0.3);
+        padding: 4px 10px;
+        border-radius: 999px;
+        white-space: nowrap;
+    }
+
+    /* Occasion list body */
+    .sku-usage-card .body {
+        padding: 4px 0 4px 0;
+        flex: 1;
+    }
+    .sku-usage-card ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    .sku-usage-card li {
+        font-size: 0.84rem;
+        color: #3A3A3A;
+        line-height: 1.35;
+        padding: 9px 20px 9px 38px;
+        border-bottom: 1px solid #F3EDE6;
+        position: relative;
+        transition: background-color 0.12s ease;
+    }
+    .sku-usage-card li:last-child { border-bottom: none; }
+    .sku-usage-card li:hover { background: #FBF7F1; }
+    .sku-usage-card li::before {
+        content: "";
+        position: absolute;
+        left: 20px; top: 50%;
+        width: 6px; height: 6px;
+        background: var(--sku-accent);
+        border-radius: 1px;
+        transform: translateY(-50%) rotate(45deg);
+    }
+
     /* Execution engine card */
     .engine-card {
         background: #ffffff; border: 1px solid #E0D8D0;

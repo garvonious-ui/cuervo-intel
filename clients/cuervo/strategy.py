@@ -177,6 +177,32 @@ SKU_STRATEGY = {
     "RTD": {"energy": "Mid-high, daytime", "occasions": "BBQ, tailgate, concerts"},
 }
 
+# ── SKU Usage Matrix (Role of Variants — Mar 2026 Cuervo deck) ───────
+# Maps 17 occasions/activities to which SKU variant(s) should be featured.
+# Used on Page 3 Tab 2 to guide content planning: given an occasion (e.g.
+# "poolside reel"), which SKU leads? An occasion can map to multiple SKUs.
+# Source: "Esp vs. Trad Usage Differentiation" deck, slide 2.
+
+SKU_USAGE_MATRIX = {
+    "Everyday mixing at home":                      ["Especial"],
+    "High energy and fun":                          ["Especial", "RTDs"],
+    "Upscale dinner with nicer attire":             ["Tradicional"],
+    "Poolside, happy mood, sun is out":             ["Especial", "RTDs"],
+    "Tequila educational event":                    ["Tradicional"],
+    "Margaritas in a casual cup or glass":          ["Especial"],
+    "Upscale cocktails or cocktail-focused bar":    ["Tradicional"],
+    "T-shirt and shorts, outdoor gathering at home":["Especial", "RTDs"],
+    "Gifting or special occasions":                 ["Tradicional"],
+    "Agave fields experience":                      ["Tradicional"],
+    "Party atmosphere, upbeat music":               ["Especial", "RTDs"],
+    "Outdoors by the beach, bringing your cooler":  ["RTDs"],
+    "Music festival, dancing, casual environment":  ["Especial", "RTDs"],
+    "On the go":                                    ["RTDs"],
+    "In the stands at a sporting event":            ["Especial", "RTDs"],
+    "In a suite at a sporting event":               ["Tradicional"],
+    "Serving on ice or out of the cooler":          ["RTDs"],
+}
+
 # ── Execution Engines ────────────────────────────────────────────────
 
 EXECUTION_ENGINES = {
