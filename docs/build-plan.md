@@ -14,6 +14,10 @@
 - [x] Complete manual content pillar tagging for DR posts, set `themes_ready=True` — 133/133 IG posts tagged, `content_mix_funnel` still pending (2026-04-10)
 - [ ] Complete `content_mix_funnel` tagging for DR posts (Entertain/Educate/Convince) — chart hidden until tagged
 
+### Ad-Hoc Requests
+- [x] Merge `preview/ui-phase-1` → `main` — 21 commits of UI Phase 1 + DR scorecard fixes now live on production (2026-04-14)
+- [x] Add SKU Usage by Occasion matrix to Page 3 Tab 2 (Cuervo only) — 17 occasions × 3 variants from "Role of Variants" Mar 2026 deck, rendered as Treatment C cards with per-variant color story (2026-04-14)
+
 ### Known Issues
 - [ ] TikTok sections show zeros when no TikTok post data in Sprout exports — add graceful empty state
 - [x] Content theme classifier is keyword-based (~80-85% accuracy) — **decision: dropping auto-classifiers, using manual content_pillar + content_mix tagging instead (hero brand only)**
@@ -43,4 +47,7 @@
 - Devils Reserve needs custom logo assets from design team
 - Devils Reserve `content_mix_funnel` tagging needed before funnel chart shows (pillar tagging done)
 - TikTok data coverage depends on Sprout Social export availability per client
-- Streamlit Cloud preview app serves code from `main` despite branch setting — merge to main needed for code changes to deploy (data file changes deploy fine from preview branch)
+
+## Known Gotchas (not blocking)
+- Streamlit Cloud preview app serves code from `main` despite branch setting being `preview/ui-phase-1` — workaround: merge to `main` to ship Python code changes. Data file changes deploy fine from the preview branch. Root cause unknown; may need to delete and recreate the Streamlit Cloud app to fix for real.
+- Streamlit hoists `<h1>`–`<h6>` out of their parent container inside `st.markdown(unsafe_allow_html=True)` blocks (for anchor linking) — breaks flex/grid layouts. Use `<div>` with explicit styling classes instead. See `docs/decisions.md`.

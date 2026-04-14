@@ -1,5 +1,68 @@
 # Changelog
 
+## 2026-04-14 — Session 5 (merge to main + SKU Usage matrix) — SHIPPED TO `origin/main`
+
+Short, focused session. Two shipped changes: (a) merged the Session 3/4 preview branch to main so UI Phase 1 + DR scorecard fixes are finally live on production, (b) added the "Role of Variants" SKU usage matrix to Page 3 Tab 2 after the social team asked if we could surface it somewhere.
+
+### What shipped
+
+**1. Merge `preview/ui-phase-1` → `main` (`18a9633`)**
+21 commits across Sessions 3, 3a, 3b, 3c, and 4. All UI Phase 1 work (Treatment C rollout, Barlow Condensed via `theme.fontFaces`, Material Symbols icon fix, unified page naming, internal picker + home Treatment C) and all Session 4 DR fixes (manual_posts.csv enrichment, brand name mismatch fix, Page 3 funnel guard, Page 1 pillar crash guard, autostrat report cleanup) are now live on `main` at `18a9633`. Non-FF merge so the merge point is visible in history. No conflicts — the preview branch diverged cleanly from main at `2935549`.
+
+Commands run:
+```
+git checkout main && git pull origin main
+git merge --no-ff preview/ui-phase-1 -m "..."
+git push origin main
+```
+
+The merge-commit diff stat showed 18 files, but the full branch delta was 23 files / +3530/-866 — the discrepancy is because files that were added cleanly at earlier commits (like `ui_components.py`) don't show up in the merge-commit's own diff. Verified `ui_components.py` is actually present in the merged tree before pushing.
+
+**2. SKU Usage by Occasion matrix on Page 3 Tab 2 (`3300b19`)**
+The social team flagged the "Role of Variants" Mar 2026 Cuervo deck — slide 2 is a matrix of 17 activities × 3 SKU variants (Especial / Tradicional / RTDs) showing which variant should lead when making content for a given occasion ("everyday mixing → Especial", "upscale dinner → Tradicional", "poolside no bar → Especial + RTDs"). User asked where it would fit best; decided on Page 3 Tab 2 (Content Strategy Frameworks) below the existing SKU strategy cards, since that tab is already the strategic-framework home and already has SKU cards rendered from `cfg.sku_strategy`.
+
+The data structure is occasion → `[SKU list]` stored in `clients/cuervo/strategy.py` as `SKU_USAGE_MATRIX`. Page 3 inverts it at render time into SKU → `[occasion list]` so each card reads as a content-planning checklist. An occasion can appear on multiple cards if it maps to multiple SKUs (Especial 8, Tradicional 6, RTDs 9 — 23 total assignments from 17 occasions).
+
+Visual: Treatment C language — dark accent header band (`#1A1A1A` bg with 3px accent border-bottom in the variant's color) + light body with occasion rows. Per-variant accent color (peach/gold/teal) cascades through the header SKU name, count pill, and list item diamond markers via a `--sku-accent` CSS variable set on each variant class (`.sku-usage-card.especial / .tradicional / .rtds`). Hover lifts the card 2px with shadow, and hovering a row gives a subtle `#FBF7F1` highlight.
+
+Wired through `ClientConfig.sku_usage_matrix` (optional, empty default) so Devils Reserve renders normally — the page has a `if cfg.sku_usage_matrix:` guard that hides the whole section when empty. Verified on both clients: Cuervo shows 3 cards side-by-side at 1440px with correct flex layout + colors + counts; Devils Reserve shows 0 usage cards and the section label doesn't render.
+
+### Decisions made
+- **Home = Page 3 Tab 2** (Content Strategy Frameworks), not Page 1 or Page 3 Tab 1. Reasoning: Tab 2 is already the "how we make content" home with pillar cards, SKU strategy cards, execution engines, voice cards, etc. The usage matrix is a content-planning tool, so it lives with the rest of the content-planning frameworks. Page 1 was considered for a future "Guidance vs Actual Posting" audit that would cross-reference the matrix against the `sku` column in `manual_posts.csv`, but that's a bigger lift and stays on the backlog.
+- **Option A: per-SKU columns**, not a literal matrix table. Three cards side-by-side scan better than a 17-row table and match the Treatment C card language. You lose the "this occasion → multiple SKUs" signal visually within a single view, but gain scannability ("I'm making a poolside reel — which card has that?"). The multi-SKU occasions just appear on multiple cards.
+- **Data lives in config, not hardcoded on the page** — `clients/cuervo/strategy.py` has `SKU_USAGE_MATRIX` as a dict, wired through a new `ClientConfig.sku_usage_matrix` field with empty default. DR gets the section hidden automatically. If the social team updates the matrix, it's a one-line edit in strategy.py.
+- **New `render_sku_usage_card` helper** in `ui_components.py` instead of extending `render_sku_card`. Keeps the two card types semantically distinct and lets the usage card have its own HTML structure (dark header band vs. single light card) without conditional branches.
+
+### Bugs found / gotchas captured
+- **Streamlit hoists `<h1>`–`<h6>` out of their parent container inside `st.markdown(unsafe_allow_html=True)`** for anchor linking. It wraps them in `<div data-testid="stHeadingWithActionElements">` and lifts them out of the flex container, which broke the dark header's `display: flex; justify-content: space-between` layout the first time. First iteration used `<h4>{sku_name}</h4>` alongside `<span class="count-pill">`, and the h4 got ripped out — the SKU name appeared at a completely different y-position than the count pill (nameY=-732 vs pillY=-703). Fixed by swapping to `<div class="sku-name">`. Added a rule about this to `docs/decisions.md` so we don't hit it again. This is now the second Streamlit-markdown-injection gotcha (the first was font config via CSS in Session 3c) — both are cases where Streamlit's own DOM handling fights the markdown HTML we inject.
+- **Preview viewport is 603px native** — at that width Streamlit `st.columns(3)` stacks the cards vertically, which made the first screenshot misleading. Had to resize to `1440x900` explicitly to verify the 3-column layout. Not a bug, just a preview harness quirk — note for next time when verifying column layouts.
+
+### Status
+- **Branch**: `main` at `3300b19`, pushed to GitHub
+- **Production**: `main` is what Streamlit Cloud serves, so both the Session 3/4 carryover AND the new SKU usage matrix should be live within ~60s of the push. If the preview doesn't auto-rebuild, `Manage app → Reboot` from the Streamlit Cloud dashboard (this has been flaky — see Session 3b/c notes).
+- **Working tree**: clean except pre-existing 7 untracked data CSVs
+- **Build-plan deltas**: added an "Ad-Hoc Requests" subsection to Phase 1 with both of this session's items checked. Moved the Streamlit Cloud preview-branch bug from "Blockers" to a new "Known Gotchas" section since it's no longer blocking anything (we merged to main).
+- **Next session pickup**: DR `content_mix_funnel` tagging (+ drop "Connect" from targets), TikTok empty-state handling, or whatever ad-hoc comes up from the social team
+
+### Files changed this session
+```
+ M docs/build-plan.md                — added Ad-Hoc Requests subsection, moved Streamlit Cloud bug to Known Gotchas
+ M docs/changelog.md                 — this entry
+ M docs/decisions.md                 — Streamlit heading interceptor gotcha
+ M clients/_schema.py                — +sku_usage_matrix field on ClientConfig
+ M clients/cuervo/client.py          — import + pass SKU_USAGE_MATRIX
+ M clients/cuervo/strategy.py        — +SKU_USAGE_MATRIX dict (17 occasions → SKU lists)
+ M config.py                         — +.sku-usage-card CSS (~80 lines, Treatment C dark header + light body)
+ M pages/3_2026_Strategy.py          — render block + matrix inversion + guard
+ M ui_components.py                  — +render_sku_usage_card helper
+```
+
+### Commits
+- `18a9633` Merge preview/ui-phase-1: UI Phase 1 + DR scorecard fixes
+- `3300b19` Add SKU usage-by-occasion matrix to Page 3 Frameworks tab (Cuervo)
+
+---
+
 ## 2026-04-10 — Session 4 (DR data enrichment + autostrat cleanup) — SHIPPED TO `origin/preview/ui-phase-1`
 
 DR dashboard went from broken KPIs to fully functional scorecard + cleaned autostrat intelligence. Also created a Notion briefing doc for client meeting.

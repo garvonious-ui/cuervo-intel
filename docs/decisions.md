@@ -1,5 +1,29 @@
 # Decisions
 
+## 2026-04-14 — Use `<div>` instead of `<h1>`-`<h6>` inside `st.markdown` HTML when you need a specific layout
+
+**Rule:** Inside `st.markdown(..., unsafe_allow_html=True)`, never put `<h1>`-`<h6>` tags inside a container where you need flex, grid, or any specific layout to hold. Use `<div>` (or `<p>`, `<span>`) with an explicit styling class instead. This applies to Treatment C cards, custom headers, any component where you inject raw HTML.
+
+**Why:** Streamlit has a heading interceptor that processes all `<h1>`-`<h6>` elements in markdown output for anchor linking. It wraps each one in `<div data-testid="stHeadingWithActionElements">` and hoists the heading OUT of its original parent container, appending an anchor-link SVG next to it. If your `<h4>` was inside a `display: flex` parent alongside other children, the flex layout breaks because the h4 is no longer a direct child — the `stHeadingWithActionElements` wrapper is, and it has its own sizing that doesn't play nice with flex space-between or grid templates.
+
+**How we hit it:** Session 5 `.sku-usage-card` component. First iteration of `render_sku_usage_card` put the SKU name in an `<h4>` alongside a `<span class="count-pill">` inside a `<div class="header">` with `display: flex; justify-content: space-between`. In the live DOM, the h4 and the pill had drastically different y-coordinates (nameY=-732, pillY=-703) — the h4 had been ripped out of the flex container and was floating elsewhere. Fix: swapped to `<div class="sku-name">` with explicit CSS for the Barlow Condensed / uppercase / variant color styling. Flex layout held perfectly on the next render.
+
+**Rule going forward:**
+- **DO**: use `<div class="...">` for all text-heavy elements inside Treatment C cards and custom HTML components
+- **DO**: apply typographic styling (font-size, font-weight, color, text-transform) via CSS classes on those divs
+- **DON'T**: use `<h1>`-`<h6>` tags inside markdown-injected HTML when you need a specific layout to hold — Streamlit will break it
+- **Exception**: `<h1>`-`<h6>` are fine at the TOP LEVEL of a markdown block (outside any flex/grid container), since they stand alone and the stHeadingWithActionElements wrapping doesn't break anything
+
+**Symptom to recognize:** Flex/grid layouts look correct in CSS but the DOM shows elements at the wrong y-position. First thing to check: are any `<h1>`-`<h6>` tags inside the container? If yes, swap them for `<div>` and the layout will probably snap into place.
+
+**Related:** This is the second "Streamlit fights markdown-injected HTML" gotcha. The first was the font config issue (see 2026-04-09 entry below) where Streamlit's theme engine overrode CSS. Pattern: Streamlit has opinions about the DOM it renders, and some of those opinions conflict with raw HTML injection. When building Treatment C components, always DOM-probe after the first render (don't trust screenshots alone) to confirm the structure landed as intended.
+
+**Files touched:**
+- `ui_components.py` — `render_sku_usage_card` uses `<div class="sku-name">`
+- `config.py` — `.sku-usage-card .header .sku-name` CSS rule (not `h4`)
+
+---
+
 ## 2026-04-09 — Set fonts via Streamlit theme.fontFaces, NOT via CSS
 
 **Decision:** All custom font registration goes in `.streamlit/config.toml` under `[theme]` + `[[theme.fontFaces]]` blocks. CSS `font-family` rules in `POPLIFE_TREATMENT_C_CSS` are only for *per-component overrides* (e.g., Inter on hero subtitles, content-card tables, North Star tagline). Never use CSS to set the global default font.
