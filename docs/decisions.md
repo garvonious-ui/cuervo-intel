@@ -1,5 +1,31 @@
 # Decisions
 
+## 2026-04-09 — Set fonts via Streamlit theme.fontFaces, NOT via CSS
+
+**Decision:** All custom font registration goes in `.streamlit/config.toml` under `[theme]` + `[[theme.fontFaces]]` blocks. CSS `font-family` rules in `POPLIFE_TREATMENT_C_CSS` are only for *per-component overrides* (e.g., Inter on hero subtitles, content-card tables, North Star tagline). Never use CSS to set the global default font.
+
+**Why:** Streamlit's theme engine applies `[theme]` settings AFTER CSS injection, so anything in the toml beats anything you put in `<style>` blocks injected via `st.markdown(..., unsafe_allow_html=True)` — even rules with `!important` and high specificity. We learned this the hard way:
+
+1. Original `config.py` used `@import url(...)` inside the `POPLIFE_TREATMENT_C_CSS` `<style>` block to load Barlow Condensed. That worked for the explicitly-targeted Treatment C components but ALSO caused FOUT (Flash of Unstyled Text) on every page load because `@import` blocks the style block from parsing.
+2. Session 3b first attempt (`fdb676a`): moved `@import` → `<link rel="stylesheet">` and added a giant selector list with `font-family: ... !important` covering every Streamlit `data-testid` (`stMetricValue`, `stMarkdownContainer`, `stDataFrame`, `stExpander`, `stButton`, `stRadio`, `stSelectbox`, sidebar, etc.). DID NOT WORK. Live DOM probe showed `body` computed font was still "Source Sans" — Streamlit's own widget CSS was loading later in the DOM and winning the cascade tie-breaker even against `!important`.
+3. Session 3b second attempt (`8be51b2`): set `font = "Barlow Condensed"` in `.streamlit/config.toml` and registered 5 weights (400-800) via `[[theme.fontFaces]]` blocks. WORKED. Verified live: every native Streamlit widget (`st.metric`, `st.dataframe`, `st.markdown`, `st.button`, `st.selectbox`, sidebar nav, `st.tabs`, expanders, callouts) now renders in Barlow Condensed without any per-component CSS rule.
+
+**Root cause**: Streamlit 1.32+ added `[[theme.fontFaces]]` as the supported way to register custom web fonts. It runs at framework startup, ahead of any markdown-injected CSS, so it sets the engine-level default that all native widgets inherit from.
+
+**Rule going forward:**
+- **DO**: register fonts in `.streamlit/config.toml` `[[theme.fontFaces]]`. Set `font = "..."` to make one of them the global default.
+- **DO**: use CSS `font-family` rules ONLY for per-component overrides (e.g., the 6 places that should use Inter instead of Barlow Condensed).
+- **DON'T**: try to set the global default font via CSS, even with `!important`. Streamlit will silently override you.
+- **DON'T**: use `@import url(...)` inside an `st.markdown` style block — it causes FOUT and can be sanitized depending on Streamlit version.
+
+**Streamlit Cloud rebuild gotcha (Session 3b):** The toml fix only takes effect on a fresh build. Streamlit Cloud's auto-rebuild on push has been unreliable for this repo — both `12cf2fe` and `8be51b2` required manual reboots via `Manage app → Reboot` before the new code was actually served. Always verify with a DOM probe (don't trust `view source` or page title) and reboot if needed.
+
+**Files touched:**
+- `.streamlit/config.toml` — added `font = "Barlow Condensed"` + 5 `[[theme.fontFaces]]` blocks
+- `config.py` — kept the per-component CSS overrides (Inter on subtitles/tables/callouts), removed the `@import` since fontFaces handles loading
+
+---
+
 ## 2026-04-09 — Move Partner posts to the amplified collab bucket
 **Decision:** Partner posts now live in `COLLAB_AMPLIFIED_TYPES` alongside Influencer and Collective. The owned bucket contains only the hero brand's own organic posts (tagged with the hero brand's name, e.g. `Cuervo`).
 

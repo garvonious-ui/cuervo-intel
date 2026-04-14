@@ -23,9 +23,9 @@ PAGE_CAPTIONS = {
 NAV_TABLE = """
 | Page | What you'll find |
 |------|--------------------|
-| **Devils Reserve Performance** | KPI scorecard, content format & theme performance, self-audit intelligence |
+| **Brand Performance** | KPI scorecard, content format & theme performance, self-audit intelligence |
 | **Competitive Landscape** | 5-brand comparison (Fireball, Pink Whitney, Jagermeister, Cazadores), content gaps |
-| **Strategy & Brief** | Scorecard, 2 content pillars (Chaos 75% / Flavor 25%), action plan |
+| **2026 Strategy** | Scorecard, 2 content pillars (Chaos 75% / Flavor 25%), action plan |
 | **Inspiration & Explorer** | Duolingo, Chipotle, Dunkin', Poppi reference profiles + full data explorer |
 | **Conversation Intel** | Competitor keyword analysis, category intel |
 """

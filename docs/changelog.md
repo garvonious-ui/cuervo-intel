@@ -1,6 +1,224 @@
 # Changelog
 
-## 2026-04-09 — Session 3 (UI Phase 1 finish: Treatment C consistency pass across all 5 pages) — COMMIT READY, NOT PUSHED
+## 2026-04-10 — Session 4 (DR data enrichment + autostrat cleanup) — SHIPPED TO `origin/preview/ui-phase-1`
+
+DR dashboard went from broken KPIs to fully functional scorecard + cleaned autostrat intelligence. Also created a Notion briefing doc for client meeting.
+
+### What shipped (10 commits)
+
+**DR manual_posts.csv enrichment**
+- Merged 18 captions from `dr_captions_filled.csv` → 100% caption coverage (133 posts)
+- Fixed brand name mismatch: `brand` column was `"devilsreserve"` but `cfg.hero_brand = "Devils Reserve"`. This was the root cause of all KPI zeros — `hero_df = df[df["brand"] == HERO]` returned 0 rows.
+- Fixed comma-formatted numeric columns (`views`, `impressions` stored as `"1,924"` strings) → parsed to int. Fixed Carousel Imp/Mo from 485 → ~24K.
+- Recomputed `total_engagement` (was all NaN — never calculated).
+- Removed 30 untagged TikTok posts + 1 deleted IG post → clean 133 IG-only dataset.
+- Set `themes_ready=True` in DR config.
+- Added `"devils reserve"` to `COLLAB_OWNED_TYPES` in config.py.
+
+**Page 3 content mix funnel guard**
+- Hid the funnel chart + Connect callout when `content_mix_funnel` has no real data. DR posts don't have funnel tags yet.
+- **Debugging saga**: initial guard checked `notna().any()` which returned `True` because the import pipeline's `.astype(str)` converted NaN → `"nan"` → `.replace("nan", pd.NA)` but left empty strings `""` which pass `notna()`. Fixed by also checking `str.strip() != ""`.
+- Added debug `st.caption` to diagnose Streamlit Cloud deploy issues (later removed).
+
+**Page 1 pillar crash guard**
+- Added `if len(pillar_eng):` guard around `pillar_eng.iloc[0]` to prevent IndexError when no owned posts have pillar tags.
+
+**Page 3 creator archetypes priority swap**
+- Brief-defined archetypes now show first (curated, complete). Autostrat-derived archetypes are fallback only.
+
+**Autostrat report cleanup (6 files)**
+- Stripped `\n` PDF artifacts from all text fields across 6 reports (1 hashtag + 5 keyword).
+- Removed search prompts from `key_insights[0]` and `overview` fields.
+- Fixed `search_term` from PDF header ("Why You're Searching") to actual keywords.
+- Cleaned `audience_verbatims`: removed 5 summary-fragment items from DR + Cazadores arrays.
+- Split concatenated creator archetype descriptions across all 3 archetypes (all 5 keyword reports).
+- Recombined 7 garbled campaign fragments into 4 coherent campaigns (Fireball, Jager, Pink Whitney).
+- Profile reports (8 files: chipotle/poppi/dunkin/duolingo × IG/TikTok) audited and confirmed clean — no changes needed.
+
+**Notion briefing doc**
+- Created platform overview + per-page DR performance notes for client meeting: https://www.notion.so/33ee73d7ba2c8197b8cae4b7ee63f30a
+
+### Decisions made
+- **TikTok posts removed from DR manual_posts.csv** — 30 untagged TikTok rows with no pillar/collab tags were diluting the dataset. IG-only for now; TikTok data can come from Sprout exports when available.
+- **Content mix funnel hidden until tagged** — chart shows all 0% without `content_mix_funnel` values. Guard hides the entire section (chart + scorecard + Connect callout). Will reappear automatically once funnel tags are added.
+- **Connect to be removed from DR funnel targets** — user confirmed Connect should not be a funnel stage (same as Cuervo). Deferred to next session when funnel tags are added.
+
+### Bugs found / issues to address next session
+- **Streamlit Cloud preview app serves `main` branch Python code despite branch setting saying `preview/ui-phase-1`**. Data files (CSVs, JSONs) deploy from the preview branch correctly, but `.py` code changes only take effect on `main`. Root cause unknown — may need to delete and recreate the Streamlit Cloud app. For now, code changes must be merged to `main` to go live.
+- **DR `content_mix_funnel` needs manual tagging** — 133 posts need Entertain/Educate/Convince tags. Once tagged, the funnel chart will appear automatically.
+- **DR `content_mix_targets` still includes "Connect"** — needs to be removed (rebalanced to 3 stages: Entertain/Educate/Convince) when funnel tags are added.
+- **`sprout_import.py` line 825 empty string bug** — `.astype(str).str.strip().replace("nan", pd.NA)` doesn't catch empty strings `""`. Should also replace `""` with `pd.NA`. Low priority since the Page 3 guard handles it downstream.
+
+### DR KPI scorecard (verified)
+| Metric | Value | vs Target |
+|---|---|---|
+| Avg Eng/Post | 86 | +1 above 85 |
+| Avg Eng/Reel | 104 | +19 above 85 |
+| Reel Ratio | 43% | -7% below 50% |
+| IG Posts/Mo | 9-10 | On target (8-12) |
+| Likes/Mo | 512 | +12 above 500 |
+| Comments/Mo | 178 | +148 above 30 |
+| Saves/Mo | 58 | +3 above 55 |
+| Shares/Mo | 64 | +4 above 60 |
+
+### Files changed this session
+```
+ M app.py                                          — CODE_VERSION v37→v39
+ M config.py                                       — COLLAB_OWNED_TYPES += "devils reserve"
+ M clients/devils_reserve/client.py                — themes_ready=True
+ M pages/1_Brand_Performance.py                    — pillar crash guard
+ M pages/3_2026_Strategy.py                        — funnel guard + archetype priority swap
+ A data/devils_reserve/sprout/manual_posts.csv     — 133 enriched IG posts
+ M data/devils_reserve/autostrat/instagram_hashtags/devilsreserve.json
+ M data/devils_reserve/autostrat/instagram_keywords/devils_reserve.json
+ M data/devils_reserve/autostrat/instagram_keywords/cazadores_tequila.json
+ M data/devils_reserve/autostrat/instagram_keywords/fireball_whisky.json
+ M data/devils_reserve/autostrat/instagram_keywords/jagermeister.json
+ M data/devils_reserve/autostrat/instagram_keywords/pink_whitney.json
+ M docs/build-plan.md
+ M docs/changelog.md
+```
+
+### Status
+- **Branch**: `preview/ui-phase-1` at `f43987a`, pushed to GitHub
+- **Production (`main`)**: still at `921477e`. Code changes from this session are NOT live on main.
+- **Preview deployment**: data changes are live, code changes are NOT (Streamlit Cloud branch bug)
+- **Next session pickup**: merge `preview/ui-phase-1` → `main` decision, DR funnel tagging, Connect removal from DR targets
+
+---
+
+## 2026-04-09 — Session 3c (font system + naming unification + icon regression fix) — SHIPPED TO `origin/preview/ui-phase-1`
+
+Picked up after Session 3b's Streamlit Cloud reboot put the picker + home Treatment C live. User flagged font inconsistency across the dashboard ("a decent amount of areas using fallback fonts") and a naming mismatch between sidebar nav, hub landing-page table, and page heros. Resolved both, plus a side-effect bug the font fix introduced.
+
+### What shipped (4 commits)
+
+**`fdb676a` — First attempt at the font fix (CSS-only). DID NOT WORK.**
+Added a high-specificity selector list with `font-family: 'Barlow Condensed' !important` targeting every Streamlit `data-testid` (`stMetricValue`, `stMarkdownContainer`, `stDataFrame`, `stExpander`, `stButton`, `stSelectbox`, sidebar, etc.). Also moved Google Fonts loading from `@import url(...)` inside `<style>` to `<link rel="stylesheet">` to kill FOUT. Pushed to preview, hard-refreshed — fonts STILL fell back. Live DOM probe showed `body` computed font was still "Source Sans" despite the `body { font-family: ... !important }` rule. Streamlit's own widget CSS loads later in the DOM than markdown-injected styles and wins on tie-breaker even against `!important`.
+
+**`8be51b2` — Real fix: Streamlit theme.fontFaces.**
+Switched to the supported approach: `.streamlit/config.toml` `[theme]` `font = "Barlow Condensed"` plus 5 `[[theme.fontFaces]]` blocks (weights 400-800) registering Barlow Condensed at framework startup. This runs *before* CSS injection so it sets the engine-level default that all native widgets inherit. The existing per-component Inter rules (hero subtitle, content-card tables, North Star tagline, CPN summary, poplife notes) still win because they're more specific selectors. Required a manual reboot to actually deploy (auto-rebuild failed silently — second time today).
+
+**`9744881` — Naming unification + font decisions doc.**
+Three different naming systems were drifting apart for the same 5 pages:
+- Sidebar (Streamlit auto-nav from filename) → "Brand Performance"
+- Hub landing-page table (`cfg.nav_table`) → "Cuervo Performance"
+- Page hero kicker (`render_page_hero`) → "JOSE CUERVO · BRAND PERFORMANCE"
+
+Locked in option #5 from the design discussion: descriptive name is the canonical primary identifier, editorial code names ("THE MIRROR", "THE WINDOW", "THE PLAYBOOK", "THE TOOLBOX", "THE LANDSCAPE") remain as the hero title — payoff once you're on the page, not a navigation aid.
+
+Specific edits:
+- `clients/cuervo/copy.py` `NAV_TABLE`: "Cuervo Performance" → "Brand Performance", "2026 Strategy & Brief" → "2026 Strategy", "Hashtag & Search Intel" → "Conversation Intel" (description rewritten to cover the full Tab 1/2/3 scope: brand hashtags + category/cultural + Google News).
+- `clients/devils_reserve/copy.py` `NAV_TABLE`: "Devils Reserve Performance" → "Brand Performance", "Strategy & Brief" → "2026 Strategy".
+- `pages/1_Brand_Performance.py`: removed vestigial `st.header()` + `st.caption()` at lines 40-41. These were leftover from before the Treatment C rollout — `render_page_hero()` at line ~140 was already rendering the hero with kicker + title + subtitle, so Page 1 was rendering the title TWICE. Other pages (2-5) had already dropped this when the hero was added.
+- Sidebar nav (filename-derived) was already correct so no file renames needed.
+- `docs/decisions.md`: added a long entry documenting the Streamlit font config gotcha. Rule: **fonts go in `.streamlit/config.toml [[theme.fontFaces]]`, never in CSS**. CSS only handles per-component overrides.
+
+**`01ba8af` — Material Symbols icon regression fix.**
+Side effect of `8be51b2`: setting `font = "Barlow Condensed"` cascaded the font down to Streamlit's native icon spans (`[data-testid="stIconMaterial"]`), which use Material Symbols Rounded ligatures. Barlow Condensed has no such ligatures, so users started seeing literal icon names as text — sidebar collapse button showed `keyboard_double_arrow_left`, expander chevrons showed `arrow_drop_down`. Fix: explicit CSS rule in `POPLIFE_TREATMENT_C_CSS` re-routing `[data-testid="stIconMaterial"]` (plus `material-icons`/`material-symbols-*` fallback selectors) back to `Material Symbols Rounded` with `!important` and `font-feature-settings: 'liga'`. Verified via `document.fonts` API that Material Symbols Rounded was already registered (Streamlit ships it) just unloaded — so CSS-only override was enough; no need to add it to fontFaces.
+
+### Verified live on preview after each commit
+Used Chrome MCP DOM probes (not just visual eyeballing — Streamlit Cloud stale-build issues make eyeballing unreliable). Probed `getComputedStyle().fontFamily` on body, headings, `stMetricValue`, `stMarkdownContainer`, buttons, sidebar links, icon spans. Final state on `9744881 + 01ba8af`:
+- Picker, Cuervo home, DR home — all 3 landing views Treatment C with Barlow Condensed everywhere
+- Sidebar nav links — Barlow Condensed
+- Hub landing table headers + cells — Barlow Condensed, naming matches sidebar
+- Page hero kicker matches hub table label exactly
+- Icon glyphs render properly (chevrons, sidebar collapse button)
+
+### Bugs found / issues to address next session
+- **Streamlit Cloud auto-rebuild is unreliable for this repo** — went 0-for-3 today (`12cf2fe`, `8be51b2` both required manual reboot via `Manage app → Reboot`). The toml fix specifically only takes effect on a fresh build, so bake the reboot step into the workflow when shipping anything that touches `.streamlit/config.toml`. Documented in `docs/decisions.md`.
+- **Streamlit `font = "..."` breaks icon ligatures** — fixed with the override CSS, but worth knowing for next time someone touches font config. Also documented in `docs/decisions.md`.
+- **More UI tweaks queued** — user has more font/visual tweaks to flag tomorrow but ran out of time. Picker + page heros + landing views are settled; remaining tweaks live on individual pages.
+
+### Files changed this session
+```
+ M .streamlit/config.toml             — font = "Barlow Condensed" + 5 fontFaces blocks
+ M config.py                          — global Streamlit widget font cascade (later neutralized when toml took over) + Material Symbols icon override
+ M clients/cuervo/copy.py             — NAV_TABLE renamed
+ M clients/devils_reserve/copy.py     — NAV_TABLE renamed
+ M pages/1_Brand_Performance.py       — removed vestigial st.header / st.caption
+ M docs/changelog.md                  — Session 3b sub-entry (mid-session checkpoint) + this entry
+ M docs/decisions.md                  — Streamlit font config gotcha
+?? 7 pre-existing untracked data CSVs (not touched, as before)
+```
+
+### Status
+- **Branch**: `preview/ui-phase-1` at `01ba8af`, pushed to GitHub
+- **Production (`main`)**: still at `2935549`. Clients are still on Session 1 state until merge
+- **Preview deployment**: live at https://cuervo-intel-preview.streamlit.app/ (may need manual reboot if recent push didn't auto-deploy)
+- **Working tree**: clean except 7 pre-existing untracked CSVs
+- **Build-plan deltas**: none. Phase 1 unchecked items unchanged. UI Phase 1 polish isn't tracked as a build-plan item
+- **Next session pickup**: more UI tweaks, then the merge decision. After UI tweaks bed in, the call is whether to merge `preview/ui-phase-1` → `main` (ships to clients) or keep iterating on the preview branch
+
+---
+
+## 2026-04-09 — Session 3b (Streamlit Cloud stale-build diagnosis) — SHIPPED
+
+Follow-up after user reported "im not seeing the changes on streamlit" after Session 3 + 3a were pushed to `origin/preview/ui-phase-1`. Commits were on GitHub, but the preview app at https://cuervo-intel-preview.streamlit.app/ was still serving the old pre-Treatment-C UI.
+
+### Diagnosis
+Loaded the preview app in Chrome via the `mcp__Claude_in_Chrome__*` tools and probed the DOM directly. Evidence the app was serving stale code:
+- `h1Text: "Cuervo — Social Media Intelligence"` — old plain `st.title` output (the new code renders `THE HUB` via `render_page_hero`)
+- `hasPageHero: false`, `sectionLabelCount: 0`, `kpiCards: 0` — zero Treatment C DOM elements on any probed view
+- Body text still had the old "Page | What you'll find" markdown nav table that was replaced in `12cf2fe`
+
+Meanwhile `git ls-remote origin preview/ui-phase-1` confirmed the remote was at `12cf2fe` — code was on GitHub, just not being served.
+
+### Cause + fix
+**Cause**: Streamlit Cloud's auto-rebuild on push had silently failed or gotten stuck on an earlier commit. User confirmed the app's Branch setting in Streamlit Cloud was correctly pointed at `preview/ui-phase-1`, so the issue wasn't misconfigured tracking. Unknown whether an earlier build errored and never cleared, or whether the poll-for-new-commits mechanism just missed the push.
+
+**Fix**: Manual reboot from the "Manage app" drawer (`⋮ → Reboot app`). Forced a fresh pull of the branch HEAD and rebuilt from scratch.
+
+### Verified live on the deployed preview
+After reboot, probed all 3 landing views via Chrome DOM queries:
+
+| View | Hero kicker | Hero title | Stats | Section labels | Exceptions |
+|---|---|---|---|---|---|
+| Picker (`/`) | POPLIFE · INTERNAL | THE CONTROL ROOM | 2 CLIENTS / 5 PAGES / 2 PLATFORMS / Treatment C | LAUNCH A DASHBOARD | 0 |
+| Cuervo home (`?client=cuervo`) | JOSE CUERVO · SOCIAL INTELLIGENCE | THE HUB | 1,080 POSTS / 13 BRANDS / 5 PAGES / 2 PLATFORMS | NAVIGATE, EXPORT | 0 |
+| DR home (`?client=devils_reserve`) | DEVILS RESERVE · SOCIAL INTELLIGENCE | THE HUB | 776 POSTS / 5 BRANDS / 5 PAGES / 2 PLATFORMS | NAVIGATE, EXPORT | 0 |
+
+All 3 views match the local smoke test from Session 3a exactly.
+
+### Rule for next time
+**When the preview app looks stale after a push**: don't assume Streamlit Cloud auto-pulled. Check the DOM directly (not just the title), compare with `git ls-remote`, and if the remote has the commit but the app doesn't — manual reboot from `Manage app → Reboot`. Auto-rebuild is best-effort, not guaranteed.
+
+### Files changed
+None — this was a pure diagnosis + dashboard-action fix, no code written.
+
+### Gotcha: direct page URLs bypass `app.py`
+Separately noted during diagnosis: hitting `/Brand_Performance` directly (without going through `/` or `/?client=X` first) shows the "Go to the home page first to load data" warning, because it bypasses the data-loading block in `app.py`. So if a user lands on a subpage URL and sees plain-looking output, that's ALSO not a reliable indicator of stale code — it's just the data-loading gate firing. Always test landing-page changes from the root URL.
+
+---
+
+## 2026-04-09 — Session 3a (home + picker Treatment C) — SHIPPED TO `origin/preview/ui-phase-1`
+
+Follow-up after deploying `preview/ui-phase-1` to Streamlit Community Cloud for review. User flagged that the internal client picker and per-client home pages were still on the bare `st.title` + `st.caption` layout — inconsistent with pages 1–5 after the Treatment C rollout.
+
+### What shipped
+- **`app.py` internal client picker** (no `?client=` param): dark "THE CONTROL ROOM" hero with `POPLIFE · INTERNAL` kicker, 4 inline stats (active clients, dashboard pages, platforms, UI phase). Peach "LAUNCH A DASHBOARD" section label above the selectbox + Launch Dashboard button. Injects `POPLIFE_TREATMENT_C_CSS` directly (no client config is loaded at this point, so client-specific `custom_css` is unavailable).
+- **`app.py` per-client home** (`?client=X`): dark "THE HUB" hero with `{CLIENT} · SOCIAL INTELLIGENCE` kicker (e.g. "JOSE CUERVO · SOCIAL INTELLIGENCE"), 4 inline stats (posts analyzed, brands tracked, dashboard pages, platforms). Replaces the old `st.columns([1, 5])` logo + `st.title` layout. Peach "NAVIGATE" section label above `cfg.nav_table`. Peach "EXPORT" section label above the Download Excel Report button.
+
+### Gotcha found and worked around
+First attempt used `render_content_card_open/render_content_card_close` to wrap the selectbox + button (picker) and the nav_table (home). That broke visually: Streamlit widgets render as siblings inside their own container divs, NOT inside markdown-emitted HTML. The open `<div class="content-card">` gets auto-closed by the browser's HTML parser at the end of the `st.markdown` block, and everything after appears visually outside the card.
+
+**Rule for future Treatment C work**: `render_content_card_open/close` only works for content where everything between them is emitted via a single `st.markdown(unsafe_allow_html=True)` call. It does NOT work when Streamlit widgets (`st.selectbox`, `st.button`, `st.plotly_chart`, `st.dataframe`, `st.markdown` with markdown tables, etc.) appear between them — those create their own sibling containers. For widget content, use a section label + caption instead. (This also means the Page 3 Collab Mix + Content Mix Funnel "wraps" I shipped in the main Session 3 entry are actually only wrapping the title + caption; the charts and scorecards below them render as siblings. Looks fine visually because the dark header + light content flows naturally, but it's not a true card wrap. Worth revisiting in Phase 2.)
+
+### Second gotcha: `type="primary"` Launch button
+Using `st.button("Launch Dashboard", type="primary")` on the picker rendered as barely-visible light-peach text on a pale peach background. Root cause: the picker loads `POPLIFE_TREATMENT_C_CSS` but NOT any client-specific `custom_css` (no client is loaded yet), so Streamlit's default primary-button theme clashed with the peach background. Fix: dropped `type="primary"` — the button now renders as dark-on-white and reads clearly.
+
+### Verified
+3 views on port 8501 (picker, `?client=cuervo` home, `?client=devils_reserve` home). Zero exceptions, zero server errors. Screenshots captured of all three.
+
+### Files changed this sub-session
+```
+ M app.py            — picker + home page Treatment C conversions, imports ui_components + POPLIFE_TREATMENT_C_CSS
+ M docs/changelog.md — this entry
+```
+
+---
+
+## 2026-04-09 — Session 3 (UI Phase 1 finish: Treatment C consistency pass across all 5 pages) — SHIPPED TO `origin/preview/ui-phase-1`
 
 ### What shipped
 Finished the Treatment C rollout by sweeping the remaining old-blue `autostrat_components` calls out of every page. After Session 2, hero blocks and most top-level section labels were already Treatment C — but `render_section_label`, `render_nopd_cards`, `render_territory_cards`, and `render_verbatim_quotes` from `autostrat_components.py` were still being called in all 5 pages (Page 1 Tab 3 Self-Audit, Page 3 Tab 4 Action Plan, Page 4 Tab 1 Inspiration, Page 5 all 3 tabs). That inconsistency is now gone.
@@ -100,15 +318,14 @@ The old autostrat helpers (`render_section_label`, `render_nopd_cards`, `render_
 ?? data/devils_reserve/posts_data.csv       ← pre-existing, not touched
 ```
 
-### How to pick back up
-Commit has been created locally but NOT pushed to `origin/main`. User to decide:
-1. `git push origin main` to ship it — Streamlit Cloud will rebuild within ~60s
-2. `git commit --amend` + re-stage to tweak the commit
-3. `git reset HEAD~1 --mixed` to unwind and keep the working tree for further edits
+### Shipped as
+- `921477e` — Implement Treatment C design system across all 5 pages (UI Phase 1)
+- `12cf2fe` — Apply Treatment C to internal picker + per-client home (app.py) [Session 3a follow-up]
+- Pushed to `origin/preview/ui-phase-1`. `origin/main` still at `2935549` — production clients are still on Session 1 state until we decide to merge.
 
 ---
 
-## 2026-04-09 — Session 2 (UI Phase 1: Treatment C rollout to pages 2–5) — IN PROGRESS, NOT COMMITTED
+## 2026-04-09 — Session 2 (UI Phase 1: Treatment C rollout to pages 2–5) — SHIPPED (rolled into commit `921477e` with Session 3)
 
 ### Status at pause
 All code changes are complete and verified on both Cuervo and DR. **Nothing has been committed yet** — working directory has 8 modified files + 1 new file (`ui_components.py`). Pick up by running the dev server, eyeballing a few pages in the browser, and then deciding on a commit.

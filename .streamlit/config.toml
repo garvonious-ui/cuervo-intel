@@ -3,7 +3,39 @@ primaryColor = "#F8C090"
 backgroundColor = "#ffffff"
 secondaryBackgroundColor = "#F3EDE6"
 textColor = "#333333"
-font = "sans serif"
+font = "Barlow Condensed"
+
+# Register Barlow Condensed as a custom font face so Streamlit's theme
+# engine actually has it available. Without these blocks, setting
+# `font = "Barlow Condensed"` would just fall through to the system
+# font. Loading Barlow Condensed at the framework level (not via CSS
+# injection) means it wins over every Streamlit-default widget rule —
+# st.metric, st.dataframe, st.markdown, st.button, st.selectbox,
+# sidebar nav, expanders, callouts all pick it up automatically.
+[[theme.fontFaces]]
+family = "Barlow Condensed"
+url = "https://fonts.gstatic.com/s/barlowcondensed/v13/HTx3L3I-JCGChYJ8VI-L6OO_au7B2xY.ttf"
+weight = "400"
+
+[[theme.fontFaces]]
+family = "Barlow Condensed"
+url = "https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B4-Lw_3E.ttf"
+weight = "500"
+
+[[theme.fontFaces]]
+family = "Barlow Condensed"
+url = "https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B4873_3E.ttf"
+weight = "600"
+
+[[theme.fontFaces]]
+family = "Barlow Condensed"
+url = "https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B46r2_3E.ttf"
+weight = "700"
+
+[[theme.fontFaces]]
+family = "Barlow Condensed"
+url = "https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B47b1_3E.ttf"
+weight = "800"
 
 [server]
 maxUploadSize = 200

@@ -115,7 +115,7 @@ CHART_FONT = dict(family=_CHART_FONT_FAMILY)
 # account's following (co-authored IG Collab Posts, creator reposts, event
 # activations, etc.) and are excluded from hero KPI averages so the scorecard
 # reflects organic brand content performance.
-COLLAB_OWNED_TYPES = {"cuervo"}
+COLLAB_OWNED_TYPES = {"cuervo", "devils reserve"}
 COLLAB_AMPLIFIED_TYPES = {"partner", "influencer", "collective"}
 
 
@@ -159,13 +159,90 @@ def split_owned_collab(df):
 #   Page 5:        .insight-expander .wtm-card .news-narrative .news-quote
 
 POPLIFE_TREATMENT_C_CSS = """
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap');
-
     .block-container { padding-top: 2rem; }
 
+    /* ══════════════════════════════════════════════════════════════════
+       Global font cascade — make Barlow Condensed the default for every
+       Streamlit widget, then individual component rules override where
+       Inter is preferred (hero subtitle, content-card tables, callouts).
+       Without this, native widgets (st.metric, st.dataframe, st.markdown,
+       st.button, st.selectbox, sidebar nav, expanders) fall back to
+       Streamlit's bundled font.
+       ══════════════════════════════════════════════════════════════════ */
+    html, body, .stApp,
+    [data-testid="stAppViewContainer"],
+    [data-testid="stMain"],
+    [data-testid="stHeader"],
+    [data-testid="stSidebar"],
+    [data-testid="stSidebar"] *,
+    [data-testid="stSidebarNav"],
+    [data-testid="stSidebarNavLink"],
+    [data-testid="stSidebarNavLink"] span,
+    [data-testid="stMetricValue"],
+    [data-testid="stMetricLabel"],
+    [data-testid="stMetricDelta"],
+    [data-testid="stMarkdownContainer"],
+    [data-testid="stMarkdownContainer"] p,
+    [data-testid="stMarkdownContainer"] li,
+    [data-testid="stMarkdownContainer"] td,
+    [data-testid="stMarkdownContainer"] th,
+    [data-testid="stCaptionContainer"],
+    [data-testid="stCaptionContainer"] p,
+    [data-testid="stDataFrame"],
+    [data-testid="stDataFrame"] *,
+    [data-testid="stTable"],
+    [data-testid="stTable"] *,
+    [data-testid="stExpander"] summary,
+    [data-testid="stExpander"] summary *,
+    [data-testid="stNotificationContentInfo"],
+    [data-testid="stNotificationContentWarning"],
+    [data-testid="stNotificationContentError"],
+    [data-testid="stNotificationContentSuccess"],
+    .stMarkdown, .stMarkdown p, .stMarkdown li, .stMarkdown td, .stMarkdown th,
+    .stCaption,
+    .stButton button, .stDownloadButton button, .stFormSubmitButton button,
+    .stSelectbox label, .stSelectbox [data-baseweb="select"],
+    .stSelectbox [data-baseweb="select"] *,
+    .stMultiSelect label, .stMultiSelect [data-baseweb="select"] *,
+    .stTextInput label, .stTextInput input,
+    .stTextArea label, .stTextArea textarea,
+    .stRadio label, .stRadio [data-baseweb="radio"],
+    .stCheckbox label,
+    .stSlider label,
+    .stDateInput label, .stDateInput input,
+    .stNumberInput label, .stNumberInput input {
+        font-family: 'Barlow Condensed', Helvetica, Arial, sans-serif !important;
+    }
+
     /* Base headings */
-    h1, h2, h3 { color: #333333; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; }
+    h1, h2, h3, h4, h5, h6 { color: #333333; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; }
+
+    /* ══════════════════════════════════════════════════════════════════
+       Streamlit icon font preservation
+       ══════════════════════════════════════════════════════════════════
+       Streamlit uses Material Symbols Rounded ligatures for native icons
+       (sidebar collapse arrow, expander chevron, button icons, etc.).
+       Setting `font = "Barlow Condensed"` in .streamlit/config.toml
+       cascades that font down to icon spans too, breaking the ligature
+       transformation — so users see the literal icon name as text
+       (e.g. "keyboard_double_arrow_left", "arrow_drop_down").
+       Force Material Symbols back onto the icon elements explicitly.
+       ══════════════════════════════════════════════════════════════════ */
+    [data-testid="stIconMaterial"],
+    span[data-testid="stIconMaterial"],
+    .material-icons,
+    .material-symbols-rounded,
+    .material-symbols-outlined {
+        font-family: 'Material Symbols Rounded', 'Material Symbols Outlined', 'Material Icons' !important;
+        font-weight: normal !important;
+        font-style: normal !important;
+        font-feature-settings: 'liga' !important;
+        -webkit-font-feature-settings: 'liga' !important;
+    }
 
     /* Restyled Streamlit tabs to match Treatment C tab row */
     .stTabs [data-baseweb="tab-list"] {

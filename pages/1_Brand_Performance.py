@@ -37,8 +37,9 @@ _perf = cfg.narrative.get("performance", {})
 
 st.logo(cfg.app_logo_path)
 st.markdown(cfg.custom_css, unsafe_allow_html=True)
-st.header(cfg.page_headers.get("performance", "Brand Performance"))
-st.caption(cfg.page_captions.get("performance", "How the brand is performing — sidebar filters do not apply here."))
+# Note: render_page_hero() further down (~line 140) renders THE MIRROR hero +
+# kicker + subtitle. The old st.header / st.caption block was vestigial from
+# before the Treatment C rollout — removed so the page only has one title.
 
 results = st.session_state["results"]
 df = st.session_state["df"]  # Unfiltered
@@ -547,12 +548,13 @@ with tab_content:
                                      xaxis_tickangle=-35)
             st.plotly_chart(fig_pillar, use_container_width=True)
 
-            top_p = pillar_eng.iloc[0]
-            bottom_p = pillar_eng.iloc[-1] if len(pillar_eng) > 1 else top_p
-            pillars_above = pillar_eng[pillar_eng["avg_eng"] >= ENG_PER_POST_TARGET]
-            st.info(f"**Top pillar:** {top_p['content_pillar']} at {top_p['avg_eng']:,.0f} avg engagements ({top_p['count']} posts). "
-                    f"{len(pillars_above)} of {len(pillar_eng)} pillars meet the {ENG_PER_POST_TARGET} eng/post target. "
-                    f"**Lowest:** {bottom_p['content_pillar']} at {bottom_p['avg_eng']:,.0f}.")
+            if len(pillar_eng):
+                top_p = pillar_eng.iloc[0]
+                bottom_p = pillar_eng.iloc[-1] if len(pillar_eng) > 1 else top_p
+                pillars_above = pillar_eng[pillar_eng["avg_eng"] >= ENG_PER_POST_TARGET]
+                st.info(f"**Top pillar:** {top_p['content_pillar']} at {top_p['avg_eng']:,.0f} avg engagements ({top_p['count']} posts). "
+                        f"{len(pillars_above)} of {len(pillar_eng)} pillars meet the {ENG_PER_POST_TARGET} eng/post target. "
+                        f"**Lowest:** {bottom_p['content_pillar']} at {bottom_p['avg_eng']:,.0f}.")
         else:
             st.subheader("Content Theme Performance")
             st.caption(_perf.get("theme_caption", f"Which themes drive the highest engagement for {HERO}"))
