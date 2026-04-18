@@ -119,17 +119,25 @@ def load_demo(client_id: str):
 
 
 def _sprout_fingerprint(sprout_dir: str) -> str:
-    """Return a hash of CSV filenames + sizes + code version so cache busts
-    when files change OR analysis logic is updated."""
+    """Return a hash of CSV filenames + sizes + mtimes + code version so the
+    cache busts when files change OR analysis logic is updated.
+
+    mtime is included alongside size so edits that don't change file size
+    (e.g. overwriting a same-length row) still bust the cache — important for
+    manual_posts.csv, which the Tagging Queue page appends to on every tag.
+    api_posts.parquet will be added to this fingerprint in Phase B.
+    """
     import hashlib
     # Bump this version whenever sprout_import.py or analysis.py logic changes
-    CODE_VERSION = "v39_hide_empty_funnel"
+    CODE_VERSION = "v40_tagging_queue"
     entries = [CODE_VERSION]
     if os.path.isdir(sprout_dir):
         for f in sorted(os.listdir(sprout_dir)):
             if f.lower().endswith(".csv"):
                 fp = os.path.join(sprout_dir, f)
-                entries.append(f"{f}:{os.path.getsize(fp)}")
+                entries.append(
+                    f"{f}:{os.path.getsize(fp)}:{os.path.getmtime(fp):.0f}"
+                )
     return hashlib.md5("|".join(entries).encode()).hexdigest()
 
 
