@@ -1,6 +1,6 @@
 # Changelog
 
-## 2026-04-18 — Session 7 (Phase A: Tagging Queue shipped) — CHECKPOINT (on `feature/sprout-api-integration`)
+## 2026-04-18 — Session 7 (Phase A: Tagging Queue shipped) — WRAPPED (pushed to `origin/feature/sprout-api-integration`)
 
 Shipped Phase A of the Sprout API plan: the Tagging Queue page. No API work yet — that's Phase B.
 
