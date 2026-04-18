@@ -1,0 +1,852 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Poplife — Brand Guidelines & Component Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Material+Symbols+Rounded&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --peach: #F8C090;
+    --teal: #7EBEC5;
+    --blue: #2ea3f2;
+    --bg: #F3EDE6;
+    --dark: #333333;
+    --white: #ffffff;
+    --border: #E0D8D0;
+    --grid: #EDE3D8;
+    --muted: #8A817C;
+    --high: #D9534F;
+    --low: #8CBF8C;
+    --needs: #2ea3f2;
+    --objections: #D9534F;
+    --desires: #5CB85C;
+    --pain: #F8C090;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: "Barlow Condensed", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--dark);
+    font-size: 16px;
+    line-height: 1.45;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 40px 32px 80px; }
+  .hero {
+    background: var(--dark);
+    color: var(--white);
+    padding: 56px 40px;
+    border-radius: 4px;
+    margin-bottom: 48px;
+  }
+  .hero .kicker {
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--peach);
+    margin-bottom: 14px;
+  }
+  .hero h1 {
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 56px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    margin: 0 0 16px;
+    line-height: 1.05;
+  }
+  .hero .sub {
+    font-family: "Inter", sans-serif;
+    font-size: 15px;
+    color: #D9D2CA;
+    max-width: 680px;
+    line-height: 1.55;
+  }
+  .hero .stats {
+    display: flex;
+    gap: 40px;
+    margin-top: 32px;
+    padding-top: 28px;
+    border-top: 1px solid rgba(255,255,255,0.12);
+  }
+  .hero .stat-num {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 700;
+    font-size: 28px;
+    color: var(--peach);
+  }
+  .hero .stat-lbl {
+    font-family: "Inter", sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #D9D2CA;
+    margin-top: 2px;
+  }
+
+  h2.section {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 700;
+    font-size: 28px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 56px 0 8px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--peach);
+  }
+  .section-caption {
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 24px;
+    max-width: 720px;
+  }
+
+  .section-label {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--peach);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    margin: 28px 0 14px;
+  }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  @media (max-width: 900px) {
+    .grid-3, .grid-4 { grid-template-columns: 1fr 1fr; }
+  }
+
+  .swatch {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .swatch .chip { height: 88px; }
+  .swatch .meta { padding: 12px 14px; }
+  .swatch .name {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .swatch .hex {
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .swatch .role {
+    font-family: "Inter", sans-serif;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+    line-height: 1.4;
+  }
+
+  .type-row {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px 24px;
+    margin-bottom: 12px;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 24px;
+    align-items: baseline;
+  }
+  .type-row .spec {
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .type-row .spec strong { color: var(--dark); font-weight: 600; }
+
+  .content-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 24px;
+  }
+  .content-card .cc-title {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0 0 6px;
+  }
+  .content-card .cc-caption {
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  .kpi-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--peach);
+    border-radius: 4px;
+    padding: 18px 20px;
+  }
+  .kpi-card .kpi-label {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .kpi-card .kpi-value {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 800;
+    font-size: 34px;
+    margin: 4px 0 2px;
+    color: var(--dark);
+  }
+  .kpi-card .kpi-meta {
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .kpi-card .status-pill {
+    display: inline-block;
+    font-family: "Inter", sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 2px;
+    margin-top: 8px;
+  }
+  .status-pill.ok { background: #E3F1DE; color: #3E7A3E; }
+  .status-pill.miss { background: #FBE3E1; color: #9E3A34; }
+
+  .pillar-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-left: 5px solid var(--accent, var(--peach));
+    border-radius: 4px;
+    padding: 20px 22px;
+  }
+  .pillar-card .pc-name {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .pillar-card .pc-desc {
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+
+  .sku-usage-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .sku-usage-card .header {
+    background: #1A1A1A;
+    color: var(--white);
+    padding: 14px 18px;
+    border-bottom: 3px solid var(--sku-accent, var(--peach));
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .sku-usage-card .sku-name {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--sku-accent, var(--peach));
+  }
+  .sku-usage-card .count-pill {
+    font-family: "Inter", sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    padding: 3px 8px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.08);
+    color: var(--sku-accent, var(--peach));
+  }
+  .sku-usage-card ul { margin: 0; padding: 8px 0; list-style: none; }
+  .sku-usage-card li {
+    padding: 8px 18px;
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    color: var(--dark);
+    border-bottom: 1px solid #F5EFE8;
+  }
+  .sku-usage-card li:last-child { border-bottom: none; }
+  .sku-usage-card li::before {
+    content: "◆ ";
+    color: var(--sku-accent, var(--peach));
+    margin-right: 6px;
+  }
+
+  .nopd-2x2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .nopd-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-top: 4px solid var(--np, var(--peach));
+    border-radius: 4px;
+    padding: 16px 18px;
+  }
+  .nopd-card .np-label {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--np, var(--peach));
+    margin-bottom: 8px;
+  }
+  .nopd-card ul { margin: 0; padding: 0 0 0 16px; }
+  .nopd-card li {
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    color: var(--dark);
+    margin-bottom: 4px;
+  }
+
+  .territory-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px 18px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    margin-bottom: 10px;
+  }
+  .territory-card .t-num {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    color: var(--peach);
+    min-width: 28px;
+  }
+  .territory-card .t-body {
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    color: var(--dark);
+    line-height: 1.55;
+  }
+
+  .verbatim-card {
+    background: #F3EDE6;
+    border-left: 4px solid var(--peach);
+    border-radius: 0 4px 4px 0;
+    padding: 14px 18px;
+    font-family: "Barlow Condensed", sans-serif;
+    font-style: italic;
+    font-size: 16px;
+    color: var(--dark);
+    margin-bottom: 10px;
+  }
+
+  .poplife-note {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--peach);
+    border-radius: 4px;
+    padding: 14px 18px;
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    color: var(--dark);
+    line-height: 1.55;
+  }
+  .poplife-note.success { border-left-color: var(--low); }
+  .poplife-note.danger { border-left-color: var(--high); }
+  .poplife-note.warning { border-left-color: var(--peach); }
+  .poplife-note .np-title {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .north-star {
+    background: var(--dark);
+    color: var(--white);
+    padding: 28px 32px;
+    border-radius: 4px;
+    border-left: 4px solid var(--peach);
+  }
+  .north-star .ns-label {
+    font-family: "Inter", sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--peach);
+    margin-bottom: 8px;
+  }
+  .north-star .ns-text {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 600;
+    font-size: 22px;
+    line-height: 1.3;
+  }
+
+  .connect-callout {
+    background: linear-gradient(135deg, #FFF4E8 0%, #FFE7D0 100%);
+    border: 1px solid var(--peach);
+    border-radius: 4px;
+    padding: 18px 22px;
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    color: var(--dark);
+  }
+  .connect-callout strong {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 15px;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .colorway {
+    display: flex;
+    height: 48px;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .colorway > div { flex: 1; }
+
+  .gotcha {
+    background: #FFF8EF;
+    border: 1px solid #F2DCBC;
+    border-radius: 4px;
+    padding: 18px 22px;
+    margin-bottom: 14px;
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--dark);
+  }
+  .gotcha h4 {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin: 0 0 6px;
+    color: var(--dark);
+  }
+  code {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px;
+    background: rgba(0,0,0,0.05);
+    padding: 1px 5px;
+    border-radius: 2px;
+  }
+
+  .footer {
+    margin-top: 72px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="kicker">POPLIFE · DESIGN SYSTEM</div>
+    <h1>BRAND GUIDELINES<br>&amp; COMPONENT LIBRARY</h1>
+    <div class="sub">Treatment C design language for the Poplife social intelligence platform. Dark editorial heroes, warm off-white canvas, peach + teal accents. Music festival meets creative agency — not corporate, not minimal.</div>
+    <div class="stats">
+      <div><div class="stat-num">2</div><div class="stat-lbl">Type Families</div></div>
+      <div><div class="stat-num">10</div><div class="stat-lbl">Core Colors</div></div>
+      <div><div class="stat-num">15+</div><div class="stat-lbl">Components</div></div>
+      <div><div class="stat-num">5</div><div class="stat-lbl">Dashboard Pages</div></div>
+    </div>
+  </div>
+
+  <!-- TYPOGRAPHY -->
+  <h2 class="section">Typography</h2>
+  <div class="section-caption">Two families. Barlow Condensed is the global default — registered at the Streamlit framework level via <code>.streamlit/config.toml</code> so every native widget inherits it. Inter is used only for per-component overrides where condensed type would hurt legibility (body copy, captions, hero subtitles, CPN tables).</div>
+
+  <div class="type-row">
+    <div>
+      <div style="font-family: 'Barlow Condensed'; font-weight: 800; font-size: 38px; text-transform: uppercase; letter-spacing: 0.02em;">Barlow Condensed</div>
+    </div>
+    <div class="spec">
+      <strong>Role:</strong> Headlines, section labels, KPI values, pillar names, hero titles, all uppercase editorial type.<br>
+      <strong>Weights:</strong> 400, 500, 600, 700, 800<br>
+      <strong>Registered:</strong> <code>.streamlit/config.toml</code> → <code>[[theme.fontFaces]]</code> (5 weights)<br>
+      <strong>Fallback stack:</strong> <code>Barlow Condensed, Helvetica, Arial, sans-serif</code><br>
+      <strong>Source:</strong> Google Fonts
+    </div>
+  </div>
+
+  <div class="type-row">
+    <div>
+      <div style="font-family: 'Inter'; font-weight: 500; font-size: 26px;">Inter</div>
+    </div>
+    <div class="spec">
+      <strong>Role:</strong> Body copy, captions, hero subtitles, tables, card descriptions, metadata, status pills.<br>
+      <strong>Weights used:</strong> 400, 500, 600, 700<br>
+      <strong>Registered:</strong> Via CSS <code>font-family</code> rules on specific components (never as global default).<br>
+      <strong>Source:</strong> Google Fonts
+    </div>
+  </div>
+
+  <div class="type-row">
+    <div>
+      <span class="material-symbols-rounded" style="font-size: 42px; color: var(--dark);">auto_awesome</span>
+    </div>
+    <div class="spec">
+      <strong>Role:</strong> UI icons (sidebar collapse, expander chevrons, etc.)<br>
+      <strong>Font:</strong> Material Symbols Rounded (ships with Streamlit)<br>
+      <strong>Note:</strong> Pinned via CSS override because <code>font = "Barlow Condensed"</code> in config.toml cascades to icon spans and breaks ligatures. See Gotchas.
+    </div>
+  </div>
+
+  <div class="section-label">Type scale</div>
+  <div class="content-card">
+    <div style="font-family: 'Barlow Condensed'; font-weight: 800; font-size: 56px; text-transform: uppercase; line-height: 1.05; margin-bottom: 4px;">Hero Title / 56px · 800</div>
+    <div style="font-family: 'Barlow Condensed'; font-weight: 800; font-size: 34px; line-height: 1.1; margin-bottom: 4px;">KPI Value / 34px · 800</div>
+    <div style="font-family: 'Barlow Condensed'; font-weight: 700; font-size: 28px; text-transform: uppercase; margin-bottom: 4px;">Page Section / 28px · 700</div>
+    <div style="font-family: 'Barlow Condensed'; font-weight: 700; font-size: 20px; text-transform: uppercase; margin-bottom: 4px;">Card Title / 20px · 700</div>
+    <div style="font-family: 'Barlow Condensed'; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.24em; color: var(--peach); margin-bottom: 8px;">SECTION LABEL / 13PX · 700 · PEACH</div>
+    <div style="font-family: 'Inter'; font-weight: 400; font-size: 15px; color: var(--dark); margin-bottom: 4px;">Body copy / Inter 15px · 400</div>
+    <div style="font-family: 'Inter'; font-weight: 400; font-size: 13px; color: var(--muted);">Caption / Inter 13px · 400 · muted</div>
+  </div>
+
+  <!-- COLOR -->
+  <h2 class="section">Color</h2>
+  <div class="section-caption">Warm neutrals with editorial accents. Peach is the single primary accent that carries across charts, borders, section labels, and pillar cards. Teal + blue are supporting accents. Dark charcoal anchors heros and sidebar.</div>
+
+  <div class="section-label">Core palette</div>
+  <div class="grid-4">
+    <div class="swatch">
+      <div class="chip" style="background: #F8C090;"></div>
+      <div class="meta"><div class="name">Peach</div><div class="hex">#F8C090</div><div class="role">Primary accent. Section labels, borders, pillar cards, button hovers.</div></div>
+    </div>
+    <div class="swatch">
+      <div class="chip" style="background: #7EBEC5;"></div>
+      <div class="meta"><div class="name">Teal</div><div class="hex">#7EBEC5</div><div class="role">Secondary accent. Chart colorway position 2, UI details.</div></div>
+    </div>
+    <div class="swatch">
+      <div class="chip" style="background: #2ea3f2;"></div>
+      <div class="meta"><div class="name">Blue</div><div class="hex">#2ea3f2</div><div class="role">Tertiary accent. Also NOPD "Needs" color.</div></div>
+    </div>
+    <div class="swatch">
+      <div class="chip" style="background: #333333;"></div>
+      <div class="meta"><div class="name">Dark</div><div class="hex">#333333</div><div class="role">Body text, hero bg, sidebar, hover tooltips.</div></div>
+    </div>
+    <div class="swatch">
+      <div class="chip" style="background: #F3EDE6;"></div>
+      <div class="meta"><div class="name">Warm BG</div><div class="hex">#F3EDE6</div><div class="role">Page background. Warm off-white (not cold gray).</div></div>
+    </div>
+    <div class="swatch">
+      <div class="chip" style="background: #ffffff; border-bottom: 1px solid var(--border);"></div>
+      <div class="meta"><div class="name">White</div><div class="hex">#FFFFFF</div><div class="role">Card backgrounds, content surfaces.</div></div>
+    </div>
+    <div class="swatch">
+      <div class="chip" style="background: #E0D8D0;"></div>
+      <div class="meta"><div class="name">Border</div><div class="hex">#E0D8D0</div><div class="role">Warm-tinted card and input borders.</div></div>
+    </div>
+    <div class="swatch">
+      <div class="chip" style="background: #EDE3D8;"></div>
+      <div class="meta"><div class="name">Grid</div><div class="hex">#EDE3D8</div><div class="role">Chart gridlines, subtle dividers.</div></div>
+    </div>
+    <div class="swatch">
+      <div class="chip" style="background: #8A817C;"></div>
+      <div class="meta"><div class="name">Muted</div><div class="hex">#8A817C</div><div class="role">Captions, axis labels, metadata text.</div></div>
+    </div>
+  </div>
+
+  <div class="section-label">Priority & status</div>
+  <div class="grid-3">
+    <div class="swatch"><div class="chip" style="background: #D9534F;"></div><div class="meta"><div class="name">High / Danger</div><div class="hex">#D9534F</div><div class="role">NOPD Objections, error states.</div></div></div>
+    <div class="swatch"><div class="chip" style="background: #F8C090;"></div><div class="meta"><div class="name">Medium / Warning</div><div class="hex">#F8C090</div><div class="role">Same as peach accent.</div></div></div>
+    <div class="swatch"><div class="chip" style="background: #8CBF8C;"></div><div class="meta"><div class="name">Low / Success</div><div class="hex">#8CBF8C</div><div class="role">Success states, positive deltas.</div></div></div>
+  </div>
+
+  <div class="section-label">NOPD framework (autostrat)</div>
+  <div class="grid-4">
+    <div class="swatch"><div class="chip" style="background: #2ea3f2;"></div><div class="meta"><div class="name">Needs</div><div class="hex">#2ea3f2</div></div></div>
+    <div class="swatch"><div class="chip" style="background: #D9534F;"></div><div class="meta"><div class="name">Objections</div><div class="hex">#D9534F</div></div></div>
+    <div class="swatch"><div class="chip" style="background: #5CB85C;"></div><div class="meta"><div class="name">Desires</div><div class="hex">#5CB85C</div></div></div>
+    <div class="swatch"><div class="chip" style="background: #F8C090;"></div><div class="meta"><div class="name">Pain Points</div><div class="hex">#F8C090</div></div></div>
+  </div>
+
+  <div class="section-label">Chart colorway (10-color default)</div>
+  <div class="colorway">
+    <div style="background: #F8C090;"></div>
+    <div style="background: #7EBEC5;"></div>
+    <div style="background: #2ea3f2;"></div>
+    <div style="background: #8CBF8C;"></div>
+    <div style="background: #A88FBF;"></div>
+    <div style="background: #E6A96F;"></div>
+    <div style="background: #5C9DBE;"></div>
+    <div style="background: #D9886B;"></div>
+    <div style="background: #B8C9A8;"></div>
+    <div style="background: #C9A88F;"></div>
+  </div>
+  <div class="section-caption" style="margin-top: 12px;">Registered as Plotly template <code>"poplife"</code> in <code>config.py</code>. Charts that set <code>color_discrete_map</code> (e.g., per-brand colors on Page 2) override this colorway.</div>
+
+  <!-- COMPONENTS -->
+  <h2 class="section">Components</h2>
+  <div class="section-caption">Treatment C = dark editorial hero + light content cards + peach accents. All helpers live in <code>ui_components.py</code>. CSS lives in <code>config.py</code> under <code>POPLIFE_TREATMENT_C_CSS</code>.</div>
+
+  <div class="section-label">Page hero</div>
+  <div class="hero" style="padding: 44px 36px; margin-bottom: 28px;">
+    <div class="kicker">JOSE CUERVO · BRAND PERFORMANCE</div>
+    <h1 style="font-size: 44px;">THE MIRROR</h1>
+    <div class="sub">How Jose Cuervo's own content is performing — scorecard, cadence, pillar mix, self-audit intelligence.</div>
+  </div>
+
+  <div class="section-label">Section label</div>
+  <div class="section-label">KPI SCORECARD</div>
+  <div style="font-family: 'Inter'; font-size: 13px; color: var(--muted); margin-bottom: 28px;">Peach uppercase, <code>letter-spacing: 0.24em</code>, bottom border in warm gray.</div>
+
+  <div class="section-label">KPI card</div>
+  <div class="grid-4" style="margin-bottom: 28px;">
+    <div class="kpi-card">
+      <div class="kpi-label">Avg Eng / Post</div>
+      <div class="kpi-value">116</div>
+      <div class="kpi-meta">Target: 100</div>
+      <div class="status-pill ok">+16 above</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Likes / Month</div>
+      <div class="kpi-value">802</div>
+      <div class="kpi-meta">Target: 750</div>
+      <div class="status-pill ok">+52 above</div>
+    </div>
+    <div class="kpi-card" style="border-left-color: var(--high);">
+      <div class="kpi-label">Comments / Mo</div>
+      <div class="kpi-value">21</div>
+      <div class="kpi-meta">Target: 30</div>
+      <div class="status-pill miss">-9 below</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Reel Ratio</div>
+      <div class="kpi-value">47%</div>
+      <div class="kpi-meta">Target: 50%</div>
+      <div class="status-pill miss">-3% below</div>
+    </div>
+  </div>
+
+  <div class="section-label">Content card</div>
+  <div class="content-card" style="margin-bottom: 28px;">
+    <div class="cc-title">Collaboration breakdown</div>
+    <div class="cc-caption">How the hero brand's content splits across owned and amplified buckets.</div>
+    <div style="font-family: 'Inter'; font-size: 14px; color: var(--dark);">Wraps title + caption + inner content. Only true "card wrap" when all children render via a single <code>st.markdown(unsafe_allow_html=True)</code> call — widgets break out.</div>
+  </div>
+
+  <div class="section-label">Pillar cards (with per-pillar accent color)</div>
+  <div class="grid-2" style="margin-bottom: 28px;">
+    <div class="pillar-card" style="--accent: #F8C090;">
+      <div class="pc-name">The Ritual</div>
+      <div class="pc-desc">Everyday moments that turn a drink into a ritual — the craft, the pour, the toast.</div>
+    </div>
+    <div class="pillar-card" style="--accent: #2ea3f2;">
+      <div class="pc-name">The Pulse</div>
+      <div class="pc-desc">Culture in motion — music, sport, what's happening tonight.</div>
+    </div>
+    <div class="pillar-card" style="--accent: #D9534F;">
+      <div class="pc-name">The Front Row</div>
+      <div class="pc-desc">Live access to partners, events, and creators driving the conversation.</div>
+    </div>
+    <div class="pillar-card" style="--accent: #C9A88F;">
+      <div class="pc-name">The Craft</div>
+      <div class="pc-desc">The brand's heritage — agave, distillery, legacy storytelling.</div>
+    </div>
+  </div>
+
+  <div class="section-label">SKU usage card</div>
+  <div class="grid-3" style="margin-bottom: 28px;">
+    <div class="sku-usage-card" style="--sku-accent: #F8C090;">
+      <div class="header"><div class="sku-name">Especial</div><div class="count-pill">8 OCCASIONS</div></div>
+      <ul>
+        <li>Everyday mixing</li>
+        <li>Poolside no-bar</li>
+        <li>Tailgate / pregame</li>
+      </ul>
+    </div>
+    <div class="sku-usage-card" style="--sku-accent: #E6A96F;">
+      <div class="header"><div class="sku-name">Tradicional</div><div class="count-pill">6 OCCASIONS</div></div>
+      <ul>
+        <li>Upscale dinner</li>
+        <li>Weekend celebration</li>
+        <li>Gift moment</li>
+      </ul>
+    </div>
+    <div class="sku-usage-card" style="--sku-accent: #7EBEC5;">
+      <div class="header"><div class="sku-name">RTDs</div><div class="count-pill">9 OCCASIONS</div></div>
+      <ul>
+        <li>Poolside no-bar</li>
+        <li>Festival / event</li>
+        <li>On-the-go</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-label">NOPD 2×2</div>
+  <div class="nopd-2x2" style="margin-bottom: 28px;">
+    <div class="nopd-card" style="--np: var(--needs);">
+      <div class="np-label">Needs</div>
+      <ul><li>Easy everyday mixers</li><li>Affordable occasions</li></ul>
+    </div>
+    <div class="nopd-card" style="--np: var(--objections);">
+      <div class="np-label">Objections</div>
+      <ul><li>"Too harsh to sip neat"</li><li>Price vs. Patrón perception</li></ul>
+    </div>
+    <div class="nopd-card" style="--np: var(--desires);">
+      <div class="np-label">Desires</div>
+      <ul><li>Smooth margaritas</li><li>Aesthetic ritual moments</li></ul>
+    </div>
+    <div class="nopd-card" style="--np: var(--pain);">
+      <div class="np-label">Pain Points</div>
+      <ul><li>Poor-quality mixers at bars</li><li>No RTDs on trip to beach</li></ul>
+    </div>
+  </div>
+
+  <div class="section-label">Territory cards</div>
+  <div style="margin-bottom: 28px;">
+    <div class="territory-card"><div class="t-num">01</div><div class="t-body">The ritual pour — slow-motion craft moments that celebrate the brand's heritage.</div></div>
+    <div class="territory-card"><div class="t-num">02</div><div class="t-body">Poolside no-bar — RTDs as the unlock for hosting without a bartender.</div></div>
+    <div class="territory-card"><div class="t-num">03</div><div class="t-body">Front-row culture — being visibly present at the events Gen Z is already watching.</div></div>
+  </div>
+
+  <div class="section-label">Verbatim pull-quotes</div>
+  <div style="margin-bottom: 28px;">
+    <div class="verbatim-card">"I didn't know they made RTDs — ordered them for the lake trip and they were gone in an hour."</div>
+    <div class="verbatim-card">"Cuervo hits different when it's cold and there's lime involved."</div>
+  </div>
+
+  <div class="section-label">Poplife notes (callouts)</div>
+  <div style="margin-bottom: 28px; display: grid; gap: 12px;">
+    <div class="poplife-note">
+      <div class="np-title">Note</div>
+      Default poplife note — peach left border, warm gray background. Use for neutral informational callouts.
+    </div>
+    <div class="poplife-note success">
+      <div class="np-title" style="color: #3E7A3E;">On track</div>
+      Success variant — sage green border. Use when a metric beats target or a test launched successfully.
+    </div>
+    <div class="poplife-note danger">
+      <div class="np-title" style="color: #9E3A34;">Risk</div>
+      Danger variant — red border. Use for missed targets, regressions, or action-required items.
+    </div>
+  </div>
+
+  <div class="section-label">North Star callout</div>
+  <div class="north-star" style="margin-bottom: 28px;">
+    <div class="ns-label">2026 NORTH STAR</div>
+    <div class="ns-text">Be the tequila brand Gen Z reaches for when the moment matters — from everyday ritual to poolside to main stage.</div>
+  </div>
+
+  <div class="section-label">Connect callout</div>
+  <div class="connect-callout" style="margin-bottom: 28px;">
+    <strong>Where connection happens</strong>
+    A warm peach-gradient callout used at the bottom of funnel sections to emphasize the Connect stage.
+  </div>
+
+  <!-- VOICE -->
+  <h2 class="section">Voice</h2>
+  <div class="section-caption">Poplife's editorial tone for the dashboard itself — not client-facing content. Direct, warm, specific, zero corporate filler.</div>
+
+  <div class="grid-2">
+    <div class="content-card">
+      <div class="cc-title" style="color: var(--low);">Do</div>
+      <ul style="font-family: 'Inter'; font-size: 14px; line-height: 1.6; padding-left: 18px;">
+        <li>Name things plainly — "Brand Performance," not "Strategic Efficacy Insights."</li>
+        <li>Use editorial code names once the user is on the page ("THE MIRROR", "THE WINDOW") as payoff, not navigation.</li>
+        <li>Lead metrics with a specific number + what's surprising about it.</li>
+        <li>Write callouts like a smart colleague explaining the thing, not a slide deck.</li>
+      </ul>
+    </div>
+    <div class="content-card">
+      <div class="cc-title" style="color: var(--high);">Don't</div>
+      <ul style="font-family: 'Inter'; font-size: 14px; line-height: 1.6; padding-left: 18px;">
+        <li>Don't use consulting-speak ("leverage", "synergies", "drive outcomes").</li>
+        <li>Don't hide bad numbers — the scorecard's job is to surface honest gaps.</li>
+        <li>Don't use emoji in product UI unless a client deck specifically calls for it.</li>
+        <li>Don't write copy that would look the same for any client — specificity builds trust.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- GOTCHAS -->
+  <h2 class="section">Implementation gotchas</h2>
+  <div class="section-caption">Hard-won lessons from shipping Treatment C across 5 Streamlit pages. Read these before building any new component.</div>
+
+  <div class="gotcha">
+    <h4>1. Fonts go in <code>.streamlit/config.toml</code>, not CSS</h4>
+    Register custom fonts via <code>[[theme.fontFaces]]</code> blocks and set <code>font = "..."</code> under <code>[theme]</code>. Streamlit applies theme settings AFTER CSS injection, so CSS <code>font-family</code> rules lose even with <code>!important</code>. Use CSS only for per-component overrides (e.g., Inter on hero subtitles, content-card tables). See <code>docs/decisions.md</code> (2026-04-09).
+  </div>
+
+  <div class="gotcha">
+    <h4>2. Use <code>&lt;div&gt;</code>, not <code>&lt;h1&gt;</code>–<code>&lt;h6&gt;</code>, inside flex/grid HTML</h4>
+    Streamlit has a heading interceptor that wraps every <code>&lt;h*&gt;</code> in markdown output with <code>&lt;div data-testid="stHeadingWithActionElements"&gt;</code> for anchor linking, hoisting it out of its parent. This breaks <code>display: flex; justify-content: space-between</code> layouts. Use <code>&lt;div class="sku-name"&gt;</code> styled via CSS instead of <code>&lt;h4&gt;</code>. See <code>docs/decisions.md</code> (2026-04-14).
+  </div>
+
+  <div class="gotcha">
+    <h4>3. <code>render_content_card_open/close</code> only works for pure HTML</h4>
+    Streamlit widgets (<code>st.selectbox</code>, <code>st.button</code>, <code>st.plotly_chart</code>, <code>st.dataframe</code>) render as siblings to markdown output, not children. The open <code>&lt;div class="content-card"&gt;</code> gets auto-closed at the end of the <code>st.markdown</code> block. For widget content, use a <code>.section-label</code> + caption instead of wrapping.
+  </div>
+
+  <div class="gotcha">
+    <h4>4. No 4+ leading spaces in <code>st.markdown</code> HTML f-strings</h4>
+    Streamlit's markdown parser treats 4+ leading spaces as a code block, silently dropping nested HTML. Build complex nested layouts as single-line f-strings.
+  </div>
+
+  <div class="gotcha">
+    <h4>5. Material Symbols icons need a CSS override when global font is set</h4>
+    Setting <code>font = "Barlow Condensed"</code> cascades down to Streamlit's icon spans (<code>[data-testid="stIconMaterial"]</code>), breaking ligatures. Pin them back to <code>Material Symbols Rounded</code> with <code>font-feature-settings: 'liga'</code> in your CSS. Already handled in <code>POPLIFE_TREATMENT_C_CSS</code>.
+  </div>
+
+  <div class="gotcha">
+    <h4>6. Streamlit Cloud auto-rebuild is best-effort</h4>
+    If a push doesn't appear live within ~60s, DOM-probe to confirm (don't trust the title or <code>view source</code> — caching is aggressive). If the app is stale, manually reboot via <code>Manage app → Reboot</code>. Required especially for <code>.streamlit/config.toml</code> changes.
+  </div>
+
+  <div class="footer">
+    <strong>Source:</strong> Treatment C design system, shipped across Sessions 2–5 (Apr 9–14, 2026).<br>
+    <strong>Canonical implementation:</strong> <code>config.py</code> → <code>POPLIFE_TREATMENT_C_CSS</code>, <code>ui_components.py</code>, <code>.streamlit/config.toml</code>.<br>
+    <strong>Related docs:</strong> <code>docs/design-system.md</code>, <code>docs/decisions.md</code>, <code>docs/page-specs.md</code>.
+  </div>
+
+</div>
+</body>
+</html>
