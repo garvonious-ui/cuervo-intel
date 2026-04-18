@@ -29,6 +29,12 @@
 
 ## Phase 2 — Feature Enhancements
 
+### Sprout API + Tagging Queue (NEW — feature branch)
+Full design: `~/.claude/plans/what-i-would-like-rustling-spindle.md`. Branch: `feature/sprout-api-integration`. Ship in three phases:
+- [ ] **Phase A** — Tagging Queue page (`pages/6_Tagging_Queue.py`). Tab 1: queue of untagged hero posts. Tab 2: manual entry for off-Sprout Partner/Influencer/Collective posts. File-lock writes to `manual_posts.csv`. Shippable standalone — no API creds needed.
+- [ ] **Phase B** — Sprout REST client (`sprout_api.py`). OAuth2 Bearer from `st.secrets`. Manual "Sync now" button. Writes `data/{client}/sprout/api_posts.parquet`.
+- [ ] **Phase C** — Scheduled daily sync via GitHub Actions (`sprout_sync.py` + `.github/workflows/sprout-sync.yml`).
+
 ### Data & Analysis
 - [x] ~~Improve content theme classifier accuracy~~ — replaced by manual pillar/funnel tagging
 - [ ] Add TikTok-specific metrics and analysis sections
