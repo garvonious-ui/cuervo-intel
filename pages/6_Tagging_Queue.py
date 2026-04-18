@@ -19,19 +19,28 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
+import html
 import pandas as pd
 import streamlit as st
 
 from client_context import get_client
 from config import COLLAB_AMPLIFIED_TYPES, COLLAB_OWNED_TYPES
+from ui_components import render_page_hero, render_kpi_section_label
 
 # ── Dev guard ────────────────────────────────────────────────────────────────
+# Check query param OR session state — Streamlit's multi-page sidebar drops
+# query params on navigation, so app.py persists the flag to session state
+# the first time the user loads the home page with ?dev=1.
 
-_dev = str(st.query_params.get("dev", "")).lower() in ("1", "true", "yes")
-if not _dev:
+_dev_qp = str(st.query_params.get("dev", "")).lower() in ("1", "true", "yes")
+_dev_ss = bool(st.session_state.get("dev_mode"))
+if not (_dev_qp or _dev_ss):
     st.set_page_config(page_title="Tagging Queue", layout="wide")
     st.error("This page requires **?dev=1** in the URL.")
-    st.caption("Example: `/?client=cuervo&dev=1` then navigate to Tagging Queue.")
+    st.caption(
+        "Load the home page with `?dev=1` first (e.g. `/?client=cuervo&dev=1`), "
+        "then the flag sticks across sidebar navigation."
+    )
     st.stop()
 
 # ── Data guard ───────────────────────────────────────────────────────────────
@@ -199,8 +208,33 @@ SKU_OPTS = list(cfg.sku_strategy.keys()) if SHOW_SKU else []
 
 # ── Page header ───────────────────────────────────────────────────────────────
 
-st.title("Tagging Queue")
-st.caption(f"**{HERO}** · dev only · tag untagged Sprout posts or add off-Sprout entries")
+# Compute queue count for hero stats (cheap — same function used in Tab 1)
+_untagged_preview = _get_untagged_posts(SPROUT_DIR, HERO)
+_queue_count = len(_untagged_preview)
+
+# Also read manual_posts.csv to show "tagged" count for context
+_manual_path = os.path.join(SPROUT_DIR, "manual_posts.csv")
+_tagged_count = 0
+if os.path.isfile(_manual_path):
+    try:
+        _tagged_count = len(pd.read_csv(_manual_path, encoding="utf-8-sig"))
+    except Exception:
+        pass
+
+render_page_hero(
+    title="The Backlog",
+    kicker=f"{HERO.upper()} · TAGGING QUEUE",
+    subtitle=(
+        "Classify untagged hero posts (pillar / funnel / collab) so they "
+        "show up in the dashboard. Or manually log an off-Sprout partner post."
+    ),
+    stats=[
+        {"value": f"{_queue_count}",  "label": "In queue"},
+        {"value": f"{_tagged_count}", "label": "Already tagged"},
+        {"value": f"{len(PILLAR_OPTS)}", "label": "Pillars"},
+        {"value": f"{len(FUNNEL_OPTS)}", "label": "Funnel stages"},
+    ],
+)
 
 tab_queue, tab_manual = st.tabs(["Queue", "Add Off-Sprout Post"])
 
@@ -209,6 +243,76 @@ tab_queue, tab_manual = st.tabs(["Queue", "Add Off-Sprout Post"])
 # Tab 1 — Queue
 # ════════════════════════════════════════════════════════════════════════════
 
+_QUEUE_CSS = """
+<style>
+.tq-card {
+    background: #FFFFFF;
+    border: 1px solid #EAE3D8;
+    border-radius: 8px;
+    padding: 20px 22px;
+    margin-bottom: 12px;
+}
+.tq-card .meta {
+    font-size: 11px;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: #8A7F70;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+.tq-card .caption {
+    font-size: 14px;
+    line-height: 1.55;
+    color: #2A2A2A;
+    white-space: pre-wrap;
+    max-height: 260px;
+    overflow-y: auto;
+    padding: 14px 16px;
+    background: #F7F2EB;
+    border-radius: 6px;
+    margin-bottom: 14px;
+}
+.tq-card .caption.empty {
+    color: #A79C8C;
+    font-style: italic;
+}
+.tq-card .url-row {
+    font-size: 12px;
+    font-family: ui-monospace, Menlo, monospace;
+    color: #6F6355;
+    word-break: break-all;
+    margin-bottom: 14px;
+}
+.tq-card .url-row a {
+    color: #B8764A;
+    text-decoration: none;
+    font-weight: 600;
+    border-bottom: 1px solid #B8764A;
+    margin-right: 8px;
+}
+.tq-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.tq-chip {
+    background: #F3EDE6;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 13px;
+    color: #333;
+    font-weight: 500;
+}
+.tq-chip .num { font-weight: 700; color: #1a1a1a; }
+.tq-chip .dim { color: #A79C8C; font-weight: 500; }
+.tq-progress {
+    font-size: 12px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #8A7F70;
+    font-weight: 600;
+    margin: 18px 0 8px 0;
+}
+</style>
+"""
+st.markdown(_QUEUE_CSS, unsafe_allow_html=True)
+
 with tab_queue:
     untagged = _get_untagged_posts(SPROUT_DIR, HERO)
 
@@ -216,13 +320,8 @@ with tab_queue:
         st.success("Queue is empty — all hero posts are tagged. ✓")
     else:
         n = len(untagged)
-        st.info(
-            f"**{n} post{'s' if n != 1 else ''} in queue.** "
-            "Tag each to include it in dashboard KPIs."
-        )
 
         # ── Queue navigation ──────────────────────────────────────────────
-        # Reset index when client changes to avoid out-of-bounds
         if (
             "queue_idx" not in st.session_state
             or st.session_state.get("queue_client") != cfg.client_id
@@ -233,74 +332,101 @@ with tab_queue:
         idx = min(int(st.session_state["queue_idx"]), n - 1)
         post = untagged.iloc[idx].to_dict()
 
-        # ── Post preview card ─────────────────────────────────────────────
-        st.caption(f"Post **{idx + 1}** of **{n}**")
-
-        url = str(post.get("post_url", ""))
-        if url.startswith("http"):
-            st.markdown(f"[↗ Open post]({url})  `{url}`")
-        else:
-            st.code(url)
-
-        col_meta, col_metrics = st.columns([3, 1])
-        with col_meta:
-            st.caption(
-                f"**{post.get('platform', '')}** · "
-                f"{post.get('post_type', '')} · "
-                f"{str(post.get('post_date', ''))[:10]}"
+        # ── Progress + nav row ────────────────────────────────────────────
+        p_col, nav_prev, nav_skip = st.columns([6, 1, 1])
+        with p_col:
+            st.markdown(
+                f'<div class="tq-progress">Post {idx + 1} of {n}</div>',
+                unsafe_allow_html=True,
             )
-            caption = str(post.get("caption_text", ""))
-            if caption:
-                st.text_area(
-                    "caption_preview", caption, height=100,
-                    disabled=True, label_visibility="collapsed"
-                )
-            else:
-                st.caption("_(no caption)_")
-
-        with col_metrics:
-            for label, key in [
-                ("Likes", "likes"), ("Comments", "comments"),
-                ("Saves", "saves"), ("Views", "views"),
-            ]:
-                raw_val = post.get(key, 0)
-                try:
-                    v = int(raw_val) if raw_val not in (None, "", "nan") else 0
-                except (ValueError, TypeError):
-                    v = 0
-                st.metric(label, f"{v:,}" if v else "—")
-
-        c_prev, c_skip, _ = st.columns([1, 1, 4])
-        with c_prev:
-            if st.button("← Prev", disabled=(idx == 0), key="q_prev"):
+        with nav_prev:
+            if st.button("← Prev", disabled=(idx == 0), key="q_prev",
+                         use_container_width=True):
                 st.session_state["queue_idx"] = idx - 1
                 st.rerun()
-        with c_skip:
-            if st.button("Skip →", key="q_skip"):
+        with nav_skip:
+            if st.button("Skip →", key="q_skip", use_container_width=True):
                 st.session_state["queue_idx"] = (idx + 1) % n
                 st.rerun()
 
-        st.divider()
+        # ── Two-column: post preview | tagging form ───────────────────────
+        col_post, col_form = st.columns([5, 3], gap="large")
 
-        # ── Tagging form ──────────────────────────────────────────────────
-        with st.form("queue_tag_form"):
-            st.subheader("Tag this post")
+        with col_post:
+            url = str(post.get("post_url", ""))
+            caption = str(post.get("caption_text", "")).strip()
 
-            pillar_sel = st.selectbox("Content Pillar *", ["— select —"] + PILLAR_OPTS)
-            funnel_sel = st.selectbox("Funnel Stage *", ["— select —"] + FUNNEL_OPTS)
-            collab_sel = st.selectbox("Collaboration", COLLAB_OPTS, index=0)
-            if SHOW_SKU:
-                sku_sel = st.selectbox("SKU", ["(none)"] + SKU_OPTS)
-            theme_sel = st.selectbox("Content Theme", ["— select —"] + THEME_OPTS)
+            def _safe_int_display(v) -> str:
+                try:
+                    iv = int(float(str(v))) if v not in (None, "", "nan") else 0
+                except (ValueError, TypeError):
+                    iv = 0
+                return f'<span class="num">{iv:,}</span>' if iv else '<span class="dim">—</span>'
 
-            save_btn = st.form_submit_button("Save & Next →", type="primary")
+            chips_html = "".join([
+                f'<div class="tq-chip">❤︎ {_safe_int_display(post.get("likes", 0))} <span class="dim">Likes</span></div>',
+                f'<div class="tq-chip">💬 {_safe_int_display(post.get("comments", 0))} <span class="dim">Comments</span></div>',
+                f'<div class="tq-chip">🔖 {_safe_int_display(post.get("saves", 0))} <span class="dim">Saves</span></div>',
+                f'<div class="tq-chip">▶︎ {_safe_int_display(post.get("views", 0))} <span class="dim">Views</span></div>',
+                f'<div class="tq-chip">📢 {_safe_int_display(post.get("shares", 0))} <span class="dim">Shares</span></div>',
+            ])
+
+            platform = html.escape(str(post.get("platform", "")))
+            post_type = html.escape(str(post.get("post_type", "")))
+            post_date = html.escape(str(post.get("post_date", ""))[:10])
+            caption_block = (
+                f'<div class="caption">{html.escape(caption)}</div>'
+                if caption else
+                '<div class="caption empty">(no caption)</div>'
+            )
+            if url.startswith("http"):
+                url_row = (
+                    f'<div class="url-row">'
+                    f'<a href="{html.escape(url)}" target="_blank">↗ Open post</a>'
+                    f'{html.escape(url)}</div>'
+                )
+            else:
+                url_row = f'<div class="url-row">{html.escape(url)}</div>'
+
+            st.markdown(
+                f"""
+<div class="tq-card">
+  <div class="meta">{platform} · {post_type} · {post_date}</div>
+  {caption_block}
+  {url_row}
+  <div class="tq-chips">{chips_html}</div>
+</div>
+""",
+                unsafe_allow_html=True,
+            )
+
+        with col_form:
+            with st.form("queue_tag_form"):
+                st.markdown(
+                    '<div class="tq-progress" style="margin-top:0">Tag this post</div>',
+                    unsafe_allow_html=True,
+                )
+
+                pillar_sel = st.selectbox(
+                    "Content Pillar *", ["— select —"] + PILLAR_OPTS
+                )
+                funnel_sel = st.selectbox(
+                    "Funnel Stage *", ["— select —"] + FUNNEL_OPTS
+                )
+                collab_sel = st.selectbox(
+                    "Collaboration", COLLAB_OPTS, index=0
+                )
+
+                save_btn = st.form_submit_button(
+                    "Save & Next →", type="primary", use_container_width=True
+                )
 
         if save_btn:
             if pillar_sel == "— select —" or funnel_sel == "— select —":
                 st.error("Content Pillar and Funnel Stage are required.")
             else:
-                sku_val = (sku_sel if SHOW_SKU and sku_sel != "(none)" else "")
-                theme_val = (theme_sel if theme_sel != "— select —" else "")
+                sku_val = ""
+                theme_val = ""
 
                 def _safe_int(v) -> int:
                     try:
@@ -415,10 +541,6 @@ with tab_manual:
             pillar_m = st.selectbox("Content Pillar *", ["— select —"] + PILLAR_OPTS)
         with tg2:
             funnel_m = st.selectbox("Funnel Stage *", ["— select —"] + FUNNEL_OPTS)
-            theme_m  = st.selectbox("Content Theme",  ["— select —"] + THEME_OPTS)
-
-        if SHOW_SKU:
-            sku_m = st.selectbox("SKU", ["(none)"] + SKU_OPTS)
 
         submit_manual = st.form_submit_button("Add Post →", type="primary")
 
@@ -437,8 +559,8 @@ with tab_manual:
             for err in errors:
                 st.error(err)
         else:
-            sku_val_m   = (sku_m if SHOW_SKU and sku_m != "(none)" else "")
-            theme_val_m = (theme_m if theme_m != "— select —" else "")
+            sku_val_m   = ""
+            theme_val_m = ""
             eng_m = int(likes_m) + int(comments_m) + int(shares_m) + int(saves_m)
             row_m = {
                 "brand":                  HERO,

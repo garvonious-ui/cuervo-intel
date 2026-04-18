@@ -1,5 +1,45 @@
 # Changelog
 
+## 2026-04-18 — Session 7 (Phase A: Tagging Queue shipped) — CHECKPOINT (on `feature/sprout-api-integration`)
+
+Shipped Phase A of the Sprout API plan: the Tagging Queue page. No API work yet — that's Phase B.
+
+### What shipped
+- **`pages/6_Tagging_Queue.py`** (new, ~370 lines) — dev-only page (`?dev=1`, flag sticky via session state). Two tabs:
+  - **Queue**: reads raw Sprout post-level CSVs, filters to hero brand, excludes URLs already in `manual_posts.csv`. Renders one post at a time in a Treatment-C card (peach-themed, scrollable caption block, compact metric chips, "Open post" link). Side-by-side layout: post preview (left, 5 cols) + tagging form (right, 3 cols). Prev/Skip buttons live at top-right next to a "Post X of N" progress label. Form fields: **Pillar, Funnel Stage, Collaboration only** (theme & SKU stripped per user preference — we don't tag themes). Submit → `portalocker.LOCK_EX` append to `manual_posts.csv`, `st.cache_data.clear()`, `st.rerun()`. First load on Cuervo: 84 untagged posts surface.
+  - **Add Off-Sprout Post**: full manual entry form for Partner/Influencer/Collective posts Sprout never captured. Collaboration dropdown limited to amplified types. Brand auto-set to hero. Appended with `is_manual_entry=Yes` for provenance.
+- **`app.py`** — `_sprout_fingerprint()` extended to include file mtimes alongside sizes (CODE_VERSION bumped `v39_hide_empty_funnel` → `v40_tagging_queue`). Also: persist `dev_mode=True` in session state when `?dev=1` is set, so Streamlit's multi-page sidebar nav doesn't strip the flag on page switches.
+- **`requirements.txt`** — add `portalocker>=2.8.0`.
+
+### UI redesign pass (same session, after first UI revealed pain)
+- v1 shipped as plain Streamlit (`st.title`, vertical `st.metric` stack, `st.text_area` for caption) — user said "I hate this UI".
+- v2 (current): `render_page_hero` matches every other page, post preview is a custom-CSS peach card (`.tq-card`), metrics are horizontal chips (`.tq-chip`) not giant vertical dashes, form sits *next to* the post (two columns) not below it so you never scroll to tag. Scoped CSS in `_QUEUE_CSS` block, `tq-` prefix.
+
+### Files changed
+```
+ M app.py                       — dev_mode session state + mtime fingerprint + CODE_VERSION
+ M requirements.txt             — +portalocker>=2.8.0
+ ?? pages/6_Tagging_Queue.py    — new page (Phase A)
+ M docs/build-plan.md           — Phase A checkbox ticked
+ M docs/changelog.md            — this entry
+```
+
+### Commits
+- `95f3909` — feat: Phase A — Tagging Queue page (dev-only) — **pushed** to `origin/feature/sprout-api-integration`
+- (pending) — UI redesign + theme/sku removal + dev_mode session state + docs — this checkpoint
+
+### Open / pickup next session
+1. **Phase B — Sprout REST client**. Blocked on creds from user: (a) Sprout API token (Advanced plan), (b) customer ID, (c) per-client profile IDs. When gathered, goes into `.streamlit/secrets.toml` + new `sprout_customer_id` / `sprout_profile_ids` fields on `ClientConfig`.
+2. Local dev server currently running on port 8501 (background) — tested against both clients.
+3. Feature branch **not yet merged to main**. Streamlit Cloud preview app still points at `preview/ui-phase-1`; branch-swap was attempted but aborted (user preferred local testing).
+4. DR `content_mix_funnel` tagging backlog (133 posts) could flow through this new UI — worth trying once we're confident in the flow on Cuervo's 84.
+
+### Notes for future me
+- Content theme column still written to CSV as empty string — preserves 31-column schema alignment with existing 179 Cuervo rows. Don't drop the column from the write; downstream `results_to_df()` reads it.
+- `is_manual_entry` column only lands in the CSV if the file is being created from scratch (DictWriter `extrasaction='ignore'` drops it when existing headers don't include it). Acceptable for now — provenance on existing rows isn't needed.
+
+---
+
 ## 2026-04-18 — Session 6 (Sprout API integration — design only, no code shipped) — COMMITTED TO `main` (not pushed)
 
 Planning session. Zero code changes to the app. Goal was to think through how to replace manual Sprout CSV uploads with a direct API integration, while preserving the manual-tagging workflow that keeps hero KPIs honest.

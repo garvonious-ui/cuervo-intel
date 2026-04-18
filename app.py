@@ -101,6 +101,12 @@ st.session_state["client_config"] = cfg
 # on that specific client's dashboard without switching views.
 show_dev_controls = str(st.query_params.get("dev", "")).lower() in ("1", "true", "yes")
 
+# Persist dev flag in session state so multi-page sidebar navigation keeps
+# it "sticky" — Streamlit drops query params when you click between pages.
+# Pages can read st.session_state["dev_mode"] instead of re-parsing ?dev=1.
+if show_dev_controls:
+    st.session_state["dev_mode"] = True
+
 
 # ── Data Loading ──────────────────────────────────────────────────────
 

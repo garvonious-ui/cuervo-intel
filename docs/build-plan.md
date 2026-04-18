@@ -31,7 +31,7 @@
 
 ### Sprout API + Tagging Queue (NEW — feature branch)
 Full design: `~/.claude/plans/what-i-would-like-rustling-spindle.md`. Branch: `feature/sprout-api-integration`. Ship in three phases:
-- [ ] **Phase A** — Tagging Queue page (`pages/6_Tagging_Queue.py`). Tab 1: queue of untagged hero posts. Tab 2: manual entry for off-Sprout Partner/Influencer/Collective posts. File-lock writes to `manual_posts.csv`. Shippable standalone — no API creds needed.
+- [x] **Phase A** — Tagging Queue page (`pages/6_Tagging_Queue.py`). Tab 1: queue of untagged hero posts (side-by-side post preview + tagging form, peach-themed card). Tab 2: manual entry for off-Sprout Partner/Influencer/Collective posts with `is_manual_entry=Yes` flag. `portalocker` file-lock around CSV writes. Treatment C hero + two-column layout. Dev-only (`?dev=1`, sticky via session state). Fields: pillar / funnel / collab only — theme & sku removed per user. Blocks Cuervo queue surfaces **84 untagged posts** (recent Sprout exports).
 - [ ] **Phase B** — Sprout REST client (`sprout_api.py`). OAuth2 Bearer from `st.secrets`. Manual "Sync now" button. Writes `data/{client}/sprout/api_posts.parquet`.
 - [ ] **Phase C** — Scheduled daily sync via GitHub Actions (`sprout_sync.py` + `.github/workflows/sprout-sync.yml`).
 
