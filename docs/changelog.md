@@ -1,5 +1,49 @@
 # Changelog
 
+## 2026-04-18 — Session 6 (Sprout API integration — design only, no code shipped) — COMMITTED TO `main` (not pushed)
+
+Planning session. Zero code changes to the app. Goal was to think through how to replace manual Sprout CSV uploads with a direct API integration, while preserving the manual-tagging workflow that keeps hero KPIs honest.
+
+### What happened
+- Environment setup: repo cloned fresh to `~/POPLIFE Dashboard /cuervo-intel`, deps installed, streamlit smoke-tested on port 8501 (HTTP 200, zero errors). Productivity system (`TASKS.md`, `dashboard.html`, `CLAUDE.md`, `memory/`) bootstrapped in the parent workspace dir — separate from the repo.
+- Mapped the current pipeline: Sprout CSVs → `sprout_import.py:751-969` → merge with `manual_posts.csv` on `post_url` → hero posts without a manual row are dropped at `sprout_import.py:843-847` (this is the invariant that keeps KPIs clean). No existing API code; no existing secrets handling.
+- Researched Sprout's public API: REST at `api.sproutsocial.com/v1`, OAuth2 Bearer, Advanced-plan-gated, no Python SDK, opaque rate limits. Viable — just have to roll our own client.
+
+### What shipped
+- **Docs only**: `docs/build-plan.md` gets a new Phase 2 subsection **"Sprout API + Tagging Queue (NEW — feature branch)"** with pointer to the plan file at `~/.claude/plans/what-i-would-like-rustling-spindle.md`. Single commit `607ae0f`.
+- Nothing pushed. `origin/main` is still at `6ebf715`.
+
+### Plan locked in (full version in the plan file)
+- **Branch**: `feature/sprout-api-integration`, off `main`. Not yet created.
+- **Phase A — Tagging Queue page** (shippable standalone, no API creds needed): `pages/6_Tagging_Queue.py` with Tab 1 (queue of hero posts whose `post_url` is NOT in `manual_posts.csv`, one-at-a-time `st.form` tagging) + Tab 2 (manual entry for Partner / Influencer / Collective posts that live on non-hero accounts — Sprout doesn't capture these, and Session 1 already hit this gap with 34 "off-Sprout" posts). `portalocker` file-lock around CSV writes handles two concurrent taggers. Extend `_sprout_fingerprint()` at `sprout_import.py:121-133` to include `manual_posts.csv` mtime so cache invalidates on tag submit.
+- **Phase B — Sprout REST client**: `sprout_api.py`, OAuth2 Bearer from `st.secrets["sprout"]`, writes to `data/{client}/sprout/api_posts.parquet`. Extend `import_sprout_directory()` to read parquet alongside CSVs (backward compatible). Add `sprout_profile_ids` + `sprout_customer_id` to `ClientConfig`.
+- **Phase C — Scheduled daily sync**: `sprout_sync.py` CLI + `.github/workflows/sprout-sync.yml` running at 6am ET.
+- **Key invariant preserved**: untagged hero posts still get dropped from analysis. The Tagging Queue is the only place they're visible.
+
+### Decisions confirmed by user
+- Direct Sprout API (not Supermetrics or scheduled exports).
+- Daily cron cadence.
+- 2 taggers (user + 1 social-team teammate) — file-lock is sufficient, no SQLite/Sheets needed.
+- Drop untagged hero posts from analysis (matches today's behavior).
+- Off-Sprout manual entry is first-class — confirmed all three amplified types (Partner / Influencer / Collective) need it.
+
+### Files changed this session
+```
+ M docs/build-plan.md   — added Sprout API + Tagging Queue subsection under Phase 2
+ M docs/changelog.md    — this entry
+```
+
+### Commits
+- `607ae0f` — docs: add Sprout API + Tagging Queue plan pointer to Phase 2
+
+### Next session pickup
+1. `git push origin main` (ships the build-plan + changelog updates — docs-only, harmless rebuild on Streamlit Cloud).
+2. `git checkout -b feature/sprout-api-integration`.
+3. `/clear`, then `/start` in a fresh session.
+4. Tell Claude: **"Read the plan and start Phase A."** The plan at `~/.claude/plans/what-i-would-like-rustling-spindle.md` is self-contained.
+
+---
+
 ## 2026-04-14 — Session 5 (merge to main + SKU Usage matrix) — SHIPPED TO `origin/main`
 
 Short, focused session. Two shipped changes: (a) merged the Session 3/4 preview branch to main so UI Phase 1 + DR scorecard fixes are finally live on production, (b) added the "Role of Variants" SKU usage matrix to Page 3 Tab 2 after the social team asked if we could surface it somewhere.
